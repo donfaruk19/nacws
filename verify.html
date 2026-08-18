@@ -5,23 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#07472d" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>NACWS · Verify</title>
 
-    <!-- Manifest will be loaded only if served from a web server -->
+    <!-- Manifest – will be removed automatically if served from file:// -->
     <link rel="manifest" href="manifest.json" id="manifestLink" />
 
-    <!-- html5-qrcode for camera scanning -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js">
-    </script>
-
-    <!-- Google Fonts -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
     <style>
-        /* (same styles as before – keep your existing CSS) */
+        /* (same as before – keep your existing styles) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f5f2eb; color: #2d2a26; min-height: 100vh; display: flex; flex-direction: column; }
         .app-header { background: #07472d; padding: 16px 20px; display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #c9a84c; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
@@ -34,14 +30,11 @@
         .mode-toggle { display: flex; gap: 8px; background: #e0dbd2; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
         .mode-toggle button { flex: 1; padding: 10px 16px; border: none; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s; background: transparent; color: #6b6560; font-family: 'Inter', sans-serif; }
         .mode-toggle button.active { background: #fff; color: #07472d; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-        .mode-toggle button:active { transform: scale(0.97); }
         .scan-area { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 16px; position: relative; }
         .scan-area #reader { width: 100%; min-height: 320px; background: #0f281b; }
-        .scan-area #reader video { border-radius: 12px 12px 0 0; }
         .scan-area .scan-overlay { position: absolute; inset: 0; pointer-events: none; border: 2px solid rgba(201,168,76,0.3); border-radius: 16px; }
         .scan-area .scan-overlay::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%; border: 2px solid rgba(201,168,76,0.15); border-radius: 12px; }
         .scan-hint { text-align: center; font-size: 0.8rem; color: #6b6560; padding: 10px 0 4px; }
-        .scan-hint strong { color: #07472d; }
         .manual-area { display: none; background: #fff; border-radius: 16px; padding: 24px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 16px; }
         .manual-area.active { display: block; }
         .manual-area label { font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 6px; color: #07472d; }
@@ -50,7 +43,6 @@
         .manual-area .input-row input:focus { border-color: #c9a84c; background: #fff; box-shadow: 0 0 0 4px rgba(201,168,76,0.12); outline: none; }
         .manual-area .input-row .btn-verify { padding: 12px 24px; background: #c9a84c; color: #0f281b; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; font-family: 'Inter', sans-serif; white-space: nowrap; }
         .manual-area .input-row .btn-verify:hover { background: #a8883a; transform: translateY(-2px); }
-        .manual-area .input-row .btn-verify:active { transform: scale(0.97); }
         .result-card { background: #fff; border-radius: 16px; padding: 20px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); display: none; animation: slideUp 0.4s ease; border-left: 5px solid #c9a84c; }
         .result-card.show { display: block; }
         .result-card .result-status { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -69,7 +61,6 @@
         .result-card .result-actions .btn-mark.success:hover { background: #146b2a; transform: translateY(-2px); }
         .result-card .result-actions .btn-mark.success:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .result-card .result-actions .btn-mark.secondary { background: #e0dbd2; color: #2d2a26; }
-        .result-card .result-actions .btn-mark.secondary:hover { background: #c9bcaa; }
         .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0f281b; color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 0.85rem; box-shadow: 0 8px 30px rgba(0,0,0,0.2); border-left: 4px solid #c9a84c; z-index: 999; display: none; max-width: 90%; text-align: center; font-weight: 500; }
         .toast.show { display: block; animation: slideUp 0.3s ease; }
         .toast.error { border-left-color: #b22222; }
@@ -104,7 +95,6 @@
 </head>
 <body>
 
-    <!-- Header, same as before -->
     <header class="app-header">
         <div class="logo-icon">🛡️</div>
         <div class="header-title">
@@ -114,20 +104,18 @@
         <span class="badge-status">● Live</span>
     </header>
 
-    <!-- Install banner -->
+    <!-- Install Banner -->
     <div class="install-banner" id="installBanner">
-        📲 Install this app for quick check-in
+        📲 Install this app for quick check‑in
         <button class="btn-install" id="installBtn">Install App</button>
     </div>
 
-    <!-- Main container -->
     <div class="main-container">
         <div class="mode-toggle">
             <button class="active" data-mode="scan" id="modeScan">📷 Scan QR</button>
             <button data-mode="manual" id="modeManual">⌨️ Enter ID</button>
         </div>
 
-        <!-- Scan Area -->
         <div class="scan-area" id="scanArea">
             <div id="reader"></div>
             <div class="scan-overlay"></div>
@@ -138,7 +126,6 @@
             </div>
         </div>
 
-        <!-- Manual Area -->
         <div class="manual-area" id="manualArea">
             <label for="manualId">Enter Unique ID</label>
             <div class="input-row">
@@ -147,7 +134,6 @@
             </div>
         </div>
 
-        <!-- Result Card -->
         <div class="result-card" id="resultCard">
             <div class="result-status">
                 <span class="status-icon" id="statusIcon">✅</span>
@@ -170,30 +156,25 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast" id="toast"><span id="toastMsg">Message</span></div>
 
     <script>
         (function() {
             'use strict';
 
-            // ─── CONFIG ──────────────────────────────────────────────
-            // Your deployed Google Apps Script URL (with ?action=all appended)
             const APP_SCRIPT_URL =
                 'https://script.google.com/macros/s/AKfycbyosv3us2ljGdWBwzgkT1CXUM4pkr6mZ4Qbg-VZ6ql1jhXgKRaLZZBrfyYqdhjgBxA/exec';
 
-            // ─── DOM REFS ────────────────────────────────────────────
+            // DOM refs
             const readerEl = document.getElementById('reader');
             const btnStart = document.getElementById('btnStartScanner');
             const btnStop = document.getElementById('btnStopScanner');
             const scanArea = document.getElementById('scanArea');
-
             const modeScan = document.getElementById('modeScan');
             const modeManual = document.getElementById('modeManual');
             const manualArea = document.getElementById('manualArea');
             const manualId = document.getElementById('manualId');
             const btnManualVerify = document.getElementById('btnManualVerify');
-
             const resultCard = document.getElementById('resultCard');
             const statusIcon = document.getElementById('statusIcon');
             const statusText = document.getElementById('statusText');
@@ -203,33 +184,27 @@
             const resultOrg = document.getElementById('resultOrg');
             const btnMarkVerified = document.getElementById('btnMarkVerified');
             const btnClearResult = document.getElementById('btnClearResult');
-
             const toast = document.getElementById('toast');
             const toastMsg = document.getElementById('toastMsg');
-
             const installBanner = document.getElementById('installBanner');
             const installBtn = document.getElementById('installBtn');
 
-            // ─── STATE ──────────────────────────────────────────────
             let html5QrCode = null;
             let isScanning = false;
             let currentParticipant = null;
             let currentId = null;
-            let cachedData = []; // store all registrations
-
-            // ─── TOAST ──────────────────────────────────────────────
+            let cachedData = [];
             let toastTimer = null;
 
+            // Toast
             function showToast(msg, type) {
                 toast.className = 'toast show' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
                 toastMsg.textContent = msg;
                 clearTimeout(toastTimer);
-                toastTimer = setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 4000);
+                toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
             }
 
-            // ─── MODE TOGGLE ────────────────────────────────────────
+            // Mode toggle
             modeScan.addEventListener('click', function() {
                 modeScan.classList.add('active');
                 modeManual.classList.remove('active');
@@ -237,7 +212,6 @@
                 scanArea.style.display = 'block';
                 showToast('QR scan mode active', '');
             });
-
             modeManual.addEventListener('click', function() {
                 modeManual.classList.add('active');
                 modeScan.classList.remove('active');
@@ -246,39 +220,28 @@
                 if (isScanning) stopScanner();
                 showToast('Manual entry mode active', '');
             });
-
-            // Start with scan mode active
             modeScan.classList.add('active');
 
-            // ─── SCANNER ─────────────────────────────────────────────
+            // Scanner
             function startScanner() {
                 if (isScanning) return;
                 if (!html5QrCode) {
                     html5QrCode = new Html5Qrcode('reader');
                 }
-
-                const config = {
-                    fps: 15,
-                    qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1.0
-                };
-
-                html5QrCode.start({ facingMode: 'environment' },
-                    config,
-                    onScanSuccess,
-                    onScanError
-                ).then(() => {
-                    isScanning = true;
-                    scanArea.classList.add('scanning-active');
-                    btnStart.textContent = '⏳ Scanning...';
-                    btnStart.disabled = true;
-                    showToast('Camera started. Point at a QR code.', '');
-                }).catch(err => {
-                    console.error('Scanner start error:', err);
-                    showToast('Could not access camera. Please check permissions.', 'error');
-                    btnStart.disabled = false;
-                    btnStart.textContent = '▶ Start Camera';
-                });
+                const config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+                html5QrCode.start({ facingMode: 'environment' }, config, onScanSuccess, onScanError)
+                    .then(() => {
+                        isScanning = true;
+                        scanArea.classList.add('scanning-active');
+                        btnStart.textContent = '⏳ Scanning...';
+                        btnStart.disabled = true;
+                        showToast('Camera started. Point at a QR code.', '');
+                    })
+                    .catch(err => {
+                        showToast('Could not access camera. Please check permissions.', 'error');
+                        btnStart.disabled = false;
+                        btnStart.textContent = '▶ Start Camera';
+                    });
             }
 
             function stopScanner() {
@@ -289,64 +252,43 @@
                     btnStart.textContent = '▶ Start Camera';
                     btnStart.disabled = false;
                     showToast('Camera stopped.', '');
-                }).catch(err => {
-                    console.error('Scanner stop error:', err);
-                });
+                }).catch(() => {});
             }
 
             function onScanSuccess(decodedText) {
                 try {
                     const data = JSON.parse(decodedText);
-                    if (data.id) {
-                        verifyParticipant(data.id);
-                    } else {
-                        showToast('Invalid QR code format. Please scan the ticket QR.', 'error');
-                    }
+                    if (data.id) verifyParticipant(data.id);
+                    else showToast('Invalid QR format.', 'error');
                 } catch (e) {
-                    if (decodedText && decodedText.startsWith('NACWS-')) {
-                        verifyParticipant(decodedText);
-                    } else {
-                        showToast('Invalid QR code. Please scan the official ticket.', 'error');
-                    }
+                    if (decodedText && decodedText.startsWith('NACWS-')) verifyParticipant(decodedText);
+                    else showToast('Invalid QR code.', 'error');
                 }
             }
 
-            function onScanError(err) {
-                // Silent
-            }
+            function onScanError(err) { /* silent */ }
 
             btnStart.addEventListener('click', startScanner);
             btnStop.addEventListener('click', stopScanner);
 
-            // ─── FETCH ALL DATA ─────────────────────────────────────
+            // Fetch all data
             async function fetchAllData() {
                 try {
                     const response = await fetch(APP_SCRIPT_URL + '?action=all');
                     if (!response.ok) throw new Error('Network error');
                     const data = await response.json();
-                    if (Array.isArray(data)) {
-                        cachedData = data;
-                        return data;
-                    } else {
-                        throw new Error('Unexpected response format');
-                    }
+                    if (Array.isArray(data)) { cachedData = data; return data; }
+                    throw new Error('Unexpected response');
                 } catch (err) {
-                    console.error('Fetch error:', err);
-                    showToast('Could not load participant data. Please check your connection.', 'error');
+                    showToast('Could not load participant data.', 'error');
                     return [];
                 }
             }
 
-            // ─── VERIFY PARTICIPANT ──────────────────────────────────
+            // Verify participant
             async function verifyParticipant(id) {
-                if (!id || id.trim() === '') {
-                    showToast('Please enter a valid ID.', 'error');
-                    return;
-                }
-
+                if (!id || !id.trim()) { showToast('Enter a valid ID.', 'error'); return; }
                 currentId = id.trim();
-
-                // Show loading state
                 resultCard.classList.add('show');
                 statusIcon.textContent = '⏳';
                 statusText.textContent = 'Searching...';
@@ -358,9 +300,7 @@
                 btnMarkVerified.disabled = true;
                 btnMarkVerified.innerHTML = '⏳ Searching...';
 
-                // Ensure we have fresh data
                 const allData = await fetchAllData();
-
                 if (allData.length === 0) {
                     statusIcon.textContent = '⚠️';
                     statusText.textContent = 'No Data';
@@ -370,10 +310,7 @@
                     showToast('Could not retrieve registration data.', 'error');
                     return;
                 }
-
-                // Find participant
                 const participant = allData.find(row => row.UniqueID === currentId);
-
                 if (participant) {
                     currentParticipant = participant;
                     displayResult(participant);
@@ -391,59 +328,41 @@
                 }
             }
 
-            // ─── DISPLAY RESULT ─────────────────────────────────────
             function displayResult(participant) {
                 const isVerified = participant.Verified === true || participant.Verified === 'TRUE';
-
                 statusIcon.textContent = isVerified ? '✅' : '⏳';
                 statusText.textContent = isVerified ? 'Already Verified' : 'Not Yet Verified';
                 statusText.className = 'status-text ' + (isVerified ? 'verified' : 'unverified');
-
                 resultName.textContent = participant.FullName || '—';
                 resultId.textContent = participant.UniqueID || '—';
                 resultEmail.textContent = participant.Email || '—';
                 resultOrg.textContent = participant.Organization || '—';
-
-                if (isVerified) {
-                    btnMarkVerified.disabled = true;
-                    btnMarkVerified.innerHTML = '✅ Already Verified';
-                } else {
-                    btnMarkVerified.disabled = false;
-                    btnMarkVerified.innerHTML = '✅ Mark as Verified';
-                }
-
+                btnMarkVerified.disabled = isVerified;
+                btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Verified';
                 resultCard.classList.add('show');
             }
 
-            // ─── MARK AS VERIFIED ────────────────────────────────────
+            // Mark as verified
             async function markAsVerified() {
-                if (!currentParticipant || !currentId) {
-                    showToast('No participant loaded to verify.', 'error');
-                    return;
-                }
-
+                if (!currentParticipant || !currentId) return;
                 if (currentParticipant.Verified === true || currentParticipant.Verified === 'TRUE') {
-                    showToast('This participant is already verified.', '');
+                    showToast('Already verified.', '');
                     return;
                 }
-
                 btnMarkVerified.disabled = true;
                 btnMarkVerified.innerHTML = '<span class="spinner"></span> Updating...';
-
                 try {
                     const url = `${APP_SCRIPT_URL}?action=verify&id=${encodeURIComponent(currentId)}`;
                     const response = await fetch(url);
                     const result = await response.json();
-
                     if (result.success) {
                         currentParticipant.Verified = true;
                         displayResult(currentParticipant);
-                        showToast('✅ Participant verified successfully!', 'success');
+                        showToast('✅ Verified successfully!', 'success');
                     } else {
-                        showToast('Verification failed: ' + (result.error || 'Unknown error'), 'error');
+                        showToast('Verification failed: ' + (result.error || 'Unknown'), 'error');
                     }
                 } catch (err) {
-                    console.error('Mark verified error:', err);
                     showToast('Could not connect to the server.', 'error');
                 } finally {
                     btnMarkVerified.disabled = false;
@@ -451,7 +370,6 @@
                 }
             }
 
-            // ─── CLEAR RESULT ───────────────────────────────────────
             function clearResult() {
                 resultCard.classList.remove('show');
                 currentParticipant = null;
@@ -461,67 +379,50 @@
                 manualId.value = '';
             }
 
-            // ─── EVENT BINDINGS ──────────────────────────────────────
             btnManualVerify.addEventListener('click', function() {
                 const id = manualId.value.trim();
-                if (!id) {
-                    showToast('Please enter a Unique ID.', 'error');
-                    return;
-                }
+                if (!id) { showToast('Enter a Unique ID.', 'error'); return; }
                 verifyParticipant(id);
             });
-
-            manualId.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    btnManualVerify.click();
-                }
-            });
-
+            manualId.addEventListener('keypress', e => { if (e.key === 'Enter') btnManualVerify.click(); });
             btnMarkVerified.addEventListener('click', markAsVerified);
             btnClearResult.addEventListener('click', clearResult);
 
-            // ─── PWA INSTALL ─────────────────────────────────────────
+            // PWA Install
             let deferredPrompt = null;
-
             window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
                 deferredPrompt = e;
                 installBanner.classList.add('show');
             });
-
             installBtn.addEventListener('click', async function() {
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
                     const result = await deferredPrompt.userChoice;
                     if (result.outcome === 'accepted') {
                         installBanner.classList.remove('show');
-                        showToast('App installed successfully!', 'success');
+                        showToast('App installed!', 'success');
                     } else {
                         showToast('Installation cancelled.', '');
                     }
                     deferredPrompt = null;
                 }
             });
-
             window.addEventListener('appinstalled', function() {
                 installBanner.classList.remove('show');
-                showToast('✅ App installed! You can now find NACWS Verify on your home screen.', 'success');
+                showToast('✅ App installed! Find it on your home screen.', 'success');
             });
 
-            // ─── FIX MANIFEST CORS (local file) ─────────────────────
-            // If running from file://, remove the manifest link to avoid errors
+            // Remove manifest on file://
             if (window.location.protocol === 'file:') {
                 const manifestLink = document.getElementById('manifestLink');
                 if (manifestLink) manifestLink.remove();
-                console.log('Running from file:// – manifest removed to avoid CORS.');
             }
 
-            // ─── AUTO-START SCANNER (optional) ──────────────────────
-            // setTimeout(startScanner, 800);
+            // Auto-start scanner after a short delay (optional)
+            // setTimeout(startScanner, 1000);
 
             console.log('✅ NACWS Verify App loaded (fixed).');
-            console.log('🔗 Using backend:', APP_SCRIPT_URL);
-
         })();
     </script>
 
