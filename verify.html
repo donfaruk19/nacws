@@ -98,13 +98,11 @@
 <body>
 
     <header class="app-header">
-         <a href="#" class="logo">
-                <div class="logo-icon">
+         <div class="logo-icon">
                     <img src="nacws_logo.png" alt="NACWS Logo" class="logo-img" />
-                </div>
-        </a>
+        </div>
         <div class="header-title">
-            <h1>NACWS · Verify</h1>
+            <h1>NACWS · Scanner</h1>
             <small>Participant Check-in System</small>
         </div>
         <span class="badge-status">● Live</span>
@@ -118,8 +116,8 @@
 
     <div class="main-container">
         <div class="mode-toggle">
-            <button class="active" data-mode="scan" id="modeScan">📷 Scan QR</button>
-            <button data-mode="manual" id="modeManual">⌨️ Enter ID</button>
+            <button class="active" data-mode="scan" id="modeScan">Scan QR</button>
+            <button data-mode="manual" id="modeManual">Enter ID</button>
         </div>
 
         <div class="scan-area" id="scanArea">
@@ -127,8 +125,8 @@
             <div class="scan-overlay"></div>
             <div class="scan-hint"><strong>📸</strong> Point camera at the QR code on the participant's ticket</div>
             <div class="scanner-controls">
-                <button class="btn-start" id="btnStartScanner">▶ Start Camera</button>
-                <button class="btn-stop" id="btnStopScanner">⏹ Stop</button>
+                <button class="btn-start" id="btnStartScanner">Start Camera</button>
+                <button class="btn-stop" id="btnStopScanner">Stop</button>
             </div>
         </div>
 
@@ -136,7 +134,7 @@
             <label for="manualId">Enter Unique ID</label>
             <div class="input-row">
                 <input type="text" id="manualId" placeholder="e.g. NACWS-260626-142120-ABC123" />
-                <button class="btn-verify" id="btnManualVerify">🔍 Verify</button>
+                <button class="btn-verify" id="btnManualVerify">Verify</button>
             </div>
         </div>
 
