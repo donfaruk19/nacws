@@ -1,49 +1,31 @@
-// Service Worker for NACWS Verify PWA
 const CACHE_NAME = 'nacws-verify-v1';
-const urlsToCache = [
-    'verify.html',
-    'manifest.json'
+const ASSETS = [
+  './index.html',
+  './verify.html',
+  './manifest.json',
+  'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
+  'https://unpkg.com/html5-qrcode'
 ];
 
-// Install event – cache assets
+// Initialize and install system assets locally onto device storage
 self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-        .then(cache => cache.addAll(urlsToCache))
-        .then(() => self.skipWaiting())
-    );
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(ASSETS);
+    })
+  );
 });
 
-// Activate event – clean old caches
-self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(name => {
-                    if (name !== CACHE_NAME) {
-                        return caches.delete(name);
-                    }
-                })
-            );
-        }).then(() => self.clients.claim())
-    );
-});
-
-// Fetch event – serve from cache, fallback to network
+// Network Interception Pipeline
 self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-        .then(response => {
-            if (response) {
-                return response;
-            }
-            return fetch(event.request).catch(() => {
-                // Optional: return offline fallback
-                return new Response('Offline – please connect to the internet.', {
-                    status: 503,
-                    statusText: 'Service Unavailable'
-                });
-            });
-        })
-    );
+  // SECURITY BYPASS GUARD: Force direct live network passthrough for Google Macro DB connections
+  if (event.request.url.includes('script.google.com') || event.request.url.includes('script.googleusercontent.com')) {
+    return; // Detach service worker caching completely for database interactions
+  }
+
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      return cachedResponse || fetch(event.request);
+    })
+  );
 });
