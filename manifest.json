@@ -3,9 +3,9 @@
   "name": "NACWS Seminar Verifier",
   "icons": [
     {
-      "src": "./icon-512.ico",
+      "src": "./icon-192.ico",
       "type": "image/png",
-      "sizes": "512x512",
+      "sizes": "192x192",
       "purpose": "any maskable"
     }
   ],
