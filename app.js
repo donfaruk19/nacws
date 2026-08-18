@@ -106,36 +106,48 @@
         openConfirm();
     }
 
-    // ---- Download ticket ----
-    async function downloadTicket() {
-        const card = document.getElementById('invitationCard');
-        if (!card) { showToast('Ticket not found.', 'error'); return; }
-        try {
-            downloadCardBtn.disabled = true;
-            downloadCardBtn.innerHTML = '<span class="spinner"></span> Generating…';
-            const canvas = await html2canvas(card, {
-                scale: 3,
-                useCORS: true,
-                backgroundColor: null,
-                logging: false,
-                width: card.scrollWidth,
-                height: card.scrollHeight,
-                windowWidth: card.scrollWidth,
-                windowHeight: card.scrollHeight
-            });
+// ---- Download ticket ----
+async function downloadTicket() {
+    const card = document.getElementById('invitationCard');
+    if (!card) { showToast('Ticket not found.', 'error'); return; }
+    try {
+        downloadCardBtn.disabled = true;
+        downloadCardBtn.innerHTML = '<span class="spinner"></span> Generating…';
+
+        // Try html2canvas first
+        const canvas = await html2canvas(card, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+            width: card.scrollWidth,
+            height: card.scrollHeight,
+            windowWidth: card.scrollWidth,
+            windowHeight: card.scrollHeight
+        });
+        const link = document.createElement('a');
+        link.download = 'NACWS-Ticket-' + (currentParticipant ? currentParticipant.uniqueId : 'card') + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('Ticket downloaded!', 'success');
+    } catch (err) {
+        // Fallback: download QR code image directly
+        const qrCanvas = document.querySelector('#qrcode-card canvas');
+        if (qrCanvas) {
             const link = document.createElement('a');
-            link.download = 'NACWS-Ticket-' + (currentParticipant ? currentParticipant.uniqueId : 'card') + '.png';
-            link.href = canvas.toDataURL('image/png');
+            link.download = 'NACWS-QR-' + (currentParticipant ? currentParticipant.uniqueId : 'card') + '.png';
+            link.href = qrCanvas.toDataURL('image/png');
             link.click();
-            showToast('Ticket downloaded!', 'success');
-        } catch (err) {
-            showToast('Failed to generate ticket.', 'error');
-        } finally {
-            downloadCardBtn.disabled = false;
-            downloadCardBtn.innerHTML = '⬇️ Download Ticket';
+            showToast('QR code downloaded (fallback).', 'success');
+        } else {
+            showToast('Failed to generate ticket. Please try again.', 'error');
         }
+    } finally {
+        downloadCardBtn.disabled = false;
+        downloadCardBtn.innerHTML = '⬇️ Download Ticket';
     }
-    downloadCardBtn.addEventListener('click', downloadTicket);
+}
+downloadCardBtn.addEventListener('click', downloadTicket);
 
     // ---- Sanitize input (basic) ----
     function sanitize(str) {
