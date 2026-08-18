@@ -44,12 +44,11 @@
 
     function openPopup() { popup.classList.add('active'); document.body.style.overflow = 'hidden'; }
     function closePopup() { popup.classList.remove('active'); document.body.style.overflow = ''; }
-
     function openConfirm() { confirmModal.classList.add('active'); document.body.style.overflow = 'hidden'; }
     function closeConfirm() { confirmModal.classList.remove('active'); document.body.style.overflow = ''; }
 
     // ---- Open popup triggers ----
-    document.querySelectorAll('#navRegisterBtn, #heroRegisterBtn, #heroCtaBtn, #bannerRegisterBtn, #footerRegisterBtn')
+    document.querySelectorAll('#navRegisterBtn, #heroRegisterBtn, #bannerRegisterBtn, #footerRegisterBtn')
         .forEach(el => el.addEventListener('click', e => { e.preventDefault();
             openPopup(); }));
 
@@ -60,8 +59,12 @@
     modalClose.addEventListener('click', closeConfirm);
     modalClose2.addEventListener('click', closeConfirm);
     confirmModal.addEventListener('click', e => { if (e.target === confirmModal) closeConfirm(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (confirmModal.classList.contains('active'))
-            closeConfirm(); if (popup.classList.contains('active')) closePopup(); } });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            if (confirmModal.classList.contains('active')) closeConfirm();
+            if (popup.classList.contains('active')) closePopup();
+        }
+    });
 
     // ---- Generate Unique ID ----
     function generateUniqueId() {
@@ -83,13 +86,15 @@
         try {
             new QRCode(qrCardContainer, {
                 text: data,
-                width: 120,
-                height: 120,
+                width: 140,
+                height: 140,
                 colorDark: '#07472d',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.H
             });
-        } catch (e) { qrCardContainer.innerHTML = '<p style="color:red;">QR error</p>'; }
+        } catch (e) {
+            qrCardContainer.innerHTML = '<p style="color:red;">QR error</p>';
+        }
     }
 
     // ---- Open confirm with ticket ----
@@ -100,56 +105,101 @@
         cardEmail.textContent = participant.email;
         cardOrg.textContent = participant.organization || 'N/A';
         cardTicketId.textContent = participant.uniqueId;
-        const qrPayload = JSON.stringify({ id: participant.uniqueId, name: participant.fullName, email: participant
-            .email });
+        const qrPayload = JSON.stringify({
+            id: participant.uniqueId,
+            name: participant.fullName,
+            email: participant.email
+        });
         generateQR(qrPayload);
         openConfirm();
     }
 
-// ---- Download ticket ----
-async function downloadTicket() {
-    const card = document.getElementById('invitationCard');
-    if (!card) { showToast('Ticket not found.', 'error'); return; }
-    try {
-        downloadCardBtn.disabled = true;
-        downloadCardBtn.innerHTML = '<span class="spinner"></span> Generating…';
-
-        // Try html2canvas first
-        const canvas = await html2canvas(card, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            width: card.scrollWidth,
-            height: card.scrollHeight,
-            windowWidth: card.scrollWidth,
-            windowHeight: card.scrollHeight
-        });
-        const link = document.createElement('a');
-        link.download = 'NACWS-Ticket-' + (currentParticipant ? currentParticipant.uniqueId : 'card') + '.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        showToast('Ticket downloaded!', 'success');
-    } catch (err) {
-        // Fallback: download QR code image directly
-        const qrCanvas = document.querySelector('#qrcode-card canvas');
-        if (qrCanvas) {
-            const link = document.createElement('a');
-            link.download = 'NACWS-QR-' + (currentParticipant ? currentParticipant.uniqueId : 'card') + '.png';
-            link.href = qrCanvas.toDataURL('image/png');
-            link.click();
-            showToast('QR code downloaded (fallback).', 'success');
-        } else {
-            showToast('Failed to generate ticket. Please try again.', 'error');
+    // ---- HIGH-QUALITY DOWNLOAD TICKET ----
+    async function downloadTicket() {
+        const card = document.getElementById('invitationCard');
+        if (!card) {
+            showToast('Ticket not found.', 'error');
+            return;
         }
-    } finally {
-        downloadCardBtn.disabled = false;
-        downloadCardBtn.innerHTML = '⬇️ Download Ticket';
-    }
-}
-downloadCardBtn.addEventListener('click', downloadTicket);
 
-    // ---- Sanitize input (basic) ----
+        try {
+            downloadCardBtn.disabled = true;
+            downloadCardBtn.innerHTML = '<span class="spinner"></span> Generating high-res…';
+
+            // Wait for any images to load
+            const images = card.querySelectorAll('img');
+            await Promise.all(Array.from(images).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                });
+            }));
+
+            // High quality capture with better settings
+            const canvas = await html2canvas(card, {
+                scale: 4, // Higher scale for crisp output
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: card.scrollWidth,
+                height: card.scrollHeight,
+                windowWidth: card.scrollWidth,
+                windowHeight: card.scrollHeight,
+                onclone: function(doc) {
+                    // Ensure all elements are properly rendered
+                    const clonedCard = doc.getElementById('invitationCard');
+                    if (clonedCard) {
+                        clonedCard.style.transform = 'none';
+                    }
+                }
+            });
+
+            // Convert to PNG with maximum quality
+            const link = document.createElement('a');
+            link.download = 'NACWS-Ticket-' + (currentParticipant ? currentParticipant.uniqueId : 'card') + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            showToast('Ticket downloaded successfully!', 'success');
+        } catch (err) {
+            console.error('Download error:', err);
+
+            // Fallback: try with lower quality settings
+            try {
+                const canvas = await html2canvas(card, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+                const link = document.createElement('a');
+                link.download = 'NACWS-Ticket-' + (currentParticipant ? currentParticipant.uniqueId : 'card') + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('Ticket downloaded (standard quality).', 'success');
+            } catch (fallbackErr) {
+                // Final fallback: download QR code only
+                const qrCanvas = document.querySelector('#qrcode-card canvas');
+                if (qrCanvas) {
+                    const link = document.createElement('a');
+                    link.download = 'NACWS-QR-' + (currentParticipant ? currentParticipant.uniqueId : 'card') + '.png';
+                    link.href = qrCanvas.toDataURL('image/png');
+                    link.click();
+                    showToast('QR code downloaded (fallback).', 'success');
+                } else {
+                    showToast('Failed to generate ticket. Please try again.', 'error');
+                }
+            }
+        } finally {
+            downloadCardBtn.disabled = false;
+            downloadCardBtn.innerHTML = '⬇️ Download Ticket';
+        }
+    }
+
+    downloadCardBtn.addEventListener('click', downloadTicket);
+
+    // ---- Sanitize input ----
     function sanitize(str) {
         const div = document.createElement('div');
         div.textContent = str;
@@ -174,7 +224,6 @@ downloadCardBtn.addEventListener('click', downloadTicket);
         if (!org) { showToast('Please enter your organization.', 'error');
             organization.focus(); return; }
 
-        // Sanitize all inputs
         const clean = {
             fullName: sanitize(name),
             email: sanitize(mail),
@@ -219,12 +268,12 @@ downloadCardBtn.addEventListener('click', downloadTicket);
 
     // ---- DEMO pre-fill ----
     if (window.location.search.includes('demo')) {
-        fullName.value = 'Maj. Adebayo O. Johnson';
-        email.value = 'adebayo.johnson@army.mil.ng';
+        fullName.value = 'Umar Faruk Abdullahi';
+        email.value = 'donfaruk191@gmail.com';
         phone.value = '+234 800 123 4567';
         rank.value = 'Major';
-        organization.value = 'Nigerian Army Cyber Warfare School';
-        special.value = 'Vegetarian meal preferred.';
+        organization.value = 'Nigeria Army';
+        special.value = 'None';
     }
     if (window.location.search.includes('register')) setTimeout(openPopup, 400);
 
