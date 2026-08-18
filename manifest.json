@@ -1,24 +1,17 @@
 {
-  "name": "NACWS Verify",
-  "short_name": "Verify",
-  "description": "Participant check-in system for NACWS Cybersecurity Seminar 2026",
-  "start_url": "verify.html",
-  "display": "standalone",
-  "background_color": "#07472d",
-  "theme_color": "#07472d",
-  "orientation": "portrait",
+  "short_name": "NACWSVerifier",
+  "name": "NACWS Seminar Verifier",
   "icons": [
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
+      "src": "./icon-512.ico",
       "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "start_url": "./verify.html",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "display": "standalone",
+  "orientation": "portrait"
 }
