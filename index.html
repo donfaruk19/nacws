@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NACWS · Cybersecurity Seminar 2026</title>
+    <title>NACWS · Cybersecurity Seminar 2027</title>
 
     <!-- ===== External CSS ===== -->
     <link rel="stylesheet" href="style.css" />
@@ -17,14 +17,14 @@
     <!-- ===== Google Fonts ===== -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&family=Playfair+Display:wght@700;900&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
 
     <!-- ===== TOP BAR ===== -->
     <div class="top-bar">
         <div class="container">
-            <span>🇳🇬 Nigerian Army · Cyber Warfare School</span>
+            <span>🇳🇬 FGN </span>
             <span>
                 <a href="mailto:cyber@army.mil.ng">✉ cyber@army.mil.ng</a>
                 <span class="sep">|</span>
@@ -36,7 +36,7 @@
     <!-- ===== BANNER ===== -->
     <div class="banner">
         <div class="banner__text">
-            🎯 <strong>Cybersecurity Seminar 2026</strong> · 29 June – 3 July · 0900hrs daily ·
+            🎯 <strong>Cybersecurity Seminar 2027</strong> · 2 – 6 July · 0900hrs daily ·
             <a href="#" id="bannerRegisterBtn">Register Now →</a>
         </div>
     </div>
@@ -56,37 +56,58 @@
         </div>
     </nav>
 
-    <!-- ===== HERO ===== -->
+    <!-- ===== HERO – Redesigned to match poster ===== -->
     <header class="hero" id="about">
         <div class="container">
             <div class="hero-content">
-                <div class="hero-breadcrumb">
+                <div class="hero-commandant">
                     <span class="gold">◆</span> COMMANDANT · NIGERIAN ARMY CYBER WARFARE SCHOOL
                 </div>
                 <div class="hero-subtitle">BRIG GEN JH BAWA DSS fndu(CN) MCSEAN</div>
-                <div class="hero-commandant">
+                <div class="hero-delegate">
                     On Behalf of THE CHIEF OF ARMY STAFF · LT GEN W SHAIBU NAM GSS DSO (LR) FTAM psc fdc(++) fndu(USA) CM FCM FCMN NAOOOM NAPH MSS MA MNIM
                 </div>
+
                 <h1>Cybersecurity &amp; <span class="gold">National Stability</span></h1>
-                <p class="hero-sub">Safeguarding Critical Infrastructure Against Disruption, Sabotage and Cyber Threats</p>
-                <div class="hero-theme">
-                    🎯 <strong>Theme:</strong> "Cybersecurity and National Stability: Safeguarding Critical Infrastructure Against Disruption, Sabotage and Cyber Threats"
+                <p class="hero-tagline">Safeguarding Critical Infrastructure Against Disruption, Sabotage and Cyber Threats</p>
+
+                <div class="hero-theme-box">
+                    <div class="theme-label">THEME</div>
+                    <div class="theme-text">"Cybersecurity and National Stability: Safeguarding Critical Infrastructure Against Disruption, Sabotage and Cyber Threats"</div>
                 </div>
-                <div class="hero-meta">
-                    <span>📅 <strong> 2 – 6 July 2027</strong></span>
-                    <span>⏰ <strong>0900hrs</strong> (09:00am) Daily</span>
-                    <span>📍 Abuja, Nigeria</span>
+
+                <div class="hero-meta-grid">
+                    <div class="meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span class="meta-label">Date</span>
+                        <span class="meta-value"><strong>2 – 6 July 2027</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">⏰</span>
+                        <span class="meta-label">Time</span>
+                        <span class="meta-value"><strong>0900hrs</strong> (09:00am) Daily</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📍</span>
+                        <span class="meta-label">Venue</span>
+                        <span class="meta-value"><strong>Abuja, Nigeria</strong></span>
+                    </div>
                 </div>
+
                 <div class="hero-actions">
-                    <a href="#" class="btn btn-primary" id="heroRegisterBtn"> Register Now</a>
-                    <a href="#schedule" class="btn btn-secondary">📋 View Schedule</a>
+                    <a href="#" class="btn btn-primary btn-hero" id="heroRegisterBtn"> Register Now</a>
+                    <a href="#schedule" class="btn btn-secondary btn-hero">View Schedule</a>
                 </div>
             </div>
+
             <div class="hero-card">
                 <img src="hero.jpg" alt="Commandant" class="comd-image" />
                 <div class="comd-name">Brig Gen JH Bawa</div>
-                <h3>COMMANDANT NACWS</h3>
-                <div class="sub-text">The Cyber Warrior · 001</div>
+                <div class="comd-title">COMMANDANT</div>
+                <div class="comd-sub">Nigerian Army Cyber Warfare School</div>
+                <div class="hero-badge-row">
+                    <span class="badge badge-dark">Limited Slots</span>
+                </div>
                 <div class="early-badge">⚡ Early registration recommended</div>
             </div>
         </div>
@@ -129,16 +150,16 @@
             </div>
             <div class="schedule-grid">
                 <div class="header-row"><span>Date</span><span>Session</span></div>
-                <div class="row"><span class="date">29 Jun</span><span>Opening Ceremony · Keynote: National Cyber Strategy · Threat Landscape</span></div>
-                <div class="row"><span class="date">30 Jun</span><span>Critical Infrastructure Protection · SCADA/ICS Security · Case Studies</span></div>
-                <div class="row"><span class="date">1 Jul</span><span>Cyber Threat Intelligence · Incident Response · Tabletop Exercise</span></div>
-                <div class="row"><span class="date">2 Jul</span><span>AI &amp; Machine Learning in Cyber Defense · Quantum Threats</span></div>
-                <div class="row"><span class="date">3 Jul</span><span>Closing Ceremony · Policy Recommendations · Networking &amp; Certification</span></div>
+                <div class="row"><span class="date">2 Jul</span><span>Opening Ceremony · Keynote: National Cyber Strategy · Threat Landscape</span></div>
+                <div class="row"><span class="date">3 Jul</span><span>Critical Infrastructure Protection · SCADA/ICS Security · Case Studies</span></div>
+                <div class="row"><span class="date">4 Jul</span><span>Cyber Threat Intelligence · Incident Response · Tabletop Exercise</span></div>
+                <div class="row"><span class="date">5 Jul</span><span>AI &amp; Machine Learning in Cyber Defense · Quantum Threats</span></div>
+                <div class="row"><span class="date">6 Jul</span><span>Closing Ceremony · Policy Recommendations · Networking &amp; Certification</span></div>
             </div>
         </div>
     </section>
 
-    <!-- ===== PARTNERS ===== -->
+    <!-- ===== PARTNERS – With your images ===== -->
     <section class="partners">
         <div class="container">
             <div class="partners-heading">
@@ -147,15 +168,15 @@
             </div>
             <div class="partners-wrapper">
                 <div class="partner-item">
-                    <div class="partner-placeholder">NACWC</div>
+                    <img src="byteshields.jpg" alt="ByteShields" class="partner-logo" />
                     <span class="partner-label">Cyber Command</span>
                 </div>
                 <div class="partner-item">
-                    <div class="partner-placeholder">Certiport</div>
+                    <img src="certiport.jpg" alt="Certiport" class="partner-logo" />
                     <span class="partner-label">Certification Partner</span>
                 </div>
                 <div class="partner-item">
-                    <div class="partner-placeholder">DBI</div>
+                    <img src="dbi.jpg" alt="DBI" class="partner-logo" />
                     <span class="partner-label">Training Partner</span>
                 </div>
             </div>
@@ -168,7 +189,7 @@
             <div>
                 <span class="brand">NACWS</span>
                 <span class="footer-meta">· Nigerian Army Cyber Warfare School</span>
-                <br /><small>© 2026 · All rights reserved.</small>
+                <br /><small>© 2027 · All rights reserved.</small>
             </div>
             <ul class="footer-links">
                 <li><a href="#about">About</a></li>
@@ -183,7 +204,7 @@
     <div class="popup-overlay" id="registerPopup">
         <div class="popup-box">
             <button class="popup-close" id="popupCloseBtn">✕</button>
-            <h2>📋 Registration</h2>
+            <h2>Registration</h2>
             <p class="sub">Complete the form below. You'll receive a confirmation with your unique QR ticket.<br /><span class="sub-note">All fields marked <span class="req">*</span> are required.</span></p>
             <form id="regForm" novalidate>
                 <div class="form-row">
@@ -225,36 +246,58 @@
         </div>
     </div>
 
-    <!-- ===== CONFIRMATION MODAL (Ticket) ===== -->
+    <!-- ===== CONFIRMATION MODAL – Upgraded Ticket ===== -->
     <div class="popup-overlay" id="confirmModal">
         <div class="popup-box ticket-wrapper">
             <button class="popup-close" id="modalCloseBtn" style="position:sticky;top:0;float:right;z-index:10;background:rgba(0,0,0,.7);border-color:rgba(255,255,255,.2);color:#fff;margin:8px 8px 0 0;">✕</button>
 
             <div class="ticket" id="invitationCard">
                 <div class="ticket-inner">
+                    <!-- Top: NACWS Branding -->
+                    <div class="ticket-brand">
+                        <img src="nacws_logo.png" alt="NACWS" class="ticket-logo" />
+                        <div class="ticket-brand-text">
+                            <div class="ticket-org">Nigerian Army Cyber Warfare School</div>
+                            <div class="ticket-event-name">Cybersecurity Seminar 2027</div>
+                        </div>
+                    </div>
+
+                    <div class="ticket-divider"></div>
+
+                    <!-- Success Message -->
                     <div class="ticket-success-icon"><span>✅</span></div>
                     <div class="ticket-title">Registration <span class="gold">Confirmed</span></div>
-                    <div class="ticket-subtitle">Your entry pass for the Cybersecurity Seminar 2026</div>
+                    <div class="ticket-subtitle">Your entry pass for the Cybersecurity Seminar 2027</div>
 
-                    <div class="ticket-header">
-                        <div class="ticket-icon">🛡️</div>
-                        <div class="ticket-title-group">
-                            <div class="ticket-org">Nigerian Army Cyber Warfare School</div>
-                            <div class="ticket-event">Cybersecurity <span>Seminar</span> 2026</div>
-                        </div>
-                        <span class="ticket-badge">Official</span>
-                    </div>
+                    <div class="ticket-divider light"></div>
 
-                    <div class="ticket-perforation"></div>
-
+                    <!-- Participant Details -->
                     <div class="ticket-body">
-                        <div class="ticket-detail"><span class="ticket-label">Participant</span><span class="ticket-value" id="cardName">—</span></div>
-                        <div class="ticket-detail"><span class="ticket-label">Unique ID</span><span class="ticket-value gold" id="cardId">—</span></div>
-                        <div class="ticket-detail"><span class="ticket-label">Email</span><span class="ticket-value small" id="cardEmail">—</span></div>
-                        <div class="ticket-detail"><span class="ticket-label">Organization</span><span class="ticket-value small" id="cardOrg">—</span></div>
-                        <div class="ticket-detail ticket-detail-full"><span class="ticket-label">Event Dates</span><span class="ticket-value gold">29 June – 3 July 2026 · 0900hrs daily</span></div>
+                        <div class="ticket-detail">
+                            <span class="ticket-label">Participant</span>
+                            <span class="ticket-value" id="cardName">—</span>
+                        </div>
+                        <div class="ticket-detail">
+                            <span class="ticket-label">Unique ID</span>
+                            <span class="ticket-value gold" id="cardId">—</span>
+                        </div>
+                        <div class="ticket-detail">
+                            <span class="ticket-label">Email</span>
+                            <span class="ticket-value small" id="cardEmail">—</span>
+                        </div>
+                        <div class="ticket-detail">
+                            <span class="ticket-label">Organization</span>
+                            <span class="ticket-value small" id="cardOrg">—</span>
+                        </div>
+                        <div class="ticket-detail ticket-detail-full">
+                            <span class="ticket-label">Event Dates</span>
+                            <span class="ticket-value gold">2 – 6 July 2027 · 0900hrs daily</span>
+                        </div>
                     </div>
 
+                    <div class="ticket-divider light"></div>
+
+                    <!-- QR Section -->
                     <div class="ticket-qr-section">
                         <div id="qrcode-card"></div>
                         <div class="ticket-qr-info">
@@ -263,10 +306,15 @@
                         </div>
                     </div>
 
+                    <div class="ticket-divider light"></div>
+
+                    <!-- Footer -->
                     <div class="ticket-footer">
                         <span class="ticket-id" id="cardTicketId">NACWS-••••••</span>
-                        <span class="ticket-stamp">✦ Verified Entry ✦</span>
+                        <span class="ticket-stamp">✦ Verified Entry Ticket ✦</span>
                     </div>
+
+                    <div class="ticket-watermark">NACWS</div>
                 </div>
             </div>
 
