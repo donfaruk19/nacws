@@ -50,9 +50,11 @@
         init: function() {
             var self = this;
             this.fullName = document.getElementById('fullName');
+            this.serviceNo = document.getElementById('serviceNo');
             this.email = document.getElementById('email');
             this.phone = document.getElementById('phone');
             this.rank = document.getElementById('rank');
+            this.role = document.getElementById('role');
             this.organization = document.getElementById('organization');
             this.special = document.getElementById('special');
             this.submitBtn = document.getElementById('submitBtn');
@@ -64,6 +66,8 @@
             this.modalClose = document.getElementById('modalCloseBtn');
             this.modalClose2 = document.getElementById('modalCloseBtn2');
             this.cardName = document.getElementById('cardName');
+            this.cardServiceNo = document.getElementById('cardServiceNo');
+            this.cardRole = document.getElementById('cardRole');
             this.cardId = document.getElementById('cardId');
             this.cardEmail = document.getElementById('cardEmail');
             this.cardOrg = document.getElementById('cardOrg');
@@ -108,9 +112,11 @@
             // Pre-fill demo
             if (window.location.search.includes('demo')) {
                 if (this.fullName) this.fullName.value = 'AU FARUK';
+                if (this.serviceNo) this.serviceNo.value = '123456';
                 if (this.email) this.email.value = 'AUF@gmail.com';
                 if (this.phone) this.phone.value = '+234 800 123 4567';
                 if (this.rank) this.rank.value = 'Major';
+                if (this.role) this.role.value = 'Participant';
                 if (this.organization) this.organization.value = 'Nigeria Army';
                 if (this.special) this.special.value = 'None';
             }
@@ -158,12 +164,15 @@
                 });
             } catch (e) {
                 this.qrContainer.innerHTML = '<p style="color:red;">QR error</p>';
+                showToast('QR generation error. Try again.', 'error');
             }
         },
 
         showTicket: function(participant) {
             this.currentParticipant = participant;
             if (this.cardName) this.cardName.textContent = participant.fullName;
+            if (this.cardServiceNo) this.cardServiceNo.textContent = participant.serviceNo || 'N/A';
+            if (this.cardRole) this.cardRole.textContent = participant.role || 'N/A';
             if (this.cardId) this.cardId.textContent = participant.uniqueId;
             if (this.cardEmail) this.cardEmail.textContent = participant.email;
             if (this.cardOrg) this.cardOrg.textContent = participant.organization || 'N/A';
@@ -171,7 +180,9 @@
             var qrPayload = JSON.stringify({
                 id: participant.uniqueId,
                 name: participant.fullName,
-                email: participant.email
+                email: participant.email,
+                serviceNo: participant.serviceNo,
+                role: participant.role
             });
             this.generateQR(qrPayload);
             this.openConfirm();
@@ -212,7 +223,7 @@
                     link.href = canvas.toDataURL('image/png');
                     link.click();
                     showToast('Ticket downloaded!', 'success');
-                }).catch(function() {
+                }).catch(function(err) {
                     // Fallback: QR only
                     var qrCanvas = self.qrContainer ? self.qrContainer.querySelector('canvas') : null;
                     if (qrCanvas) {
@@ -231,17 +242,18 @@
                 });
             });
         },
+
     // ============================================================
-    // GALLERY SLIDER FUNCTIONS - ADD THESE 2 NEW FUNCTIONS HERE
+    // GALLERY SLIDER FUNCTIONS
     // ============================================================
-initGallery: function() {
+    initGallery: function() {
         const track = document.getElementById('galleryTrack');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const dotsContainer = document.getElementById('galleryDots');
         const slider = document.getElementById('gallerySlider');
 
-        if(!track ||!prevBtn ||!nextBtn ||!dotsContainer ||!slider) return; // won't run if gallery not on page
+        if(!track ||!prevBtn ||!nextBtn ||!dotsContainer ||!slider) return;
 
         const slides = Array.from(track.children);
         const slideCount = slides.length;
@@ -252,10 +264,8 @@ initGallery: function() {
         let startX = 0;
         let isDragging = false;
 
-        // Clear existing dots first
         dotsContainer.innerHTML = '';
 
-        // Create Dots
         slides.forEach((_, i) => {
             const dot = document.createElement('button');
             dot.classList.add('gallery-dot');
@@ -283,7 +293,6 @@ initGallery: function() {
         slider.addEventListener('mouseenter', stopAutoPlay);
         slider.addEventListener('mouseleave', startAutoPlay);
 
-        // SWIPE
         track.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX; isDragging = true; stopAutoPlay(); track.style.transition = 'none';
         });
@@ -307,24 +316,32 @@ initGallery: function() {
             e.preventDefault();
             var self = this;
             var name = this.fullName ? this.fullName.value.trim() : '';
+            var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
             var mail = this.email ? this.email.value.trim() : '';
             var phoneVal = this.phone ? this.phone.value.trim() : '';
+            var roleVal = this.role ? this.role.value.trim() : '';
             var org = this.organization ? this.organization.value.trim() : '';
 
             if (!name) { showToast('Please enter your full name.', 'error');
                 if (this.fullName) this.fullName.focus(); return; }
+            if (!serviceNo) { showToast('Please enter your service number.', 'error');
+                if (this.serviceNo) this.serviceNo.focus(); return; }
             if (!mail || !mail.includes('@')) { showToast('Please enter a valid email.', 'error');
                 if (this.email) this.email.focus(); return; }
             if (!phoneVal) { showToast('Please enter your phone number.', 'error');
                 if (this.phone) this.phone.focus(); return; }
+            if (!roleVal) { showToast('Please select your role.', 'error');
+                if (this.role) this.role.focus(); return; }
             if (!org) { showToast('Please enter your organization.', 'error');
                 if (this.organization) this.organization.focus(); return; }
 
             var clean = {
                 fullName: sanitize(name),
+                serviceNo: sanitize(serviceNo),
                 email: sanitize(mail),
                 phone: sanitize(phoneVal),
                 rank: sanitize((this.rank ? this.rank.value.trim() : '') || 'N/A'),
+                role: sanitize(roleVal),
                 organization: sanitize(org),
                 special: sanitize((this.special ? this.special.value.trim() : '') || 'N/A')
             };
@@ -338,9 +355,11 @@ initGallery: function() {
             var payload = {
                 uniqueId: uniqueId,
                 fullName: clean.fullName,
+                serviceNo: clean.serviceNo,
                 email: clean.email,
                 phone: clean.phone,
                 rank: clean.rank,
+                role: clean.role,
                 organization: clean.organization,
                 special: clean.special,
                 registrationDate: new Date().toISOString(),
@@ -404,7 +423,6 @@ initGallery: function() {
             this.currentId = null;
             this.cachedData = [];
 
-            // Mode toggle
             if (this.modeScan) {
                 this.modeScan.addEventListener('click', function() {
                     self.modeScan.classList.add('active');
@@ -426,11 +444,9 @@ initGallery: function() {
             }
             if (this.modeScan) this.modeScan.classList.add('active');
 
-            // Scanner
             if (this.btnStart) this.btnStart.addEventListener('click', function() { self.startScanner(); });
             if (this.btnStop) this.btnStop.addEventListener('click', function() { self.stopScanner(); });
 
-            // Manual verify
             if (this.btnManualVerify) {
                 this.btnManualVerify.addEventListener('click', function() {
                     var id = self.manualId ? self.manualId.value.trim() : '';
@@ -448,7 +464,6 @@ initGallery: function() {
                     .markAsVerified(); });
             if (this.btnClearResult) this.btnClearResult.addEventListener('click', function() { self.clearResult(); });
 
-            // PWA Install
             var deferredPrompt = null;
             window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
@@ -476,7 +491,6 @@ initGallery: function() {
                 showToast('✅ App installed! Find it on your home screen.', 'success');
             });
 
-            // Remove manifest on file://
             if (window.location.protocol === 'file:') {
                 var manifestLink = document.getElementById('manifestLink');
                 if (manifestLink) manifestLink.remove();
@@ -494,7 +508,7 @@ initGallery: function() {
             var config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
             this.html5QrCode.start({ facingMode: 'environment' }, config,
                 function(decodedText) { self.onScanSuccess(decodedText); },
-                function(err) { /* silent */ }
+                function(err) { }
             ).then(function() {
                 self.isScanning = true;
                 if (self.scanArea) self.scanArea.classList.add('scanning-active');
@@ -704,7 +718,7 @@ initGallery: function() {
         loadData: function() {
             var self = this;
             if (this.tableBody) {
-                this.tableBody.innerHTML = '<tr><td colspan="8" class="loading">⏳ Loading...</td></tr>';
+                this.tableBody.innerHTML = '<tr><td colspan="10" class="loading">⏳ Loading...</td></tr>';
             }
             fetch(APP_SCRIPT_URL + '?action=all')
                 .then(function(response) {
@@ -722,7 +736,7 @@ initGallery: function() {
                 })
                 .catch(function() {
                     if (self.tableBody) {
-                        self.tableBody.innerHTML = '<tr><td colspan="8" class="loading">❌ Error loading data.</td></tr>';
+                        self.tableBody.innerHTML = '<tr><td colspan="10" class="loading">❌ Error loading data.</td></tr>';
                     }
                     showToast('Could not load data.', 'error');
                 });
@@ -738,7 +752,8 @@ initGallery: function() {
                 if (search) {
                     match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
                         (row.Email && row.Email.toLowerCase().includes(search)) ||
-                        (row.UniqueID && row.UniqueID.toLowerCase().includes(search));
+                        (row.UniqueID && row.UniqueID.toLowerCase().includes(search)) ||
+                        (row.ServiceNo && row.ServiceNo.toLowerCase().includes(search));
                 }
                 if (match && filter !== '') {
                     var isVerified = row.Verified === true || row.Verified === 'TRUE';
@@ -749,7 +764,7 @@ initGallery: function() {
 
             if (!this.tableBody) return;
             if (filtered.length === 0) {
-                this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
+                this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
                 return;
             }
 
@@ -759,7 +774,9 @@ initGallery: function() {
                 var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
                 html += '<tr>' +
                     '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
+                    '<td>' + (row.ServiceNo || '—') + '</td>' +
                     '<td>' + (row.FullName || '—') + '</td>' +
+                    '<td>' + (row.Role || '—') + '</td>' +
                     '<td>' + (row.Email || '—') + '</td>' +
                     '<td>' + (row.Phone || '—') + '</td>' +
                     '<td>' + (row.Rank || '—') + '</td>' +
@@ -788,13 +805,13 @@ initGallery: function() {
                 showToast('No data to export.', 'error');
                 return;
             }
-            var headers = ['UniqueID', 'FullName', 'Email', 'Phone', 'Rank', 'Organization', 'Special', 'RegistrationDate',
-                'Verified'
-            ];
+            var headers = ['UniqueID', 'ServiceNo', 'FullName', 'Role', 'Email', 'Phone', 'Rank', 'Organization', 'Special', 'RegistrationDate', 'Verified'];
             var rows = this.allData.map(function(row) {
                 return [
                     row.UniqueID,
+                    row.ServiceNo,
                     row.FullName,
+                    row.Role,
                     row.Email,
                     row.Phone,
                     row.Rank,
