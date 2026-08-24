@@ -2,7 +2,19 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  base: '/nacws/', // ⬅️ Ensures images and scripts load correctly on GitHub Pages
+  base: '/nacws/',
+  plugins: [
+    {
+      name: 'minify-html',
+      transformIndexHtml(html) {
+        return html
+          .replace(/<!--[\s\S]*?-->/g, '') // Removes all HTML comments
+          .replace(/>\s+</g, '><')         // Removes spacing between tags
+          .replace(/\s+/g, ' ')            // Collapses multi-line spaces into one
+          .trim();
+      }
+    }
+  ],
   build: {
     minify: 'terser',
     terserOptions: {
@@ -10,14 +22,15 @@ export default defineConfig({
         drop_console: true,
         dead_code: true
       },
-      mangle: true // Scrambles variable and function names into nonsense strings
+      mangle: true // Scrambles JavaScript variable names
     },
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
         verify: resolve(__dirname, 'verify.html'),
-        admin: resolve(__dirname, 'admin.html') // ⬅️ Ensures these secondary pages don't get deleted
+        admin: resolve(__dirname, 'admin.html')
       }
     }
   }
 });
+
