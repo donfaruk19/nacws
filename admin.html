@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NACWS · Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <div>
+                <h1><img src="nacws-logo.jpg" style="height:40px; weight:auto;" alt="NACWS Logo" class="logo-img" />Registration Dashboard</h1>
+                <div style="font-size:0.8rem;opacity:0.7;">NACWS Cybersecurity Seminar 2027</div>
+            </div>
+            <div>
+                <span class="badge badge-gold"><span class="status-dot online"></span> Live</span>
+                <button class="btn btn-gold" onclick="NACWS.admin.exportCSV()" style="margin-left:12px;">⬇️ Export CSV</button>
+            </div>
+        </div>
+
+        <div class="admin-stats" id="statsContainer">
+            <div class="stat-card"><div class="number" id="totalCount">0</div><div class="label">Total Registrations</div></div>
+            <div class="stat-card"><div class="number" id="verifiedCount">0</div><div class="label">Verified</div></div>
+            <div class="stat-card"><div class="number" id="unverifiedCount">0</div><div class="label">Pending</div></div>
+        </div>
+
+        <div class="admin-controls">
+            <input type="text" id="searchInput" placeholder="🔍 Search by name, email, ID..." />
+            <select id="filterVerified">
+                <option value="">All</option>
+                <option value="true">Verified</option>
+                <option value="false">Pending</option>
+            </select>
+            <button class="btn btn-primary" onclick="NACWS.admin.loadData()">⟳ Refresh</button>
+        </div>
+
+        <div class="admin-table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Rank</th>
+                        <th>Organization</th>
+                        <th>Registered</th>
+                        <th>Verified</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody">
+                    <tr><td colspan="8" class="loading">Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><span id="toastMsg">Message</span></div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof NACWS !== 'undefined' && NACWS.admin) {
+                NACWS.admin.init();
+            }
+        });
+    </script>
+</body>
+</html>
