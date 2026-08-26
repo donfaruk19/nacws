@@ -333,7 +333,56 @@
              <div class="ticket-email-note">A confirmation email with this ticket has been sent to your inbox.</div>
          </div>
      </div>
-
+<!-- Compact ticket for download (hidden) -->
+<div id="compactTicket" style="display:none;">
+  <div class="ticket compact">
+    <div class="ticket-inner">
+      <div class="ticket-brand">
+        <div class="ticket-brand-text">
+          <div class="ticket-org">NIGERIAN ARMY CYBER WARFARE SCHOOL</div>
+          <div class="ticket-event-name">Cybersecurity Seminar 2027</div>
+        </div>
+      </div>
+      <div class="ticket-divider"></div>
+      <div class="ticket-success-icon">✅</div>
+      <div class="ticket-title">Registration Confirmed</div>
+      <div class="ticket-subtitle">Entry Pass</div>
+      <div class="ticket-body compact-body">
+        <div class="ticket-detail">
+          <span class="ticket-label">Name</span>
+          <span class="ticket-value" id="compactName">—</span>
+        </div>
+        <div class="ticket-detail">
+          <span class="ticket-label">Service No</span>
+          <span class="ticket-value" id="compactServiceNo">—</span>
+        </div>
+        <div class="ticket-detail">
+          <span class="ticket-label">Role</span>
+          <span class="ticket-value" id="compactRole">—</span>
+        </div>
+        <div class="ticket-detail">
+          <span class="ticket-label">Unique ID</span>
+          <span class="ticket-value" id="compactId">—</span>
+        </div>
+        <div class="ticket-detail ticket-detail-full">
+          <span class="ticket-label">Event Dates</span>
+          <span class="ticket-value" style="font-size:0.75rem;">2 – 6 July 2027 · 09:00hrs daily</span>
+        </div>
+      </div>
+      <div class="ticket-qr-section">
+        <div id="qrcode-compact"></div>
+        <div class="ticket-qr-info">
+          <strong>Scan to Verify</strong>
+          <span>Present this ticket at the entrance</span>
+        </div>
+      </div>
+      <div class="ticket-footer">
+        <span class="ticket-id" id="compactTicketId">NACWS-XXXX</span>
+        <span class="ticket-stamp">✦ VERIFIED ENTRY ✦</span>
+      </div>
+    </div>
+  </div>
+</div>
      <!-- ===== TOAST ===== -->
      <div class="toast" id="toast"><span id="toastMsg">Message</span></div>
 
