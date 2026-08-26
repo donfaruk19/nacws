@@ -814,8 +814,10 @@ footer .footer-links a:hover {
 }
 
 /* ============================================================
-   REGISTRATION POPUP & TICKET
+   REGISTRATION POPUP & TICKET  –  Clean & Fixed
    ============================================================ */
+
+/* ----- OVERLAY ----- */
 .popup-overlay {
     display: none;
     position: fixed;
@@ -830,6 +832,8 @@ footer .footer-links a:hover {
 .popup-overlay.active {
     display: flex;
 }
+
+/* ----- POPUP BOX ----- */
 .popup-box {
     background: #fff;
     max-width: 600px;
@@ -842,12 +846,32 @@ footer .footer-links a:hover {
     overflow-y: auto;
     animation: slideUp .4s ease;
 }
+
+/* ----- TICKET WRAPPER (inside popup) ----- */
 .ticket-wrapper {
     background: transparent;
     box-shadow: none;
     padding: 0;
-    max-width: 640px;
+    width: 420px;               /* Fixed width for consistent capture */
+    max-width: 420px;
+    margin: 0 auto;
+    overflow: visible;          /* Allow QR code to show fully */
+    height: auto;
+    max-height: none;
+    box-sizing: border-box;
 }
+
+/* Override popup-box when it contains the ticket */
+.popup-box.ticket-wrapper {
+    max-width: 640px;           /* Popup can be wider, but inner ticket is fixed */
+    width: 100%;
+    overflow: visible;          /* Override default overflow-y: auto */
+    padding: 20px;             /* Reduced padding to center ticket */
+    background: transparent;
+    box-shadow: none;
+}
+
+/* ----- POPUP CLOSE BUTTON ----- */
 .popup-close {
     position: sticky;
     top: 0;
@@ -870,6 +894,8 @@ footer .footer-links a:hover {
     background: rgba(201, 168, 76, .3);
     transform: rotate(90deg);
 }
+
+/* ----- TYPOGRAPHY & FORM ----- */
 .popup-box h2 {
     font-family: 'Playfair Display', serif;
     font-size: 1.8rem;
@@ -888,6 +914,7 @@ footer .footer-links a:hover {
 .popup-box .sub .req {
     color: #b22222;
 }
+
 .form-group {
     margin-bottom: 14px;
 }
@@ -901,7 +928,8 @@ footer .footer-links a:hover {
     color: #b22222;
 }
 .form-group input,
-.form-group textarea, .form-group select{
+.form-group textarea,
+.form-group select {
     width: 100%;
     padding: 12px 16px;
     font-size: .95rem;
@@ -968,7 +996,7 @@ footer .footer-links a:hover {
     outline: none;
 }
 
-/* ----- TICKET ----- */
+/* ----- TICKET CARD ----- */
 .ticket {
     background: linear-gradient(160deg, #0f281b 0%, #1a3c2a 40%, #07472d 100%);
     border-radius: 20px;
@@ -976,6 +1004,8 @@ footer .footer-links a:hover {
     box-shadow: 0 30px 80px rgba(0, 0, 0, .5), 0 0 0 1px rgba(201, 168, 76, .15);
     position: relative;
     overflow: hidden;
+    width: 100%;                /* Fit inside .ticket-wrapper (420px) */
+    box-sizing: border-box;
 }
 .ticket::before {
     content: '';
@@ -990,12 +1020,15 @@ footer .footer-links a:hover {
     mask-composite: exclude;
     pointer-events: none;
 }
+
 .ticket-inner {
     background: linear-gradient(170deg, #0f281b 0%, #1a3c2a 60%, #07472d 100%);
     border-radius: 17px;
     padding: 30px 28px 24px;
     position: relative;
-    overflow: hidden;
+    overflow: hidden;          /* Keeps decorative gradient contained */
+    width: 100%;
+    box-sizing: border-box;
 }
 .ticket-inner::after {
     content: '';
@@ -1007,6 +1040,8 @@ footer .footer-links a:hover {
     background: radial-gradient(ellipse at 70% 30%, rgba(201, 168, 76, .04), transparent 70%);
     pointer-events: none;
 }
+
+/* Brand */
 .ticket-brand {
     display: flex;
     align-items: center;
@@ -1033,6 +1068,8 @@ footer .footer-links a:hover {
     color: #c9a84c;
     line-height: 1.1;
 }
+
+/* Dividers */
 .ticket-divider {
     height: 1px;
     background: linear-gradient(to right, rgba(201, 168, 76, .3), transparent);
@@ -1041,6 +1078,8 @@ footer .footer-links a:hover {
 .ticket-divider.light {
     background: linear-gradient(to right, rgba(255, 255, 255, .08), transparent);
 }
+
+/* Success icon */
 .ticket-success-icon {
     text-align: center;
     font-size: 2.2rem;
@@ -1057,6 +1096,8 @@ footer .footer-links a:hover {
     50% { transform: scale(1.2); }
     100% { transform: scale(1); opacity: 1; }
 }
+
+/* Titles */
 .ticket-title {
     font-family: 'Playfair Display', serif;
     font-size: 1.4rem;
@@ -1077,6 +1118,8 @@ footer .footer-links a:hover {
     position: relative;
     z-index: 1;
 }
+
+/* Ticket body grid */
 .ticket-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1084,6 +1127,8 @@ footer .footer-links a:hover {
     padding: 6px 0 4px;
     position: relative;
     z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
 }
 .ticket-detail {
     display: flex;
@@ -1115,6 +1160,8 @@ footer .footer-links a:hover {
 .ticket-detail-full {
     grid-column: 1 / -1;
 }
+
+/* QR section */
 .ticket-qr-section {
     display: flex;
     align-items: center;
@@ -1123,15 +1170,18 @@ footer .footer-links a:hover {
     position: relative;
     z-index: 1;
 }
-.ticket-qr-section #qrcode-card {
+#qrcode-card {
     flex-shrink: 0;
+    width: 120px;
+    height: 120px;
     background: #fff;
     padding: 6px;
     border-radius: 10px;
     box-shadow: 0 0 30px rgba(201, 168, 76, .08), inset 0 0 0 1px rgba(201, 168, 76, .2);
     line-height: 0;
+    overflow: visible;          /* Ensure QR code isn't clipped */
 }
-.ticket-qr-section #qrcode-card canvas {
+#qrcode-card canvas {
     display: block;
     border-radius: 6px;
 }
@@ -1152,6 +1202,8 @@ footer .footer-links a:hover {
     display: block;
     margin-top: 2px;
 }
+
+/* Footer */
 .ticket-footer {
     display: flex;
     justify-content: space-between;
@@ -1178,6 +1230,8 @@ footer .footer-links a:hover {
     padding: 2px 12px;
     border-radius: 20px;
 }
+
+/* Watermark */
 .ticket-watermark {
     position: absolute;
     bottom: 10px;
@@ -1190,6 +1244,8 @@ footer .footer-links a:hover {
     letter-spacing: 4px;
     line-height: 1;
 }
+
+/* Modal actions */
 .modal-actions {
     display: flex;
     gap: 12px;
@@ -1207,6 +1263,7 @@ footer .footer-links a:hover {
     font-weight: 700;
     letter-spacing: .3px;
 }
+
 .ticket-email-note {
     font-size: .65rem;
     color: rgba(255, 255, 255, .2);
@@ -1214,36 +1271,54 @@ footer .footer-links a:hover {
     margin-top: 12px;
     letter-spacing: .5px;
 }
+
 /* ============================================================
-   FIX: Full ticket capture & remove right-side white space
+   FIX: Full ticket capture – ensures no white space
    ============================================================ */
+
+/* Force exact width for the card that will be captured */
+#invitationCard,
+.ticket-wrapper,
+.popup-box.ticket-wrapper {
+    width: 420px !important;
+    max-width: 420px !important;
+    min-width: 420px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+}
+
+/* All inner containers must not overflow this width */
+.ticket,
+.ticket-inner,
+.ticket-body {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* QR container – fixed dimensions, no overflow */
+#qrcode-card {
+    width: 120px !important;
+    height: 120px !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+}
+
+/* When capturing, html2canvas needs overflow visible */
 .ticket-wrapper,
 .ticket,
 .ticket-inner {
     overflow: visible !important;
     height: auto !important;
     max-height: none !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
 }
 
-/* QR container – ensure it doesn't cause overflow */
-#qrcode-card {
-    overflow: visible !important;
-    flex-shrink: 0;
-}
-
-/* Ensure the ticket body doesn't force extra width */
-.ticket-body {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* Remove any potential fixed width on the popup box when ticket is shown */
+/* Ensure the popup container doesn't clip the ticket */
 .popup-box.ticket-wrapper {
-    max-width: 640px;
-    width: 100%;
-    overflow: visible !important;  /* override overflow-y: auto from .popup-box */
+    overflow: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 20px !important;
 }
 
 /* ============================================================
