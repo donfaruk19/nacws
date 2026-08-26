@@ -9,7 +9,7 @@
     // ============================================================
     // SHARED HELPERS
     // ============================================================
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0yBX8R_YWE9Zt00_EB85r2cK0FfRxknKsfC9Qd_JxiEUQNYHiwP8NZPUK-Ff2L9hy/exec';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNJew8Gd3hQdwDu0uG4ECDYmveAlNwjDHJOr8taQZ0ujGxiVN-hXxu5OLC9kUhB1i9/exec';
     let toastTimer = null;
 
     function showToast(msg, type) {
