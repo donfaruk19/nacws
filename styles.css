@@ -1214,6 +1214,37 @@ footer .footer-links a:hover {
     margin-top: 12px;
     letter-spacing: .5px;
 }
+/* ============================================================
+   FIX: Full ticket capture & remove right-side white space
+   ============================================================ */
+.ticket-wrapper,
+.ticket,
+.ticket-inner {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* QR container – ensure it doesn't cause overflow */
+#qrcode-card {
+    overflow: visible !important;
+    flex-shrink: 0;
+}
+
+/* Ensure the ticket body doesn't force extra width */
+.ticket-body {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Remove any potential fixed width on the popup box when ticket is shown */
+.popup-box.ticket-wrapper {
+    max-width: 640px;
+    width: 100%;
+    overflow: visible !important;  /* override overflow-y: auto from .popup-box */
+}
 
 /* ============================================================
    TOAST
