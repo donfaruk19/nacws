@@ -4,9 +4,15 @@
   "icons": [
     {
       "src": "./icon-192.ico",
-      "type": "image/png",
+      "type": "image/x-icon",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.ico",
+      "type": "image/x-icon",
+      "sizes": "512x512",
+      "purpose": "any"
     }
   ],
   "start_url": "./verify.html",
