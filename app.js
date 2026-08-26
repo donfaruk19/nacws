@@ -196,61 +196,110 @@
         },
 
 // ===== DOWNLOAD TICKET – FULLY OPTIMIZED =====
+// ===== DOWNLOAD TICKET – COMPACT VERSION =====
 downloadTicket: function() {
   var self = this;
-  var card = document.getElementById('invitationCard');
-  if (!card) {
-    showToast('Ticket not found.', 'error');
+  var participant = this.currentParticipant;
+  if (!participant) {
+    showToast('No participant data.', 'error');
     return;
   }
+
+  // 1. Populate compact ticket fields
+  var compact = document.getElementById('compactTicket');
+  if (!compact) {
+    showToast('Compact ticket not found.', 'error');
+    return;
+  }
+
+  var nameEl = document.getElementById('compactName');
+  var serviceEl = document.getElementById('compactServiceNo');
+  var roleEl = document.getElementById('compactRole');
+  var idEl = document.getElementById('compactId');
+  var ticketIdEl = document.getElementById('compactTicketId');
+
+  if (nameEl) nameEl.textContent = participant.fullName || '—';
+  if (serviceEl) serviceEl.textContent = participant.serviceNo || '—';
+  if (roleEl) roleEl.textContent = participant.role || '—';
+  if (idEl) idEl.textContent = participant.uniqueId || '—';
+  if (ticketIdEl) ticketIdEl.textContent = participant.uniqueId || 'NACWS-XXXX';
+
+  // 2. Generate QR code in the compact container
+  var qrContainer = document.getElementById('qrcode-compact');
+  if (qrContainer) {
+    qrContainer.innerHTML = '';
+    var qrPayload = JSON.stringify({
+      id: participant.uniqueId,
+      name: participant.fullName,
+      email: participant.email,
+      serviceNo: participant.serviceNo,
+      role: participant.role
+    });
+    try {
+      new QRCode(qrContainer, {
+        text: qrPayload,
+        width: 80,
+        height: 80,
+        colorDark: '#07472d',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    } catch (e) {
+      qrContainer.innerHTML = '<p style="color:red;font-size:0.5rem;">QR error</p>';
+    }
+  }
+
+  // 3. Show compact ticket temporarily (offscreen) for capture
+  compact.style.display = 'block';
+  compact.style.position = 'absolute';
+  compact.style.left = '-9999px';
+  compact.style.top = '0';
+  compact.style.width = '320px';
+
+  // 4. Capture with html2canvas
   self.downloadBtn.disabled = true;
   self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
 
-  // Ensure the card is fully expanded and ready for capture
-  card.style.transform = 'none';
+  var card = compact.querySelector('.ticket');
+  // Ensure no overflow
   card.style.overflow = 'visible';
   card.style.height = 'auto';
   card.style.maxHeight = 'none';
-  
-  // Force a reflow
-  void card.offsetHeight;
 
   html2canvas(card, {
-    scale: 2.5,                     // High-res output
+    scale: 2.5,
     useCORS: true,
-    backgroundColor: '#0f281b',     // 1. Matches ticket background
+    backgroundColor: '#0f281b',
     logging: false,
-    width: 420,                     // 2. Fixed width (matches CSS)
-    height: card.scrollHeight,      // Auto-calc height
-    windowWidth: 420,               // 3. Forces virtual viewport
-    windowHeight: card.scrollHeight,// 4. Matches content height
+    width: 320,
+    height: card.scrollHeight,
+    windowWidth: 320,
+    windowHeight: card.scrollHeight,
     onclone: function(doc) {
-      var cloned = doc.getElementById('invitationCard');
+      var cloned = doc.querySelector('.ticket.compact');
       if (cloned) {
-        cloned.style.width = '420px';  // 5. Lock cloned card width
-        cloned.style.margin = '0';     // 6. Remove centering margins
-        cloned.style.transform = 'none';
+        cloned.style.width = '320px';
+        cloned.style.margin = '0';
         cloned.style.overflow = 'visible';
         cloned.style.height = 'auto';
         cloned.style.maxHeight = 'none';
       }
-      // 7. Safety net: dark background for the entire virtual page
       doc.body.style.background = '#0f281b';
       doc.body.style.margin = '0';
     }
   }).then(function(canvas) {
     var link = document.createElement('a');
-    link.download = 'NACWS-Ticket-' + (self.currentParticipant ? self.currentParticipant.uniqueId : 'card') + '.png';
+    link.download = 'NACWS-Ticket-' + participant.uniqueId + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
     showToast('Ticket downloaded!', 'success');
   }).catch(function(err) {
     console.error('html2canvas error:', err);
-    // Fallback: QR only
-    var qrCanvas = self.qrContainer ? self.qrContainer.querySelector('canvas') : null;
+    // fallback: capture QR only
+    var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
     if (qrCanvas) {
       var link = document.createElement('a');
-      link.download = 'NACWS-QR-' + (self.currentParticipant ? self.currentParticipant.uniqueId : 'card') + '.png';
+      link.download = 'NACWS-QR-' + participant.uniqueId + '.png';
       link.href = qrCanvas.toDataURL('image/png');
       link.click();
       showToast('QR downloaded (fallback).', 'success');
@@ -258,11 +307,12 @@ downloadTicket: function() {
       showToast('Failed to generate ticket. Please try again.', 'error');
     }
   }).finally(function() {
+    // Hide compact again
+    compact.style.display = 'none';
     self.downloadBtn.disabled = false;
     self.downloadBtn.innerHTML = '⬇️ Download Ticket';
   });
 },
-
         // ===== GALLERY SLIDER =====
         initGallery: function() {
             const track = document.getElementById('galleryTrack');
