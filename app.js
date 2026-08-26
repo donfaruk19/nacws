@@ -111,19 +111,19 @@
 
             // Pre-fill demo
             if (window.location.search.includes('demo')) {
-                if (this.fullName) this.fullName.value = 'AU FARUK';
-                if (this.serviceNo) this.serviceNo.value = '123456';
-                if (this.email) this.email.value = 'AUF@gmail.com';
+                if (this.fullName) this.fullName.value = 'Umar Faruk';
+                if (this.serviceNo) this.serviceNo.value = 'N/2332';
+                if (this.email) this.email.value = 'donfaruk191@gmail.com';
                 if (this.phone) this.phone.value = '+234 800 123 4567';
                 if (this.rank) this.rank.value = 'Major';
-                if (this.role) this.role.value = 'Participant';
-                if (this.organization) this.organization.value = 'Nigeria Army';
+                if (this.role) this.role.value = 'Discussant';
+                if (this.organization) this.organization.value = 'Nigerian Army';
                 if (this.special) this.special.value = 'None';
             }
             if (window.location.search.includes('register')) {
                 setTimeout(function() { self.openPopup(); }, 400);
             }
-            self.initGallery();
+            self.initGallery(); 
         },
 
         openPopup: function() {
@@ -153,11 +153,14 @@
         generateQR: function(data) {
             if (!this.qrContainer) return;
             this.qrContainer.innerHTML = '';
+            // Ensure container has fixed dimensions
+            this.qrContainer.style.width = '120px';
+            this.qrContainer.style.height = '120px';
             try {
                 new QRCode(this.qrContainer, {
                     text: data,
-                    width: 140,
-                    height: 140,
+                    width: 120,
+                    height: 120,
                     colorDark: '#07472d',
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.H
@@ -184,10 +187,15 @@
                 serviceNo: participant.serviceNo,
                 role: participant.role
             });
-            this.generateQR(qrPayload);
+            // Delay QR generation to ensure container is ready
+            var self = this;
+            setTimeout(function() {
+                self.generateQR(qrPayload);
+            }, 200);
             this.openConfirm();
         },
 
+        // ===== DOWNLOAD TICKET – FIXED to capture full ticket =====
         downloadTicket: function() {
             var self = this;
             var card = document.getElementById('invitationCard');
@@ -198,6 +206,7 @@
             self.downloadBtn.disabled = true;
             self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
 
+            // Wait for images to load
             var images = card.querySelectorAll('img');
             Promise.all(Array.from(images).map(function(img) {
                 if (img.complete) return Promise.resolve();
@@ -206,15 +215,24 @@
                     img.onerror = resolve;
                 });
             })).then(function() {
+                // Use html2canvas with full card dimensions
                 html2canvas(card, {
-                    scale: 2,
+                    scale: 2.5,
                     useCORS: true,
                     backgroundColor: '#ffffff',
                     logging: false,
                     width: card.scrollWidth,
                     height: card.scrollHeight,
                     windowWidth: card.scrollWidth,
-                    windowHeight: card.scrollHeight
+                    windowHeight: card.scrollHeight,
+                    onclone: function(doc) {
+                        // Ensure all content is visible
+                        var clonedCard = doc.getElementById('invitationCard');
+                        if (clonedCard) {
+                            clonedCard.style.transform = 'none';
+                            clonedCard.style.overflow = 'visible';
+                        }
+                    }
                 }).then(function(canvas) {
                     var link = document.createElement('a');
                     link.download = 'NACWS-Ticket-' + (self.currentParticipant ? self.currentParticipant
@@ -223,6 +241,8 @@
                     link.click();
                     showToast('Ticket downloaded!', 'success');
                 }).catch(function(err) {
+                    console.error('html2canvas error:', err);
+                    // Fallback: QR only
                     var qrCanvas = self.qrContainer ? self.qrContainer.querySelector('canvas') : null;
                     if (qrCanvas) {
                         var link = document.createElement('a');
@@ -232,7 +252,7 @@
                         link.click();
                         showToast('QR downloaded (fallback).', 'success');
                     } else {
-                        showToast('Failed to generate ticket.', 'error');
+                        showToast('Failed to generate ticket. Please try again.', 'error');
                     }
                 }).finally(function() {
                     self.downloadBtn.disabled = false;
@@ -418,9 +438,11 @@
             this.statusIcon = document.getElementById('statusIcon');
             this.statusText = document.getElementById('statusText');
             this.resultName = document.getElementById('resultName');
+            this.resultServiceNo = document.getElementById('resultServiceNo');
             this.resultId = document.getElementById('resultId');
             this.resultEmail = document.getElementById('resultEmail');
             this.resultOrg = document.getElementById('resultOrg');
+            this.resultRole = document.getElementById('resultRole');
             this.btnMarkVerified = document.getElementById('btnMarkVerified');
             this.btnClearResult = document.getElementById('btnClearResult');
             this.installBanner = document.getElementById('installBanner');
@@ -432,6 +454,7 @@
             this.currentId = null;
             this.cachedData = [];
 
+            // Mode toggle
             if (this.modeScan) {
                 this.modeScan.addEventListener('click', function() {
                     self.modeScan.classList.add('active');
@@ -453,11 +476,24 @@
             }
             if (this.modeScan) this.modeScan.classList.add('active');
 
-            if (this.btnStart) this.btnStart.addEventListener('click', function() { self.startScanner(); });
-            if (this.btnStop) this.btnStop.addEventListener('click', function() { self.stopScanner(); });
+            // Scanner buttons
+            if (this.btnStart) {
+                this.btnStart.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    self.startScanner();
+                });
+            }
+            if (this.btnStop) {
+                this.btnStop.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    self.stopScanner();
+                });
+            }
 
+            // Manual verify
             if (this.btnManualVerify) {
-                this.btnManualVerify.addEventListener('click', function() {
+                this.btnManualVerify.addEventListener('click', function(e) {
+                    e.preventDefault();
                     var id = self.manualId ? self.manualId.value.trim() : '';
                     if (!id) { showToast('Enter a Unique ID.', 'error'); return; }
                     self.verifyParticipant(id);
@@ -469,10 +505,21 @@
                 });
             }
 
-            if (this.btnMarkVerified) this.btnMarkVerified.addEventListener('click', function() { self
-                    .markAsVerified(); });
-            if (this.btnClearResult) this.btnClearResult.addEventListener('click', function() { self.clearResult(); });
+            // Result actions
+            if (this.btnMarkVerified) {
+                this.btnMarkVerified.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    self.markAsVerified();
+                });
+            }
+            if (this.btnClearResult) {
+                this.btnClearResult.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    self.clearResult();
+                });
+            }
 
+            // PWA Install
             var deferredPrompt = null;
             window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
@@ -517,7 +564,7 @@
             var config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
             this.html5QrCode.start({ facingMode: 'environment' }, config,
                 function(decodedText) { self.onScanSuccess(decodedText); },
-                function(err) { }
+                function(err) { /* silent */ }
             ).then(function() {
                 self.isScanning = true;
                 if (self.scanArea) self.scanArea.classList.add('scanning-active');
@@ -526,7 +573,8 @@
                     self.btnStart.disabled = true;
                 }
                 showToast('Camera started. Point at a QR code.', '');
-            }).catch(function() {
+            }).catch(function(err) {
+                console.error('Scanner start error:', err);
                 showToast('Could not access camera. Please check permissions.', 'error');
                 if (self.btnStart) {
                     self.btnStart.disabled = false;
@@ -546,7 +594,9 @@
                     self.btnStart.disabled = false;
                 }
                 showToast('Camera stopped.', '');
-            }).catch(function() {});
+            }).catch(function(err) {
+                console.error('Stop error:', err);
+            });
         },
 
         onScanSuccess: function(decodedText) {
@@ -574,7 +624,8 @@
                     }
                     throw new Error('Unexpected response');
                 })
-                .catch(function() {
+                .catch(function(err) {
+                    console.error('Fetch error:', err);
                     showToast('Could not load participant data.', 'error');
                     return [];
                 });
@@ -592,9 +643,11 @@
                     this.statusText.className = 'status-text';
                 }
                 if (this.resultName) this.resultName.textContent = '—';
+                if (this.resultServiceNo) this.resultServiceNo.textContent = '—';
                 if (this.resultId) this.resultId.textContent = this.currentId;
                 if (this.resultEmail) this.resultEmail.textContent = '—';
                 if (this.resultOrg) this.resultOrg.textContent = '—';
+                if (this.resultRole) this.resultRole.textContent = '—';
                 if (this.btnMarkVerified) {
                     this.btnMarkVerified.disabled = true;
                     this.btnMarkVerified.innerHTML = '⏳ Searching...';
@@ -626,9 +679,11 @@
                         self.statusText.className = 'status-text not-found';
                     }
                     if (self.resultName) self.resultName.textContent = '—';
+                    if (self.resultServiceNo) self.resultServiceNo.textContent = '—';
                     if (self.resultId) self.resultId.textContent = self.currentId;
                     if (self.resultEmail) self.resultEmail.textContent = '—';
                     if (self.resultOrg) self.resultOrg.textContent = '—';
+                    if (self.resultRole) self.resultRole.textContent = '—';
                     if (self.btnMarkVerified) {
                         self.btnMarkVerified.disabled = true;
                         self.btnMarkVerified.innerHTML = '❌ Not Registered';
@@ -646,12 +701,14 @@
                 this.statusText.className = 'status-text ' + (isVerified ? 'verified' : 'unverified');
             }
             if (this.resultName) this.resultName.textContent = participant.FullName || '—';
+            if (this.resultServiceNo) this.resultServiceNo.textContent = participant.ServiceNo || '—';
             if (this.resultId) this.resultId.textContent = participant.UniqueID || '—';
             if (this.resultEmail) this.resultEmail.textContent = participant.Email || '—';
             if (this.resultOrg) this.resultOrg.textContent = participant.Organization || '—';
+            if (this.resultRole) this.resultRole.textContent = participant.Role || '—';
             if (this.btnMarkVerified) {
                 this.btnMarkVerified.disabled = isVerified;
-                this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Verified';
+                this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Verified Attendace';
             }
             if (this.resultCard) this.resultCard.classList.add('show');
         },
@@ -679,13 +736,14 @@
                         showToast('Verification failed: ' + (result.error || 'Unknown'), 'error');
                     }
                 })
-                .catch(function() {
+                .catch(function(err) {
+                    console.error('Mark verified error:', err);
                     showToast('Could not connect to the server.', 'error');
                 })
                 .finally(function() {
                     if (self.btnMarkVerified) {
                         self.btnMarkVerified.disabled = false;
-                        self.btnMarkVerified.innerHTML = '✅ Mark as Verified';
+                        self.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
                     }
                 });
         },
@@ -696,7 +754,7 @@
             this.currentId = null;
             if (this.btnMarkVerified) {
                 this.btnMarkVerified.disabled = false;
-                this.btnMarkVerified.innerHTML = '✅ Mark as Verified';
+                this.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
             }
             if (this.manualId) this.manualId.value = '';
         }
@@ -743,7 +801,8 @@
                         throw new Error('Invalid data');
                     }
                 })
-                .catch(function() {
+                .catch(function(err) {
+                    console.error('Load data error:', err);
                     if (self.tableBody) {
                         self.tableBody.innerHTML = '<tr><td colspan="10" class="loading">❌ Error loading data.</td></tr>';
                     }
@@ -752,7 +811,6 @@
         },
 
         renderTable: function() {
-            var self = this;
             var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
             var filter = this.filterVerified ? this.filterVerified.value : '';
 
@@ -791,7 +849,7 @@
                     '<td>' + (row.Organization || '—') + '</td>' +
                     '<td>' + (row.Role || '—') + '</td>' +
                     '<td>' + date + '</td>' +
-                    '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified' : '⏳ Pending') + '</span></td>' +
+                    '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified Attendance' : '⏳ Pending') + '</span></td>' +
                     '</tr>';
             });
             this.tableBody.innerHTML = html;
