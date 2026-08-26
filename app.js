@@ -195,7 +195,7 @@
             this.openConfirm();
         },
 
-        // ===== DOWNLOAD TICKET – FIXED to capture full ticket =====
+        // ===== DOWNLOAD TICKET – FIXED to // ===== DOWNLOAD TICKET – FIXED =====
 downloadTicket: function() {
   var self = this;
   var card = document.getElementById('invitationCard');
@@ -206,35 +206,39 @@ downloadTicket: function() {
   self.downloadBtn.disabled = true;
   self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
 
-  // Ensure the card is fully expanded
+  // Store original styles
+  var originalTransform = card.style.transform;
+  var originalOverflow = card.style.overflow;
+
   card.style.transform = 'none';
   card.style.overflow = 'visible';
-  card.style.height = 'auto';
-  card.style.maxHeight = 'none';
 
-  // Force a reflow
-  void card.offsetHeight;
+  // Get exact size of card
+  var cardWidth = card.offsetWidth;
+  var cardHeight = card.offsetHeight;
 
   html2canvas(card, {
     scale: 2.5,
     useCORS: true,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#0B3D0B', // <-- CHANGED: Match your card green
     logging: false,
-    width: card.scrollWidth,
-    height: card.scrollHeight,
-    windowWidth: card.scrollWidth,
-    windowHeight: card.scrollHeight,
+    width: cardWidth,  // <-- CHANGED: Use exact width
+    height: cardHeight, // <-- CHANGED: Use exact height
+    windowWidth: cardWidth,
+    windowHeight: cardHeight,
     onclone: function(doc) {
       var cloned = doc.getElementById('invitationCard');
       if (cloned) {
         cloned.style.transform = 'none';
         cloned.style.overflow = 'visible';
+        cloned.style.width = cardWidth + 'px'; // <-- CHANGED: Fixed width
         cloned.style.height = 'auto';
-        cloned.style.maxHeight = 'none';
-        // Remove any fixed widths that cause right white space
-        cloned.style.width = '100%';
+        cloned.style.margin = '0'; // <-- ADD: Remove centering margin
         cloned.style.boxSizing = 'border-box';
       }
+      // Also fix body background in clone
+      doc.body.style.background = '#0B3D0B';
+      doc.body.style.margin = '0';
     }
   }).then(function(canvas) {
     var link = document.createElement('a');
@@ -242,19 +246,13 @@ downloadTicket: function() {
     link.href = canvas.toDataURL('image/png');
     link.click();
     showToast('Ticket downloaded!', 'success');
+    
+    // Restore original styles
+    card.style.transform = originalTransform;
+    card.style.overflow = originalOverflow;
   }).catch(function(err) {
     console.error('html2canvas error:', err);
-    // Fallback: QR only
-    var qrCanvas = self.qrContainer ? self.qrContainer.querySelector('canvas') : null;
-    if (qrCanvas) {
-      var link = document.createElement('a');
-      link.download = 'NACWS-QR-' + (self.currentParticipant ? self.currentParticipant.uniqueId : 'card') + '.png';
-      link.href = qrCanvas.toDataURL('image/png');
-      link.click();
-      showToast('QR downloaded (fallback).', 'success');
-    } else {
-      showToast('Failed to generate ticket. Please try again.', 'error');
-    }
+    showToast('Failed to generate ticket. Please try again.', 'error');
   }).finally(function() {
     self.downloadBtn.disabled = false;
     self.downloadBtn.innerHTML = '⬇️ Download Ticket';
