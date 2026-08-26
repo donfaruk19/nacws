@@ -1273,7 +1273,7 @@ footer .footer-links a:hover {
 }
 
 /* ============================================================
-   FIX: Full ticket capture – ensures no white space
+   Full ticket capture
    ============================================================ */
 
 /* Force exact width for the card that will be captured */
@@ -1321,6 +1321,94 @@ footer .footer-links a:hover {
     padding: 20px !important;
 }
 
+/* ----- COMPACT TICKET (for download) ----- */
+.ticket.compact {
+  width: 320px;                /* smaller, portable */
+  max-width: 320px;
+  margin: 0;
+  padding: 2px;               /* reduce outer padding */
+  border-radius: 14px;
+}
+.ticket.compact .ticket-inner {
+  padding: 16px 18px 12px;    /* less padding */
+  border-radius: 13px;
+}
+.ticket.compact .ticket-brand .ticket-org {
+  font-size: 0.5rem;
+  letter-spacing: 0.5px;
+}
+.ticket.compact .ticket-brand .ticket-event-name {
+  font-size: 0.9rem;
+}
+.ticket.compact .ticket-success-icon {
+  font-size: 1.4rem;
+  margin-bottom: -4px;
+}
+.ticket.compact .ticket-title {
+  font-size: 1.0rem;
+  margin: 0;
+}
+.ticket.compact .ticket-subtitle {
+  font-size: 0.6rem;
+  margin-bottom: 4px;
+}
+.ticket.compact .ticket-body {
+  gap: 4px 12px;
+  padding: 2px 0;
+}
+.ticket.compact .ticket-detail .ticket-label {
+  font-size: 0.45rem;
+  letter-spacing: 0.5px;
+}
+.ticket.compact .ticket-detail .ticket-value {
+  font-size: 0.7rem;
+}
+.ticket.compact .ticket-qr-section {
+  padding: 4px 0;
+  gap: 10px;
+}
+.ticket.compact #qrcode-compact {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(201,168,76,.1);
+}
+.ticket.compact #qrcode-compact canvas {
+  width: 80px !important;
+  height: 80px !important;
+}
+.ticket.compact .ticket-qr-info strong {
+  font-size: 0.6rem;
+}
+.ticket.compact .ticket-qr-info span {
+  font-size: 0.5rem;
+}
+.ticket.compact .ticket-footer {
+  padding-top: 4px;
+}
+.ticket.compact .ticket-footer .ticket-id {
+  font-size: 0.5rem;
+}
+.ticket.compact .ticket-footer .ticket-stamp {
+  font-size: 0.4rem;
+  padding: 1px 8px;
+}
+.ticket.compact .ticket-watermark {
+  display: none;  /* remove heavy watermark */
+}
+
+/* Force compact wrapper to have no extra space */
+#compactTicket {
+  display: block !important;   /* will be hidden by other means */
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 320px;
+  overflow: visible;
+}
 /* ============================================================
    TOAST
    ============================================================ */
