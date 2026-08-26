@@ -198,7 +198,6 @@
             self.downloadBtn.disabled = true;
             self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
 
-            // Wait for images
             var images = card.querySelectorAll('img');
             Promise.all(Array.from(images).map(function(img) {
                 if (img.complete) return Promise.resolve();
@@ -208,7 +207,7 @@
                 });
             })).then(function() {
                 html2canvas(card, {
-                    scale: 4,
+                    scale: 2, // reduced from 4 to 2 for smaller file
                     useCORS: true,
                     backgroundColor: '#ffffff',
                     logging: false,
@@ -224,7 +223,6 @@
                     link.click();
                     showToast('Ticket downloaded!', 'success');
                 }).catch(function(err) {
-                    // Fallback: QR only
                     var qrCanvas = self.qrContainer ? self.qrContainer.querySelector('canvas') : null;
                     if (qrCanvas) {
                         var link = document.createElement('a');
@@ -243,6 +241,91 @@
             });
         },
 
+        // ===== HANDLE SUBMIT with validation =====
+        handleSubmit: function(e) {
+            e.preventDefault();
+            var self = this;
+            var name = this.fullName ? this.fullName.value.trim() : '';
+            var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
+            var mail = this.email ? this.email.value.trim() : '';
+            var phoneVal = this.phone ? this.phone.value.trim() : '';
+            var roleVal = this.role ? this.role.value.trim() : '';
+            var org = this.organization ? this.organization.value.trim() : '';
+            var rankVal = this.rank ? this.rank.value.trim() : '';
+
+            // Validation patterns
+            var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
+            var servicePattern = /^[a-zA-Z0-9()\/]+$/;
+            var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            var phonePattern = /^\+?[0-9\s\-()]+$/;
+            var orgPattern = /^[a-zA-Z0-9\- ]+$/;
+            var rankPattern = /^[a-zA-Z0-9\-/ ]+$/;
+
+            if (!name) { showToast('Please enter your full name.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+            if (!namePattern.test(name)) { showToast('Name contains invalid characters.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+            if (!serviceNo) { showToast('Please enter your service number.', 'error'); if (this.serviceNo) this.serviceNo.focus(); return; }
+            if (!servicePattern.test(serviceNo)) { showToast('Service number contains invalid characters.', 'error'); if (this.serviceNo) this.serviceNo.focus(); return; }
+            if (!mail || !emailPattern.test(mail)) { showToast('Please enter a valid email.', 'error'); if (this.email) this.email.focus(); return; }
+            if (!phoneVal || !phonePattern.test(phoneVal)) { showToast('Please enter a valid phone number.', 'error'); if (this.phone) this.phone.focus(); return; }
+            if (!roleVal) { showToast('Please select your role.', 'error'); if (this.role) this.role.focus(); return; }
+            if (!org) { showToast('Please enter your organization.', 'error'); if (this.organization) this.organization.focus(); return; }
+            if (!orgPattern.test(org)) { showToast('Organization contains invalid characters.', 'error'); if (this.organization) this.organization.focus(); return; }
+            if (rankVal && !rankPattern.test(rankVal)) { showToast('Rank contains invalid characters.', 'error'); if (this.rank) this.rank.focus(); return; }
+
+            var clean = {
+                fullName: sanitize(name),
+                serviceNo: sanitize(serviceNo),
+                email: sanitize(mail),
+                phone: sanitize(phoneVal),
+                rank: sanitize(rankVal || 'N/A'),
+                role: sanitize(roleVal),
+                organization: sanitize(org),
+                special: sanitize((this.special ? this.special.value.trim() : '') || 'N/A')
+            };
+
+            if (this.submitBtn) {
+                this.submitBtn.disabled = true;
+                this.submitBtn.innerHTML = '<span class="spinner"></span> Submitting…';
+            }
+
+            var uniqueId = generateUniqueId();
+            var payload = {
+                uniqueId: uniqueId,
+                fullName: clean.fullName,
+                serviceNo: clean.serviceNo,
+                email: clean.email,
+                phone: clean.phone,
+                rank: clean.rank,
+                role: clean.role,
+                organization: clean.organization,
+                special: clean.special,
+                registrationDate: new Date().toISOString(),
+                verified: false
+            };
+
+            fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function() {
+                self.showTicket(payload);
+                showToast('Registration successful! Check your email.', 'success');
+                if (self.form) self.form.reset();
+                self.closePopup();
+            }).catch(function() {
+                self.showTicket(payload);
+                showToast('Registered locally. Email will be sent when online.', 'success');
+                if (self.form) self.form.reset();
+                self.closePopup();
+            }).finally(function() {
+                if (self.submitBtn) {
+                    self.submitBtn.disabled = false;
+                    self.submitBtn.innerHTML = '🚀 Register &amp; Get QR';
+                }
+            });
+        }
+    };
     // ============================================================
     // GALLERY SLIDER FUNCTIONS
     // ============================================================
