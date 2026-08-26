@@ -901,7 +901,7 @@ footer .footer-links a:hover {
     color: #b22222;
 }
 .form-group input,
-.form-group textarea {
+.form-group textarea, .form-group select{
     width: 100%;
     padding: 12px 16px;
     font-size: .95rem;
