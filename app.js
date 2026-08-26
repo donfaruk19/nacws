@@ -123,7 +123,7 @@
             if (window.location.search.includes('register')) {
                 setTimeout(function() { self.openPopup(); }, 400);
             }
-            self.initGallery(); 
+            self.initGallery();
         },
 
         openPopup: function() {
@@ -207,7 +207,7 @@
                 });
             })).then(function() {
                 html2canvas(card, {
-                    scale: 2, // reduced from 4 to 2 for smaller file
+                    scale: 2,
                     useCORS: true,
                     backgroundColor: '#ffffff',
                     logging: false,
@@ -239,6 +239,78 @@
                     self.downloadBtn.innerHTML = '⬇️ Download Ticket';
                 });
             });
+        },
+
+        // ===== GALLERY SLIDER =====
+        initGallery: function() {
+            const track = document.getElementById('galleryTrack');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const dotsContainer = document.getElementById('galleryDots');
+            const slider = document.getElementById('gallerySlider');
+
+            if (!track || !prevBtn || !nextBtn || !dotsContainer || !slider) return;
+
+            const slides = Array.from(track.children);
+            const slideCount = slides.length;
+            let currentIndex = 0;
+            let autoPlayInterval;
+            const autoPlayTime = 4000;
+
+            let startX = 0;
+            let isDragging = false;
+
+            dotsContainer.innerHTML = '';
+
+            slides.forEach((_, i) => {
+                const dot = document.createElement('button');
+                dot.classList.add('gallery-dot');
+                dot.setAttribute('aria-label', `Go to slide ${i+1}`);
+                if (i === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => goToSlide(i));
+                dotsContainer.appendChild(dot);
+            });
+            const dots = Array.from(dotsContainer.children);
+
+            function updateSlider() {
+                track.style.transform = `translateX(-${currentIndex * 100}%)`;
+                dots.forEach(dot => dot.classList.remove('active'));
+                dots[currentIndex].classList.add('active');
+            }
+            function nextSlide() { currentIndex = (currentIndex + 1) % slideCount; updateSlider(); }
+            function prevSlide() { currentIndex = (currentIndex - 1 + slideCount) % slideCount; updateSlider(); }
+            function goToSlide(index) { currentIndex = index; updateSlider(); resetAutoPlay(); }
+            function startAutoPlay() { stopAutoPlay(); autoPlayInterval = setInterval(nextSlide, autoPlayTime); }
+            function stopAutoPlay() { clearInterval(autoPlayInterval); }
+            function resetAutoPlay() { stopAutoPlay(); startAutoPlay(); }
+
+            nextBtn.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
+            prevBtn.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
+            slider.addEventListener('mouseenter', stopAutoPlay);
+            slider.addEventListener('mouseleave', startAutoPlay);
+
+            track.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                isDragging = true;
+                stopAutoPlay();
+                track.style.transition = 'none';
+            });
+            track.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                const diff = e.touches[0].clientX - startX;
+                track.style.transform = `translateX(${-currentIndex * 100 + (diff / slider.offsetWidth) * 100}%)`;
+            });
+            track.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                track.style.transition = 'transform 0.8s cubic-bezier(.77,0,.18,1)';
+                const diff = e.changedTouches[0].clientX - startX;
+                if (diff > 50) { prevSlide(); } else if (diff < -50) { nextSlide(); }
+                updateSlider();
+                startAutoPlay();
+            });
+
+            startAutoPlay();
         },
 
         // ===== HANDLE SUBMIT with validation =====
@@ -278,152 +350,6 @@
                 email: sanitize(mail),
                 phone: sanitize(phoneVal),
                 rank: sanitize(rankVal || 'N/A'),
-                role: sanitize(roleVal),
-                organization: sanitize(org),
-                special: sanitize((this.special ? this.special.value.trim() : '') || 'N/A')
-            };
-
-            if (this.submitBtn) {
-                this.submitBtn.disabled = true;
-                this.submitBtn.innerHTML = '<span class="spinner"></span> Submitting…';
-            }
-
-            var uniqueId = generateUniqueId();
-            var payload = {
-                uniqueId: uniqueId,
-                fullName: clean.fullName,
-                serviceNo: clean.serviceNo,
-                email: clean.email,
-                phone: clean.phone,
-                rank: clean.rank,
-                role: clean.role,
-                organization: clean.organization,
-                special: clean.special,
-                registrationDate: new Date().toISOString(),
-                verified: false
-            };
-
-            fetch(APP_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(function() {
-                self.showTicket(payload);
-                showToast('Registration successful! Check your email.', 'success');
-                if (self.form) self.form.reset();
-                self.closePopup();
-            }).catch(function() {
-                self.showTicket(payload);
-                showToast('Registered locally. Email will be sent when online.', 'success');
-                if (self.form) self.form.reset();
-                self.closePopup();
-            }).finally(function() {
-                if (self.submitBtn) {
-                    self.submitBtn.disabled = false;
-                    self.submitBtn.innerHTML = '🚀 Register &amp; Get QR';
-                }
-            });
-        }
-    };
-    // ============================================================
-    // GALLERY SLIDER FUNCTIONS
-    // ============================================================
-    initGallery: function() {
-        const track = document.getElementById('galleryTrack');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const dotsContainer = document.getElementById('galleryDots');
-        const slider = document.getElementById('gallerySlider');
-
-        if(!track ||!prevBtn ||!nextBtn ||!dotsContainer ||!slider) return;
-
-        const slides = Array.from(track.children);
-        const slideCount = slides.length;
-        let currentIndex = 0;
-        let autoPlayInterval;
-        const autoPlayTime = 4000;
-
-        let startX = 0;
-        let isDragging = false;
-
-        dotsContainer.innerHTML = '';
-
-        slides.forEach((_, i) => {
-            const dot = document.createElement('button');
-            dot.classList.add('gallery-dot');
-            dot.setAttribute('aria-label', `Go to slide ${i+1}`);
-            if(i === 0) dot.classList.add('active');
-            dot.addEventListener('click', () => goToSlide(i));
-            dotsContainer.appendChild(dot);
-        });
-        const dots = Array.from(dotsContainer.children);
-
-        function updateSlider() {
-            track.style.transform = `translateX(-${currentIndex * 100}%)`;
-            dots.forEach(dot => dot.classList.remove('active'));
-            dots[currentIndex].classList.add('active');
-        }
-        function nextSlide() { currentIndex = (currentIndex + 1) % slideCount; updateSlider(); }
-        function prevSlide() { currentIndex = (currentIndex - 1 + slideCount) % slideCount; updateSlider(); }
-        function goToSlide(index) { currentIndex = index; updateSlider(); resetAutoPlay(); }
-        function startAutoPlay() { stopAutoPlay(); autoPlayInterval = setInterval(nextSlide, autoPlayTime); }
-        function stopAutoPlay() { clearInterval(autoPlayInterval); }
-        function resetAutoPlay() { stopAutoPlay(); startAutoPlay(); }
-
-        nextBtn.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
-        prevBtn.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
-        slider.addEventListener('mouseenter', stopAutoPlay);
-        slider.addEventListener('mouseleave', startAutoPlay);
-
-        track.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX; isDragging = true; stopAutoPlay(); track.style.transition = 'none';
-        });
-        track.addEventListener('touchmove', (e) => {
-            if(!isDragging) return;
-            const diff = e.touches[0].clientX - startX;
-            track.style.transform = `translateX(${-currentIndex * 100 + (diff / slider.offsetWidth) * 100}%)`;
-        });
-        track.addEventListener('touchend', (e) => {
-            if(!isDragging) return; isDragging = false;
-            track.style.transition = 'transform 0.8s cubic-bezier(.77,0,.18,1)';
-            const diff = e.changedTouches[0].clientX - startX;
-            if(diff > 50) { prevSlide(); } else if(diff < -50) { nextSlide(); }
-            updateSlider(); startAutoPlay();
-        });
-
-        startAutoPlay();
-    },
-
-        handleSubmit: function(e) {
-            e.preventDefault();
-            var self = this;
-            var name = this.fullName ? this.fullName.value.trim() : '';
-            var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
-            var mail = this.email ? this.email.value.trim() : '';
-            var phoneVal = this.phone ? this.phone.value.trim() : '';
-            var roleVal = this.role ? this.role.value.trim() : '';
-            var org = this.organization ? this.organization.value.trim() : '';
-
-            if (!name) { showToast('Please enter your full name.', 'error');
-                if (this.fullName) this.fullName.focus(); return; }
-            if (!serviceNo) { showToast('Please enter your service number.', 'error');
-                if (this.serviceNo) this.serviceNo.focus(); return; }
-            if (!mail || !mail.includes('@')) { showToast('Please enter a valid email.', 'error');
-                if (this.email) this.email.focus(); return; }
-            if (!phoneVal) { showToast('Please enter your phone number.', 'error');
-                if (this.phone) this.phone.focus(); return; }
-            if (!roleVal) { showToast('Please select your role.', 'error');
-                if (this.role) this.role.focus(); return; }
-            if (!org) { showToast('Please enter your organization.', 'error');
-                if (this.organization) this.organization.focus(); return; }
-
-            var clean = {
-                fullName: sanitize(name),
-                serviceNo: sanitize(serviceNo),
-                email: sanitize(mail),
-                phone: sanitize(phoneVal),
-                rank: sanitize((this.rank ? this.rank.value.trim() : '') || 'N/A'),
                 role: sanitize(roleVal),
                 organization: sanitize(org),
                 special: sanitize((this.special ? this.special.value.trim() : '') || 'N/A')
@@ -826,50 +752,50 @@
         },
 
         renderTable: function() {
-    var self = this;
-    var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
-    var filter = this.filterVerified ? this.filterVerified.value : '';
+            var self = this;
+            var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
+            var filter = this.filterVerified ? this.filterVerified.value : '';
 
-    var filtered = this.allData.filter(function(row) {
-        var match = true;
-        if (search) {
-            match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
-                (row.Email && row.Email.toLowerCase().includes(search)) ||
-                (row.UniqueID && row.UniqueID.toLowerCase().includes(search)) ||
-                (row.ServiceNo && row.ServiceNo.toLowerCase().includes(search));
-        }
-        if (match && filter !== '') {
-            var isVerified = row.Verified === true || row.Verified === 'TRUE';
-            match = (filter === 'true') === isVerified;
-        }
-        return match;
-    });
+            var filtered = this.allData.filter(function(row) {
+                var match = true;
+                if (search) {
+                    match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
+                        (row.Email && row.Email.toLowerCase().includes(search)) ||
+                        (row.UniqueID && row.UniqueID.toLowerCase().includes(search)) ||
+                        (row.ServiceNo && row.ServiceNo.toLowerCase().includes(search));
+                }
+                if (match && filter !== '') {
+                    var isVerified = row.Verified === true || row.Verified === 'TRUE';
+                    match = (filter === 'true') === isVerified;
+                }
+                return match;
+            });
 
-    if (!this.tableBody) return;
-    if (filtered.length === 0) {
-        this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
-        return;
-    }
+            if (!this.tableBody) return;
+            if (filtered.length === 0) {
+                this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
+                return;
+            }
 
-    var html = '';
-    filtered.forEach(function(row) {
-        var verified = row.Verified === true || row.Verified === 'TRUE';
-        var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
-        html += '<tr>' +
-            '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
-            '<td>' + (row.ServiceNo || '—') + '</td>' +
-            '<td>' + (row.Rank || '—') + '</td>' +
-            '<td>' + (row.FullName || '—') + '</td>' +
-            '<td>' + (row.Email || '—') + '</td>' +
-            '<td>' + (row.Phone || '—') + '</td>' +
-            '<td>' + (row.Organization || '—') + '</td>' +
-            '<td>' + (row.Role || '—') + '</td>' +
-            '<td>' + date + '</td>' +
-            '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified' : '⏳ Pending') + '</span></td>' +
-            '</tr>';
-    });
-    this.tableBody.innerHTML = html;
-},
+            var html = '';
+            filtered.forEach(function(row) {
+                var verified = row.Verified === true || row.Verified === 'TRUE';
+                var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
+                html += '<tr>' +
+                    '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
+                    '<td>' + (row.ServiceNo || '—') + '</td>' +
+                    '<td>' + (row.Rank || '—') + '</td>' +
+                    '<td>' + (row.FullName || '—') + '</td>' +
+                    '<td>' + (row.Email || '—') + '</td>' +
+                    '<td>' + (row.Phone || '—') + '</td>' +
+                    '<td>' + (row.Organization || '—') + '</td>' +
+                    '<td>' + (row.Role || '—') + '</td>' +
+                    '<td>' + date + '</td>' +
+                    '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified' : '⏳ Pending') + '</span></td>' +
+                    '</tr>';
+            });
+            this.tableBody.innerHTML = html;
+        },
 
         updateStats: function(data) {
             var total = data.length;
@@ -883,38 +809,38 @@
         },
 
         exportCSV: function() {
-    if (this.allData.length === 0) {
-        showToast('No data to export.', 'error');
-        return;
-    }
-    var headers = ['UniqueID', 'ServiceNo', 'Rank', 'FullName', 'Email', 'Phone', 'Organization', 'Role', 'RegistrationDate', 'Verified'];
-    var rows = this.allData.map(function(row) {
-        return [
-            row.UniqueID,
-            row.ServiceNo,
-            row.Rank,
-            row.FullName,
-            row.Email,
-            row.Phone,
-            row.Organization,
-            row.Role,
-            row.RegistrationDate,
-            (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
-        ];
-    });
-    var csv = headers.join(',') + '\n';
-    rows.forEach(function(row) {
-        csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') + '\n';
-    });
-    var blob = new Blob([csv], { type: 'text/csv' });
-    var link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('CSV exported!', 'success');
-}
+            if (this.allData.length === 0) {
+                showToast('No data to export.', 'error');
+                return;
+            }
+            var headers = ['UniqueID', 'ServiceNo', 'Rank', 'FullName', 'Email', 'Phone', 'Organization', 'Role', 'RegistrationDate', 'Verified'];
+            var rows = this.allData.map(function(row) {
+                return [
+                    row.UniqueID,
+                    row.ServiceNo,
+                    row.Rank,
+                    row.FullName,
+                    row.Email,
+                    row.Phone,
+                    row.Organization,
+                    row.Role,
+                    row.RegistrationDate,
+                    (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
+                ];
+            });
+            var csv = headers.join(',') + '\n';
+            rows.forEach(function(row) {
+                csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') + '\n';
+            });
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('CSV exported!', 'success');
+        }
     };
 
     // ============================================================
