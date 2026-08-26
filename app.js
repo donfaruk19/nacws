@@ -196,70 +196,70 @@
         },
 
         // ===== DOWNLOAD TICKET – FIXED to capture full ticket =====
-        downloadTicket: function() {
-            var self = this;
-            var card = document.getElementById('invitationCard');
-            if (!card) {
-                showToast('Ticket not found.', 'error');
-                return;
-            }
-            self.downloadBtn.disabled = true;
-            self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
+downloadTicket: function() {
+  var self = this;
+  var card = document.getElementById('invitationCard');
+  if (!card) {
+    showToast('Ticket not found.', 'error');
+    return;
+  }
+  self.downloadBtn.disabled = true;
+  self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
 
-            // Wait for images to load
-            var images = card.querySelectorAll('img');
-            Promise.all(Array.from(images).map(function(img) {
-                if (img.complete) return Promise.resolve();
-                return new Promise(function(resolve) {
-                    img.onload = resolve;
-                    img.onerror = resolve;
-                });
-            })).then(function() {
-                // Use html2canvas with full card dimensions
-                html2canvas(card, {
-                    scale: 2.5,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    logging: false,
-                    width: card.scrollWidth,
-                    height: card.scrollHeight,
-                    windowWidth: card.scrollWidth,
-                    windowHeight: card.scrollHeight,
-                    onclone: function(doc) {
-                        // Ensure all content is visible
-                        var clonedCard = doc.getElementById('invitationCard');
-                        if (clonedCard) {
-                            clonedCard.style.transform = 'none';
-                            clonedCard.style.overflow = 'visible';
-                        }
-                    }
-                }).then(function(canvas) {
-                    var link = document.createElement('a');
-                    link.download = 'NACWS-Ticket-' + (self.currentParticipant ? self.currentParticipant
-                        .uniqueId : 'card') + '.png';
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    showToast('Ticket downloaded!', 'success');
-                }).catch(function(err) {
-                    console.error('html2canvas error:', err);
-                    // Fallback: QR only
-                    var qrCanvas = self.qrContainer ? self.qrContainer.querySelector('canvas') : null;
-                    if (qrCanvas) {
-                        var link = document.createElement('a');
-                        link.download = 'NACWS-QR-' + (self.currentParticipant ? self.currentParticipant
-                            .uniqueId : 'card') + '.png';
-                        link.href = qrCanvas.toDataURL('image/png');
-                        link.click();
-                        showToast('QR downloaded (fallback).', 'success');
-                    } else {
-                        showToast('Failed to generate ticket. Please try again.', 'error');
-                    }
-                }).finally(function() {
-                    self.downloadBtn.disabled = false;
-                    self.downloadBtn.innerHTML = '⬇️ Download Ticket';
-                });
-            });
-        },
+  // Ensure the card is fully expanded
+  card.style.transform = 'none';
+  card.style.overflow = 'visible';
+  card.style.height = 'auto';
+  card.style.maxHeight = 'none';
+
+  // Force a reflow
+  void card.offsetHeight;
+
+  html2canvas(card, {
+    scale: 2.5,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+    width: card.scrollWidth,
+    height: card.scrollHeight,
+    windowWidth: card.scrollWidth,
+    windowHeight: card.scrollHeight,
+    onclone: function(doc) {
+      var cloned = doc.getElementById('invitationCard');
+      if (cloned) {
+        cloned.style.transform = 'none';
+        cloned.style.overflow = 'visible';
+        cloned.style.height = 'auto';
+        cloned.style.maxHeight = 'none';
+        // Remove any fixed widths that cause right white space
+        cloned.style.width = '100%';
+        cloned.style.boxSizing = 'border-box';
+      }
+    }
+  }).then(function(canvas) {
+    var link = document.createElement('a');
+    link.download = 'NACWS-Ticket-' + (self.currentParticipant ? self.currentParticipant.uniqueId : 'card') + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('Ticket downloaded!', 'success');
+  }).catch(function(err) {
+    console.error('html2canvas error:', err);
+    // Fallback: QR only
+    var qrCanvas = self.qrContainer ? self.qrContainer.querySelector('canvas') : null;
+    if (qrCanvas) {
+      var link = document.createElement('a');
+      link.download = 'NACWS-QR-' + (self.currentParticipant ? self.currentParticipant.uniqueId : 'card') + '.png';
+      link.href = qrCanvas.toDataURL('image/png');
+      link.click();
+      showToast('QR downloaded (fallback).', 'success');
+    } else {
+      showToast('Failed to generate ticket. Please try again.', 'error');
+    }
+  }).finally(function() {
+    self.downloadBtn.disabled = false;
+    self.downloadBtn.innerHTML = '⬇️ Download Ticket';
+  });
+},
 
         // ===== GALLERY SLIDER =====
         initGallery: function() {
