@@ -9,7 +9,7 @@
     // ============================================================
     // SHARED HELPERS
     // ============================================================
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyosv3us2ljGdWBwzgkT1CXUM4pkr6mZ4Qbg-VZ6ql1jhXgKRaLZZBrfyYqdhjgBxA/exec';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwR8cLYKGCo_FLZuawOWp4N6m7ze_M5PdmMHoYuO85pjMYxBC7Rv8caCFOiFC0ImOt0/exec';
     let toastTimer = null;
 
     function showToast(msg, type) {
@@ -743,51 +743,50 @@
         },
 
         renderTable: function() {
-            var self = this;
-            var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
-            var filter = this.filterVerified ? this.filterVerified.value : '';
+    var self = this;
+    var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
+    var filter = this.filterVerified ? this.filterVerified.value : '';
 
-            var filtered = this.allData.filter(function(row) {
-                var match = true;
-                if (search) {
-                    match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
-                        (row.Email && row.Email.toLowerCase().includes(search)) ||
-                        (row.UniqueID && row.UniqueID.toLowerCase().includes(search)) ||
-                        (row.ServiceNo && row.ServiceNo.toLowerCase().includes(search));
-                }
-                if (match && filter !== '') {
-                    var isVerified = row.Verified === true || row.Verified === 'TRUE';
-                    match = (filter === 'true') === isVerified;
-                }
-                return match;
-            });
+    var filtered = this.allData.filter(function(row) {
+        var match = true;
+        if (search) {
+            match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
+                (row.Email && row.Email.toLowerCase().includes(search)) ||
+                (row.UniqueID && row.UniqueID.toLowerCase().includes(search)) ||
+                (row.ServiceNo && row.ServiceNo.toLowerCase().includes(search));
+        }
+        if (match && filter !== '') {
+            var isVerified = row.Verified === true || row.Verified === 'TRUE';
+            match = (filter === 'true') === isVerified;
+        }
+        return match;
+    });
 
-            if (!this.tableBody) return;
-            if (filtered.length === 0) {
-                this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
-                return;
-            }
+    if (!this.tableBody) return;
+    if (filtered.length === 0) {
+        this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
+        return;
+    }
 
-            var html = '';
-            filtered.forEach(function(row) {
-                var verified = row.Verified === true || row.Verified === 'TRUE';
-                var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
-                html += '<tr>' +
-                    '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
-                    '<td>' + (row.ServiceNo || '—') + '</td>' +
-                    '<td>' + (row.FullName || '—') + '</td>' +
-                    '<td>' + (row.Role || '—') + '</td>' +
-                    '<td>' + (row.Email || '—') + '</td>' +
-                    '<td>' + (row.Phone || '—') + '</td>' +
-                    '<td>' + (row.Rank || '—') + '</td>' +
-                    '<td>' + (row.Organization || '—') + '</td>' +
-                    '<td>' + date + '</td>' +
-                    '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ?
-                        '✅ Verified' : '⏳ Pending') + '</span></td>' +
-                    '</tr>';
-            });
-            this.tableBody.innerHTML = html;
-        },
+    var html = '';
+    filtered.forEach(function(row) {
+        var verified = row.Verified === true || row.Verified === 'TRUE';
+        var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
+        html += '<tr>' +
+            '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
+            '<td>' + (row.ServiceNo || '—') + '</td>' +
+            '<td>' + (row.Rank || '—') + '</td>' +
+            '<td>' + (row.FullName || '—') + '</td>' +
+            '<td>' + (row.Email || '—') + '</td>' +
+            '<td>' + (row.Phone || '—') + '</td>' +
+            '<td>' + (row.Organization || '—') + '</td>' +
+            '<td>' + (row.Role || '—') + '</td>' +
+            '<td>' + date + '</td>' +
+            '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified' : '⏳ Pending') + '</span></td>' +
+            '</tr>';
+    });
+    this.tableBody.innerHTML = html;
+},
 
         updateStats: function(data) {
             var total = data.length;
@@ -801,40 +800,38 @@
         },
 
         exportCSV: function() {
-            if (this.allData.length === 0) {
-                showToast('No data to export.', 'error');
-                return;
-            }
-            var headers = ['UniqueID', 'ServiceNo', 'FullName', 'Role', 'Email', 'Phone', 'Rank', 'Organization', 'Special', 'RegistrationDate', 'Verified'];
-            var rows = this.allData.map(function(row) {
-                return [
-                    row.UniqueID,
-                    row.ServiceNo,
-                    row.FullName,
-                    row.Role,
-                    row.Email,
-                    row.Phone,
-                    row.Rank,
-                    row.Organization,
-                    row.Special,
-                    row.RegistrationDate,
-                    (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
-                ];
-            });
-            var csv = headers.join(',') + '\n';
-            rows.forEach(function(row) {
-                csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') +
-                    '\n';
-            });
-            var blob = new Blob([csv], { type: 'text/csv' });
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast('CSV exported!', 'success');
-        }
+    if (this.allData.length === 0) {
+        showToast('No data to export.', 'error');
+        return;
+    }
+    var headers = ['UniqueID', 'ServiceNo', 'Rank', 'FullName', 'Email', 'Phone', 'Organization', 'Role', 'RegistrationDate', 'Verified'];
+    var rows = this.allData.map(function(row) {
+        return [
+            row.UniqueID,
+            row.ServiceNo,
+            row.Rank,
+            row.FullName,
+            row.Email,
+            row.Phone,
+            row.Organization,
+            row.Role,
+            row.RegistrationDate,
+            (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
+        ];
+    });
+    var csv = headers.join(',') + '\n';
+    rows.forEach(function(row) {
+        csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') + '\n';
+    });
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('CSV exported!', 'success');
+}
     };
 
     // ============================================================
