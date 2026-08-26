@@ -195,7 +195,7 @@
             this.openConfirm();
         },
 
-        // ===== DOWNLOAD TICKET – FIXED to // ===== DOWNLOAD TICKET – FIXED =====
+// ===== DOWNLOAD TICKET – FULLY OPTIMIZED =====
 downloadTicket: function() {
   var self = this;
   var card = document.getElementById('invitationCard');
@@ -206,38 +206,36 @@ downloadTicket: function() {
   self.downloadBtn.disabled = true;
   self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
 
-  // Store original styles
-  var originalTransform = card.style.transform;
-  var originalOverflow = card.style.overflow;
-
+  // Ensure the card is fully expanded and ready for capture
   card.style.transform = 'none';
   card.style.overflow = 'visible';
-
-  // Get exact size of card
-  var cardWidth = card.offsetWidth;
-  var cardHeight = card.offsetHeight;
+  card.style.height = 'auto';
+  card.style.maxHeight = 'none';
+  
+  // Force a reflow
+  void card.offsetHeight;
 
   html2canvas(card, {
-    scale: 2.5,
+    scale: 2.5,                     // High-res output
     useCORS: true,
-    backgroundColor: '#0B3D0B', // <-- CHANGED: Match your card green
+    backgroundColor: '#0f281b',     // 1. Matches ticket background
     logging: false,
-    width: cardWidth,  // <-- CHANGED: Use exact width
-    height: cardHeight, // <-- CHANGED: Use exact height
-    windowWidth: cardWidth,
-    windowHeight: cardHeight,
+    width: 420,                     // 2. Fixed width (matches CSS)
+    height: card.scrollHeight,      // Auto-calc height
+    windowWidth: 420,               // 3. Forces virtual viewport
+    windowHeight: card.scrollHeight,// 4. Matches content height
     onclone: function(doc) {
       var cloned = doc.getElementById('invitationCard');
       if (cloned) {
+        cloned.style.width = '420px';  // 5. Lock cloned card width
+        cloned.style.margin = '0';     // 6. Remove centering margins
         cloned.style.transform = 'none';
         cloned.style.overflow = 'visible';
-        cloned.style.width = cardWidth + 'px'; // <-- CHANGED: Fixed width
         cloned.style.height = 'auto';
-        cloned.style.margin = '0'; // <-- ADD: Remove centering margin
-        cloned.style.boxSizing = 'border-box';
+        cloned.style.maxHeight = 'none';
       }
-      // Also fix body background in clone
-      doc.body.style.background = '#0B3D0B';
+      // 7. Safety net: dark background for the entire virtual page
+      doc.body.style.background = '#0f281b';
       doc.body.style.margin = '0';
     }
   }).then(function(canvas) {
@@ -246,13 +244,19 @@ downloadTicket: function() {
     link.href = canvas.toDataURL('image/png');
     link.click();
     showToast('Ticket downloaded!', 'success');
-    
-    // Restore original styles
-    card.style.transform = originalTransform;
-    card.style.overflow = originalOverflow;
   }).catch(function(err) {
     console.error('html2canvas error:', err);
-    showToast('Failed to generate ticket. Please try again.', 'error');
+    // Fallback: QR only
+    var qrCanvas = self.qrContainer ? self.qrContainer.querySelector('canvas') : null;
+    if (qrCanvas) {
+      var link = document.createElement('a');
+      link.download = 'NACWS-QR-' + (self.currentParticipant ? self.currentParticipant.uniqueId : 'card') + '.png';
+      link.href = qrCanvas.toDataURL('image/png');
+      link.click();
+      showToast('QR downloaded (fallback).', 'success');
+    } else {
+      showToast('Failed to generate ticket. Please try again.', 'error');
+    }
   }).finally(function() {
     self.downloadBtn.disabled = false;
     self.downloadBtn.innerHTML = '⬇️ Download Ticket';
