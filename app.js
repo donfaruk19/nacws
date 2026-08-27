@@ -195,7 +195,6 @@
             this.openConfirm();
         },
 
-// ===== DOWNLOAD TICKET – FULLY OPTIMIZED =====
 // ===== DOWNLOAD TICKET – COMPACT VERSION =====
 downloadTicket: function() {
   var self = this;
@@ -249,71 +248,79 @@ downloadTicket: function() {
     }
   }
 
-  // 3. Show compact ticket temporarily (offscreen) for capture
+  // 3. Show compact ticket offscreen for layout calculation
   compact.style.display = 'block';
   compact.style.position = 'absolute';
   compact.style.left = '-9999px';
   compact.style.top = '0';
   compact.style.width = '320px';
 
-  // 4. Capture with html2canvas
   if (self.downloadBtn) {
     self.downloadBtn.disabled = true;
     self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
   }
 
   var card = compact.querySelector('.ticket');
-  card.style.overflow = 'visible';
-  card.style.height = 'auto';
-  card.style.maxHeight = 'none';
+  if (card) {
+    card.style.overflow = 'visible';
+    card.style.height = 'auto';
+    card.style.maxHeight = 'none';
+  }
 
-  html2canvas(card, {
-    scale: 2.5,
-    useCORS: true,
-    backgroundColor: '#0f281b',
-    logging: false,
-    width: 320,
-    height: card.scrollHeight,
-    windowWidth: 320,
-    windowHeight: card.scrollHeight,
-    onclone: function(doc) {
-      var cloned = doc.querySelector('.ticket.compact');
-      if (cloned) {
-        cloned.style.width = '320px';
-        cloned.style.margin = '0';
-        cloned.style.overflow = 'visible';
-        cloned.style.height = 'auto';
-        cloned.style.maxHeight = 'none';
-      }
-      doc.body.style.background = '#0f281b';
-      doc.body.style.margin = '0';
-    }
-  }).then(function(canvas) {
-    var link = document.createElement('a');
-    link.download = 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    showToast('Ticket downloaded!', 'success');
-  }).catch(function(err) {
-    console.error('html2canvas error:', err);
-    var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
-    if (qrCanvas) {
-      var link = document.createElement('a');
-      link.download = 'NACWS-QR-' + (participant.uniqueId || 'QR') + '.png';
-      link.href = qrCanvas.toDataURL('image/png');
-      link.click();
-      showToast('QR downloaded (fallback).', 'success');
-    } else {
-      showToast('Failed to generate ticket. Please try again.', 'error');
-    }
-  }).finally(function() {
-    compact.style.display = 'none';
-    if (self.downloadBtn) {
-      self.downloadBtn.disabled = false;
-      self.downloadBtn.innerHTML = '⬇️ Download Ticket';
-    }
+  // 4. Synchronize layout & render cycles before html2canvas capture
+  requestAnimationFrame(function() {
+    setTimeout(function() {
+      var targetElement = card || compact;
+      
+      html2canvas(targetElement, {
+        scale: 2.5,
+        useCORS: true,
+        backgroundColor: '#0f281b',
+        logging: false,
+        width: 320,
+        height: targetElement.scrollHeight,
+        windowWidth: 320,
+        windowHeight: targetElement.scrollHeight,
+        onclone: function(doc) {
+          var cloned = doc.querySelector('.ticket.compact');
+          if (cloned) {
+            cloned.style.width = '320px';
+            cloned.style.margin = '0';
+            cloned.style.overflow = 'visible';
+            cloned.style.height = 'auto';
+            cloned.style.maxHeight = 'none';
+          }
+          doc.body.style.background = '#0f281b';
+          doc.body.style.margin = '0';
+        }
+      }).then(function(canvas) {
+        var link = document.createElement('a');
+        link.download = 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('Ticket downloaded!', 'success');
+      }).catch(function(err) {
+        console.error('html2canvas error:', err);
+        var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
+        if (qrCanvas) {
+          var link = document.createElement('a');
+          link.download = 'NACWS-QR-' + (participant.uniqueId || 'QR') + '.png';
+          link.href = qrCanvas.toDataURL('image/png');
+          link.click();
+          showToast('QR downloaded (fallback).', 'success');
+        } else {
+          showToast('Failed to generate ticket. Please try again.', 'error');
+        }
+      }).finally(function() {
+        compact.style.display = 'none';
+        if (self.downloadBtn) {
+          self.downloadBtn.disabled = false;
+          self.downloadBtn.innerHTML = '⬇️ Download Ticket';
+        }
+      });
+    }, 150); // 150ms buffer to guarantee complete QR image rasterization
   });
-},
+}
         // ===== GALLERY SLIDER =====
         initGallery: function() {
             const track = document.getElementById('galleryTrack');
@@ -466,352 +473,362 @@ downloadTicket: function() {
             }).finally(function() {
                 if (self.submitBtn) {
                     self.submitBtn.disabled = false;
-                    self.submitBtn.innerHTML = '🚀 Register &amp; Get QR';
+                    self.submitBtn.innerHTML = 'Submit Now';
                 }
             });
         }
     };
 
-    // ============================================================
-    // MODULE: VERIFICATION (verify.html)
-    // ============================================================
-    var Verify = {
-        init: function() {
-            var self = this;
-            this.readerEl = document.getElementById('reader');
-            this.btnStart = document.getElementById('btnStartScanner');
-            this.btnStop = document.getElementById('btnStopScanner');
-            this.scanArea = document.getElementById('scanArea');
-            this.modeScan = document.getElementById('modeScan');
-            this.modeManual = document.getElementById('modeManual');
-            this.manualArea = document.getElementById('manualArea');
-            this.manualId = document.getElementById('manualId');
-            this.btnManualVerify = document.getElementById('btnManualVerify');
-            this.resultCard = document.getElementById('resultCard');
-            this.statusIcon = document.getElementById('statusIcon');
-            this.statusText = document.getElementById('statusText');
-            this.resultName = document.getElementById('resultName');
-            this.resultServiceNo = document.getElementById('resultServiceNo');
-            this.resultId = document.getElementById('resultId');
-            this.resultEmail = document.getElementById('resultEmail');
-            this.resultOrg = document.getElementById('resultOrg');
-            this.resultRole = document.getElementById('resultRole');
-            this.btnMarkVerified = document.getElementById('btnMarkVerified');
-            this.btnClearResult = document.getElementById('btnClearResult');
-            this.installBanner = document.getElementById('installBanner');
-            this.installBtn = document.getElementById('installBtn');
+// ============================================================
+// MODULE: VERIFICATION (verify.html)
+// ============================================================
+var Verify = {
+    init: function() {
+        var self = this;
+        this.readerEl = document.getElementById('reader');
+        this.btnStart = document.getElementById('btnStartScanner');
+        this.btnStop = document.getElementById('btnStopScanner');
+        this.scanArea = document.getElementById('scanArea');
+        this.modeScan = document.getElementById('modeScan');
+        this.modeManual = document.getElementById('modeManual');
+        this.manualArea = document.getElementById('manualArea');
+        this.manualId = document.getElementById('manualId');
+        this.btnManualVerify = document.getElementById('btnManualVerify');
+        this.resultCard = document.getElementById('resultCard');
+        this.statusIcon = document.getElementById('statusIcon');
+        this.statusText = document.getElementById('statusText');
+        this.resultName = document.getElementById('resultName');
+        this.resultServiceNo = document.getElementById('resultServiceNo');
+        this.resultId = document.getElementById('resultId');
+        this.resultEmail = document.getElementById('resultEmail');
+        this.resultOrg = document.getElementById('resultOrg');
+        this.resultRole = document.getElementById('resultRole');
+        this.btnMarkVerified = document.getElementById('btnMarkVerified');
+        this.btnClearResult = document.getElementById('btnClearResult');
+        this.installBanner = document.getElementById('installBanner');
+        this.installBtn = document.getElementById('installBtn');
 
-            this.html5QrCode = null;
-            this.isScanning = false;
-            this.currentParticipant = null;
-            this.currentId = null;
-            this.cachedData = [];
+        this.html5QrCode = null;
+        this.isScanning = false;
+        this.currentParticipant = null;
+        this.currentId = null;
+        this.cachedData = [];
 
-            // Mode toggle
-            if (this.modeScan) {
-                this.modeScan.addEventListener('click', function() {
-                    self.modeScan.classList.add('active');
-                    self.modeManual.classList.remove('active');
-                    if (self.manualArea) self.manualArea.classList.remove('active');
-                    if (self.scanArea) self.scanArea.style.display = 'block';
-                    showToast('QR scan mode active', '');
-                });
-            }
-            if (this.modeManual) {
-                this.modeManual.addEventListener('click', function() {
-                    self.modeManual.classList.add('active');
-                    self.modeScan.classList.remove('active');
-                    if (self.manualArea) self.manualArea.classList.add('active');
-                    if (self.scanArea) self.scanArea.style.display = 'none';
-                    if (self.isScanning) self.stopScanner();
-                    showToast('Manual entry mode active', '');
-                });
-            }
-            if (this.modeScan) this.modeScan.classList.add('active');
+        // Mode toggle
+        if (this.modeScan) {
+            this.modeScan.addEventListener('click', function() {
+                self.modeScan.classList.add('active');
+                if (self.modeManual) self.modeManual.classList.remove('active');
+                if (self.manualArea) self.manualArea.classList.remove('active');
+                if (self.scanArea) self.scanArea.style.display = 'block';
+                showToast('QR scan mode active', '');
+            });
+        }
+        if (this.modeManual) {
+            this.modeManual.addEventListener('click', function() {
+                self.modeManual.classList.add('active');
+                if (self.modeScan) self.modeScan.classList.remove('active');
+                if (self.manualArea) self.manualArea.classList.add('active');
+                if (self.scanArea) self.scanArea.style.display = 'none';
+                if (self.isScanning) self.stopScanner();
+                showToast('Manual entry mode active', '');
+            });
+        }
+        if (this.modeScan) this.modeScan.classList.add('active');
 
-            // Scanner buttons
-            if (this.btnStart) {
-                this.btnStart.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    self.startScanner();
-                });
-            }
-            if (this.btnStop) {
-                this.btnStop.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    self.stopScanner();
-                });
-            }
-
-            // Manual verify
-            if (this.btnManualVerify) {
-                this.btnManualVerify.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var id = self.manualId ? self.manualId.value.trim() : '';
-                    if (!id) { showToast('Enter a Unique ID.', 'error'); return; }
-                    self.verifyParticipant(id);
-                });
-            }
-            if (this.manualId) {
-                this.manualId.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter' && self.btnManualVerify) self.btnManualVerify.click();
-                });
-            }
-
-            // Result actions
-            if (this.btnMarkVerified) {
-                this.btnMarkVerified.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    self.markAsVerified();
-                });
-            }
-            if (this.btnClearResult) {
-                this.btnClearResult.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    self.clearResult();
-                });
-            }
-
-            // PWA Install
-            var deferredPrompt = null;
-            window.addEventListener('beforeinstallprompt', function(e) {
+        // Scanner control buttons
+        if (this.btnStart) {
+            this.btnStart.addEventListener('click', function(e) {
                 e.preventDefault();
-                deferredPrompt = e;
-                if (self.installBanner) self.installBanner.classList.add('show');
+                self.startScanner();
             });
-            if (this.installBtn) {
-                this.installBtn.addEventListener('click', function() {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        deferredPrompt.userChoice.then(function(result) {
-                            if (result.outcome === 'accepted') {
-                                if (self.installBanner) self.installBanner.classList.remove('show');
-                                showToast('App installed!', 'success');
-                            } else {
-                                showToast('Installation cancelled.', '');
-                            }
-                            deferredPrompt = null;
-                        });
-                    }
-                });
-            }
-            window.addEventListener('appinstalled', function() {
-                if (self.installBanner) self.installBanner.classList.remove('show');
-                showToast('✅ App installed! Find it on your home screen.', 'success');
+        }
+        if (this.btnStop) {
+            this.btnStop.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.stopScanner();
             });
+        }
 
-            if (window.location.protocol === 'file:') {
-                var manifestLink = document.getElementById('manifestLink');
-                if (manifestLink) manifestLink.remove();
-            }
-
-            console.log('✅ NACWS Verify loaded.');
-        },
-
-        startScanner: function() {
-            var self = this;
-            if (this.isScanning) return;
-            if (!this.html5QrCode) {
-                this.html5QrCode = new Html5Qrcode('reader');
-            }
-            var config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
-            this.html5QrCode.start({ facingMode: 'environment' }, config,
-                function(decodedText) { self.onScanSuccess(decodedText); },
-                function(err) { /* silent */ }
-            ).then(function() {
-                self.isScanning = true;
-                if (self.scanArea) self.scanArea.classList.add('scanning-active');
-                if (self.btnStart) {
-                    self.btnStart.textContent = '⏳ Scanning...';
-                    self.btnStart.disabled = true;
-                }
-                showToast('Camera started. Point at a QR code.', '');
-            }).catch(function(err) {
-                console.error('Scanner start error:', err);
-                showToast('Could not access camera. Please check permissions.', 'error');
-                if (self.btnStart) {
-                    self.btnStart.disabled = false;
-                    self.btnStart.textContent = '▶ Start Camera';
-                }
+        // Manual verify submission
+        if (this.btnManualVerify) {
+            this.btnManualVerify.addEventListener('click', function(e) {
+                e.preventDefault();
+                var id = self.manualId ? self.manualId.value.trim() : '';
+                if (!id) { showToast('Enter a Unique ID.', 'error'); return; }
+                self.verifyParticipant(id);
             });
-        },
-
-        stopScanner: function() {
-            var self = this;
-            if (!this.html5QrCode || !this.isScanning) return;
-            this.html5QrCode.stop().then(function() {
-                self.isScanning = false;
-                if (self.scanArea) self.scanArea.classList.remove('scanning-active');
-                if (self.btnStart) {
-                    self.btnStart.textContent = '▶ Start Camera';
-                    self.btnStart.disabled = false;
-                }
-                showToast('Camera stopped.', '');
-            }).catch(function(err) {
-                console.error('Stop error:', err);
+        }
+        if (this.manualId) {
+            this.manualId.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && self.btnManualVerify) self.btnManualVerify.click();
             });
-        },
+        }
 
-        onScanSuccess: function(decodedText) {
-            try {
-                var data = JSON.parse(decodedText);
-                if (data.id) this.verifyParticipant(data.id);
-                else showToast('Invalid QR format.', 'error');
-            } catch (e) {
-                if (decodedText && decodedText.startsWith('NACWS-')) this.verifyParticipant(decodedText);
-                else showToast('Invalid QR code.', 'error');
-            }
-        },
+        // Result action buttons
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.markAsVerified();
+            });
+        }
+        if (this.btnClearResult) {
+            this.btnClearResult.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.clearResult();
+            });
+        }
 
-        fetchAllData: function() {
-            var self = this;
-            return fetch(APP_SCRIPT_URL + '?action=all')
-                .then(function(response) {
-                    if (!response.ok) throw new Error('Network error');
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (Array.isArray(data)) {
-                        self.cachedData = data;
-                        return data;
-                    }
-                    throw new Error('Unexpected response');
-                })
-                .catch(function(err) {
-                    console.error('Fetch error:', err);
-                    showToast('Could not load participant data.', 'error');
-                    return [];
-                });
-        },
-
-        verifyParticipant: function(id) {
-            var self = this;
-            if (!id || !id.trim()) { showToast('Enter a valid ID.', 'error'); return; }
-            this.currentId = id.trim();
-            if (this.resultCard) {
-                this.resultCard.classList.add('show');
-                if (this.statusIcon) this.statusIcon.textContent = '⏳';
-                if (this.statusText) {
-                    this.statusText.textContent = 'Searching...';
-                    this.statusText.className = 'status-text';
-                }
-                if (this.resultName) this.resultName.textContent = '—';
-                if (this.resultServiceNo) this.resultServiceNo.textContent = '—';
-                if (this.resultId) this.resultId.textContent = this.currentId;
-                if (this.resultEmail) this.resultEmail.textContent = '—';
-                if (this.resultOrg) this.resultOrg.textContent = '—';
-                if (this.resultRole) this.resultRole.textContent = '—';
-                if (this.btnMarkVerified) {
-                    this.btnMarkVerified.disabled = true;
-                    this.btnMarkVerified.innerHTML = '⏳ Searching...';
-                }
-            }
-
-            this.fetchAllData().then(function(allData) {
-                if (!allData || allData.length === 0) {
-                    if (self.statusIcon) self.statusIcon.textContent = '⚠️';
-                    if (self.statusText) {
-                        self.statusText.textContent = 'No Data';
-                        self.statusText.className = 'status-text not-found';
-                    }
-                    if (self.btnMarkVerified) {
-                        self.btnMarkVerified.disabled = true;
-                        self.btnMarkVerified.innerHTML = '⚠️ No Data';
-                    }
-                    showToast('Could not retrieve registration data.', 'error');
-                    return;
-                }
-                var participant = allData.find(function(row) { return row.UniqueID === self.currentId; });
-                if (participant) {
-                    self.currentParticipant = participant;
-                    self.displayResult(participant);
-                } else {
-                    if (self.statusIcon) self.statusIcon.textContent = '❌';
-                    if (self.statusText) {
-                        self.statusText.textContent = 'Not Found';
-                        self.statusText.className = 'status-text not-found';
-                    }
-                    if (self.resultName) self.resultName.textContent = '—';
-                    if (self.resultServiceNo) self.resultServiceNo.textContent = '—';
-                    if (self.resultId) self.resultId.textContent = self.currentId;
-                    if (self.resultEmail) self.resultEmail.textContent = '—';
-                    if (self.resultOrg) self.resultOrg.textContent = '—';
-                    if (self.resultRole) self.resultRole.textContent = '—';
-                    if (self.btnMarkVerified) {
-                        self.btnMarkVerified.disabled = true;
-                        self.btnMarkVerified.innerHTML = '❌ Not Registered';
-                    }
-                    showToast('Participant not found. Please check the ID.', 'error');
+        // PWA Installation handling
+        var deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (self.installBanner) self.installBanner.classList.add('show');
+        });
+        if (this.installBtn) {
+            this.installBtn.addEventListener('click', function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(function(result) {
+                        if (result.outcome === 'accepted') {
+                            if (self.installBanner) self.installBanner.classList.remove('show');
+                            showToast('App installed!', 'success');
+                        } else {
+                            showToast('Installation cancelled.', '');
+                        }
+                        deferredPrompt = null;
+                    });
                 }
             });
-        },
+        }
+        window.addEventListener('appinstalled', function() {
+            if (self.installBanner) self.installBanner.classList.remove('show');
+            showToast('✅ App installed! Find it on your home screen.', 'success');
+        });
 
-        displayResult: function(participant) {
-            var isVerified = participant.Verified === true || participant.Verified === 'TRUE';
-            if (this.statusIcon) this.statusIcon.textContent = isVerified ? '✅' : '⏳';
+        if (window.location.protocol === 'file:') {
+            var manifestLink = document.getElementById('manifestLink');
+            if (manifestLink) manifestLink.remove();
+        }
+
+        console.log('✅ NACWS Verify module loaded.');
+    },
+
+    startScanner: function() {
+        var self = this;
+        if (this.isScanning) return;
+        if (!this.html5QrCode) {
+            this.html5QrCode = new Html5Qrcode('reader');
+        }
+        var config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+        this.html5QrCode.start(
+            { facingMode: 'environment' },
+            config,
+            function(decodedText) { self.onScanSuccess(decodedText); },
+            function(err) { /* silent scan error */ }
+        ).then(function() {
+            self.isScanning = true;
+            if (self.scanArea) self.scanArea.classList.add('scanning-active');
+            if (self.btnStart) {
+                self.btnStart.textContent = '⏳ Scanning...';
+                self.btnStart.disabled = true;
+            }
+            showToast('Camera started. Point at a QR code.', '');
+        }).catch(function(err) {
+            console.error('Scanner start error:', err);
+            showToast('Could not access camera. Please check permissions.', 'error');
+            if (self.btnStart) {
+                self.btnStart.disabled = false;
+                self.btnStart.textContent = '▶ Start Camera';
+            }
+        });
+    },
+
+    stopScanner: function() {
+        var self = this;
+        if (!this.html5QrCode || !this.isScanning) return;
+        this.html5QrCode.stop().then(function() {
+            self.isScanning = false;
+            if (self.scanArea) self.scanArea.classList.remove('scanning-active');
+            if (self.btnStart) {
+                self.btnStart.textContent = '▶ Start Camera';
+                self.btnStart.disabled = false;
+            }
+            showToast('Camera stopped.', '');
+        }).catch(function(err) {
+            console.error('Stop error:', err);
+        });
+    },
+
+    onScanSuccess: function(decodedText) {
+        try {
+            var data = JSON.parse(decodedText);
+            if (data.id) {
+                this.verifyParticipant(data.id);
+            } else {
+                showToast('Invalid QR format.', 'error');
+            }
+        } catch (e) {
+            if (decodedText && decodedText.startsWith('NACWS-')) {
+                this.verifyParticipant(decodedText);
+            } else {
+                showToast('Invalid QR code.', 'error');
+            }
+        }
+    },
+
+    fetchAllData: function() {
+        var self = this;
+        return fetch(APP_SCRIPT_URL + '?action=all')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(function(data) {
+                if (Array.isArray(data)) {
+                    self.cachedData = data;
+                    return data;
+                }
+                throw new Error('Unexpected data format');
+            })
+            .catch(function(err) {
+                console.error('Fetch error:', err);
+                showToast('Could not load participant data.', 'error');
+                return [];
+            });
+    },
+
+    verifyParticipant: function(id) {
+        var self = this;
+        if (!id || !id.trim()) { showToast('Enter a valid ID.', 'error'); return; }
+        this.currentId = id.trim();
+        if (this.resultCard) {
+            this.resultCard.classList.add('show');
+            if (this.statusIcon) this.statusIcon.textContent = '⏳';
             if (this.statusText) {
-                this.statusText.textContent = isVerified ? 'Already Verified' : 'Not Yet Verified';
-                this.statusText.className = 'status-text ' + (isVerified ? 'verified' : 'unverified');
+                this.statusText.textContent = 'Searching...';
+                this.statusText.className = 'status-text';
             }
-            if (this.resultName) this.resultName.textContent = participant.FullName || '—';
-            if (this.resultServiceNo) this.resultServiceNo.textContent = participant.ServiceNo || '—';
-            if (this.resultId) this.resultId.textContent = participant.UniqueID || '—';
-            if (this.resultEmail) this.resultEmail.textContent = participant.Email || '—';
-            if (this.resultOrg) this.resultOrg.textContent = participant.Organization || '—';
-            if (this.resultRole) this.resultRole.textContent = participant.Role || '—';
-            if (this.btnMarkVerified) {
-                this.btnMarkVerified.disabled = isVerified;
-                this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Verified Attendace';
-            }
-            if (this.resultCard) this.resultCard.classList.add('show');
-        },
-
-        markAsVerified: function() {
-            var self = this;
-            if (!this.currentParticipant || !this.currentId) return;
-            if (this.currentParticipant.Verified === true || this.currentParticipant.Verified === 'TRUE') {
-                showToast('Already verified.', '');
-                return;
-            }
+            if (this.resultName) this.resultName.textContent = '—';
+            if (this.resultServiceNo) this.resultServiceNo.textContent = '—';
+            if (this.resultId) this.resultId.textContent = this.currentId;
+            if (this.resultEmail) this.resultEmail.textContent = '—';
+            if (this.resultOrg) this.resultOrg.textContent = '—';
+            if (this.resultRole) this.resultRole.textContent = '—';
             if (this.btnMarkVerified) {
                 this.btnMarkVerified.disabled = true;
-                this.btnMarkVerified.innerHTML = '<span class="spinner"></span> Updating...';
+                this.btnMarkVerified.innerHTML = '⏳ Searching...';
             }
-            var url = APP_SCRIPT_URL + '?action=verify&id=' + encodeURIComponent(this.currentId);
-            fetch(url)
-                .then(function(response) { return response.json(); })
-                .then(function(result) {
-                    if (result.success) {
-                        self.currentParticipant.Verified = true;
-                        self.displayResult(self.currentParticipant);
-                        showToast('✅ Verified successfully!', 'success');
-                    } else {
-                        showToast('Verification failed: ' + (result.error || 'Unknown'), 'error');
-                    }
-                })
-                .catch(function(err) {
-                    console.error('Mark verified error:', err);
-                    showToast('Could not connect to the server.', 'error');
-                })
-                .finally(function() {
+        }
+
+        this.fetchAllData().then(function(allData) {
+            if (!allData || allData.length === 0) {
+                if (self.statusIcon) self.statusIcon.textContent = '⚠️';
+                if (self.statusText) {
+                    self.statusText.textContent = 'No Data';
+                    self.statusText.className = 'status-text not-found';
+                }
+                if (self.btnMarkVerified) {
+                    self.btnMarkVerified.disabled = true;
+                    self.btnMarkVerified.innerHTML = '⚠️ No Data';
+                }
+                showToast('Could not retrieve registration data.', 'error');
+                return;
+            }
+            var participant = allData.find(function(row) { return row.UniqueID === self.currentId; });
+            if (participant) {
+                self.currentParticipant = participant;
+                self.displayResult(participant);
+            } else {
+                if (self.statusIcon) self.statusIcon.textContent = '❌';
+                if (self.statusText) {
+                    self.statusText.textContent = 'Not Found';
+                    self.statusText.className = 'status-text not-found';
+                }
+                if (self.resultName) self.resultName.textContent = '—';
+                if (self.resultServiceNo) self.resultServiceNo.textContent = '—';
+                if (self.resultId) self.resultId.textContent = self.currentId;
+                if (self.resultEmail) self.resultEmail.textContent = '—';
+                if (self.resultOrg) self.resultOrg.textContent = '—';
+                if (self.resultRole) self.resultRole.textContent = '—';
+                if (self.btnMarkVerified) {
+                    self.btnMarkVerified.disabled = true;
+                    self.btnMarkVerified.innerHTML = '❌ Not Registered';
+                }
+                showToast('Participant not found. Please check the ID.', 'error');
+            }
+        });
+    },
+
+    displayResult: function(participant) {
+        var isVerified = participant.Verified === true || participant.Verified === 'TRUE';
+        if (this.statusIcon) this.statusIcon.textContent = isVerified ? '✅' : '⏳';
+        if (this.statusText) {
+            this.statusText.textContent = isVerified ? 'Already Verified' : 'Not Yet Verified';
+            this.statusText.className = 'status-text ' + (isVerified ? 'verified' : 'unverified');
+        }
+        if (this.resultName) this.resultName.textContent = participant.FullName || '—';
+        if (this.resultServiceNo) this.resultServiceNo.textContent = participant.ServiceNo || '—';
+        if (this.resultId) this.resultId.textContent = participant.UniqueID || '—';
+        if (this.resultEmail) this.resultEmail.textContent = participant.Email || '—';
+        if (this.resultOrg) this.resultOrg.textContent = participant.Organization || '—';
+        if (this.resultRole) this.resultRole.textContent = participant.Role || '—';
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.disabled = isVerified;
+            this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Verified Attendance';
+        }
+        if (this.resultCard) this.resultCard.classList.add('show');
+    },
+
+    markAsVerified: function() {
+        var self = this;
+        if (!this.currentParticipant || !this.currentId) return;
+        if (this.currentParticipant.Verified === true || this.currentParticipant.Verified === 'TRUE') {
+            showToast('Already verified.', '');
+            return;
+        }
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.disabled = true;
+            this.btnMarkVerified.innerHTML = '<span class="spinner"></span> Updating...';
+        }
+        var url = APP_SCRIPT_URL + '?action=verify&id=' + encodeURIComponent(this.currentId);
+        fetch(url)
+            .then(function(response) { return response.json(); })
+            .then(function(result) {
+                if (result.success) {
+                    self.currentParticipant.Verified = true;
+                    self.displayResult(self.currentParticipant);
+                    showToast('✅ Verified successfully!', 'success');
+                } else {
+                    showToast('Verification failed: ' + (result.error || 'Unknown'), 'error');
                     if (self.btnMarkVerified) {
                         self.btnMarkVerified.disabled = false;
                         self.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
                     }
-                });
-        },
+                }
+            })
+            .catch(function(err) {
+                console.error('Mark verified error:', err);
+                showToast('Could not connect to the server.', 'error');
+                if (self.btnMarkVerified) {
+                    self.btnMarkVerified.disabled = false;
+                    self.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
+                }
+            });
+    },
 
-        clearResult: function() {
-            if (this.resultCard) this.resultCard.classList.remove('show');
-            this.currentParticipant = null;
-            this.currentId = null;
-            if (this.btnMarkVerified) {
-                this.btnMarkVerified.disabled = false;
-                this.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
-            }
-            if (this.manualId) this.manualId.value = '';
+    clearResult: function() {
+        if (this.resultCard) this.resultCard.classList.remove('show');
+        this.currentParticipant = null;
+        this.currentId = null;
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.disabled = false;
+            this.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
         }
-    };
+        if (this.manualId) this.manualId.value = '';
+    }
+};
 
     // ============================================================
     // MODULE: ADMIN (admin.html)
