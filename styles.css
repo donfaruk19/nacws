@@ -1273,6 +1273,136 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
     overflow: visible;
 }
 /* ============================================================
+   CONFIRMATION MODAL GRID LAYOUT MODIFICATIONS
+   ============================================================ */
+.popup-box.ticket-wrapper.confirmation-modal-dark {
+    background: rgba(10, 25, 18, 0.95) !important;
+    border: 1px solid rgba(201, 168, 76, 0.25) !important;
+    border-radius: 24px !important;
+    padding: 24px !important;
+    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(12px);
+    max-width: 470px !important;
+    width: 100% !important;
+}
+
+.ticket-badge-sub {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #0f281b;
+    background: #c9a84c;
+    padding: 2px 12px;
+    border-radius: 4px;
+    margin-top: 4px;
+    letter-spacing: 1px;
+}
+
+/* Symmetrical Grid rows instead of unstable right text wraps */
+.ticket-details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 20px 0;
+    padding: 0 8px;
+    text-align: left;
+}
+
+.ticket-grid-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px dashed rgba(201, 168, 76, 0.15);
+    padding-bottom: 6px;
+}
+
+.ticket-grid-row:last-child {
+    border-bottom: none;
+}
+
+.grid-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #e8d5a3;
+    opacity: 0.75;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    padding-right: 12px;
+}
+
+.grid-value {
+    font-size: 0.9rem;
+    color: #ffffff;
+    font-weight: 600;
+    text-align: right;
+    word-break: break-word;
+}
+
+.gold-monospace {
+    color: #c9a84c !important;
+    font-family: monospace;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+}
+
+/* Integrated Action Button Tray Layout */
+.modal-actions-tray {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(201, 168, 76, 0.2);
+    width: 100%;
+}
+
+.modal-actions-tray .btn {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 12px 20px;
+    transition: all 0.3s ease;
+}
+
+.modal-actions-tray .btn-download {
+    background: linear-gradient(135deg, #c9a84c, #a8883a) !important;
+    color: #0f281b !important;
+    border: none !important;
+}
+
+.modal-actions-tray .btn-download:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(201, 168, 76, 0.4) !important;
+}
+
+.modal-actions-tray .btn-close-modal {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.modal-actions-tray .btn-close-modal:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+@media (max-width: 480px) {
+    .modal-actions-tray {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .ticket-grid-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+    .grid-value {
+        text-align: left;
+    }
+}
+/* ============================================================
    TOAST
    ============================================================ */
 .toast {
