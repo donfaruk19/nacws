@@ -272,116 +272,76 @@
          </div>
      </div>
 
-     <!-- ===== CONFIRMATION MODAL (Ticket) ===== -->
-     <div class="popup-overlay" id="confirmModal">
-         <div class="popup-box ticket-wrapper">
-             <button class="popup-close" id="modalCloseBtn" style="position:sticky;top:0;float:right;z-index:10;background:rgba(0,0,0,.7);border-color:rgba(255,255,255,.2);color:#fff;margin:8px 8px;">✕</button>
+<!-- ===== CONFIRMATION MODAL (Ticket View) ===== -->
+<div class="popup-overlay" id="confirmModal">
+    <div class="popup-box ticket-wrapper">
+        <button class="popup-close" id="modalCloseBtn" style="position:sticky;top:0;float:right;z-index:10;background:rgba(0,0,0,.7);border-color:rgba(255,255,255,.2);color:#fff;margin:8px 8px;">✕</button>
 
-             <div class="ticket" id="invitationCard">
-                 <div class="ticket-inner">
-                     <div class="ticket-brand">
-                         <img src="nacws_logo.png" alt="NACWS" class="ticket-logo" />
-                         <div class="ticket-brand-text">
-                             <div class="ticket-org">NACWS</div>
-                             <div class="ticket-event-name">Cybersecurity Seminar 2027</div>
-                         </div>
-                     </div>
+        <div class="ticket" id="invitationCard">
+            <div class="ticket-inner">
+                <!-- Top Header Logo -->
+                <div class="ticket-header-logo">
+                    <img src="nacws_logo.png" alt="NACWS Logo" class="ticket-logo-top" />
+                </div>
 
-                     <div class="ticket-divider"></div>
+                <!-- Centralized Event Title -->
+                <div class="ticket-event-centralized">
+                    <h2>CYBERSECURITY SEMINAR 2027</h2>
+                </div>
 
-                     <div class="ticket-success-icon"><span>✅</span></div>
-                     <div class="ticket-title">Registration <span class="gold">Confirmed</span></div>
-                     <div class="ticket-subtitle">Your entry pass for the Cybersecurity Seminar 2027</div>
+                <!-- Right-Aligned Details Block -->
+                <div class="ticket-user-details-right">
+                    <div class="detail-line rank-name"><span id="cardRank">—</span> <span id="cardName">—</span></div>
+                    <div class="detail-line unit-org" id="cardOrg">—</div>
+                    <div class="detail-line unique-id" id="cardId">—</div>
+                    <div class="detail-line user-role" id="cardRole">—</div>
+                </div>
 
-                     <div class="ticket-divider light"></div>
+                <!-- Central QR Code Section -->
+                <div class="ticket-qr-center">
+                    <div id="qrcode-card"></div>
+                </div>
 
-                     <div class="ticket-body">
-                         <div class="ticket-detail"><span class="ticket-label">Participant</span><span class="ticket-value" id="cardName">—</span></div>
-                         <div class="ticket-detail"><span class="ticket-label">Service No</span><span class="ticket-value" id="cardServiceNo">—</span></div>
-                         <div class="ticket-detail"><span class="ticket-label">Role</span><span class="ticket-value" id="cardRole">—</span></div>
-                         <div class="ticket-detail"><span class="ticket-label">Unique ID</span><span class="ticket-value gold" id="cardId">—</span></div>
-                         <div class="ticket-detail"><span class="ticket-label">Email</span><span class="ticket-value small" id="cardEmail">—</span></div>
-                         <div class="ticket-detail"><span class="ticket-label">Organization</span><span class="ticket-value small" id="cardOrg">—</span></div>
-                         <div class="ticket-detail ticket-detail-full"><span class="ticket-label">Event Dates</span><span class="ticket-value gold">2 – 6 July 2027 · 0900hrs daily</span></div>
-                     </div>
-
-                     <div class="ticket-divider light"></div>
-
-                     <div class="ticket-qr-section">
-                         <div id="qrcode-card"></div>
-                         <div class="ticket-qr-info">
-                             <strong>Scan to Verify</strong>
-                             <span>Present this ticket at the entrance</span>
-                         </div>
-                     </div>
-
-                     <div class="ticket-divider light"></div>
-
-                     <div class="ticket-footer">
-                         <span class="ticket-id" id="cardTicketId">NACWS-••••••</span>
-                         <span class="ticket-stamp">✦ Verified Entry ✦</span>
-                     </div>
-
-                     <div class="ticket-watermark">NACWS</div>
-                 </div>
-             </div>
-
-             <div class="modal-actions">
-                 <button class="btn btn-download" id="downloadCardBtn">⬇️ Download Ticket</button>
-                 <button class="btn btn-close-modal" id="modalCloseBtn2">✕ Close</button>
-             </div>
-             <div class="ticket-email-note">A confirmation email with this ticket has been sent to your inbox.</div>
-         </div>
-     </div>
-<!-- Compact ticket for download (hidden) -->
-<div id="compactTicket" style="display:none;">
-  <div class="ticket compact">
-    <div class="ticket-inner">
-      <div class="ticket-brand">
-        <div class="ticket-brand-text">
-          <div class="ticket-org">NIGERIAN ARMY CYBER WARFARE SCHOOL</div>
-          <div class="ticket-event-name">Cybersecurity Seminar 2027</div>
+                <!-- Single Line Event Details -->
+                <div class="ticket-meta-single-line">
+                    <span>📅 2 – 6 July 2027</span> · 
+                    <span>⏰ 0900hrs Daily</span> · 
+                    <span>📍 Main Auditorium, Abuja</span>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="ticket-divider"></div>
-      <div class="ticket-success-icon">✅</div>
-      <div class="ticket-title">Registration Confirmed</div>
-      <div class="ticket-subtitle">Entry Pass</div>
-      <div class="ticket-body compact-body">
-        <div class="ticket-detail">
-          <span class="ticket-label">Name</span>
-          <span class="ticket-value" id="compactName">—</span>
+
+        <div class="modal-actions">
+            <button class="btn btn-download" id="downloadCardBtn">⬇️ Download Ticket</button>
+            <button class="btn btn-close-modal" id="modalCloseBtn2">✕ Close</button>
         </div>
-        <div class="ticket-detail">
-          <span class="ticket-label">Service No</span>
-          <span class="ticket-value" id="compactServiceNo">—</span>
-        </div>
-        <div class="ticket-detail">
-          <span class="ticket-label">Role</span>
-          <span class="ticket-value" id="compactRole">—</span>
-        </div>
-        <div class="ticket-detail">
-          <span class="ticket-label">Unique ID</span>
-          <span class="ticket-value" id="compactId">—</span>
-        </div>
-        <div class="ticket-detail ticket-detail-full">
-          <span class="ticket-label">Event Dates</span>
-          <span class="ticket-value" style="font-size:0.75rem;">2 – 6 July 2027 · 09:00hrs daily</span>
-        </div>
-      </div>
-      <div class="ticket-qr-section">
-        <div id="qrcode-compact"></div>
-        <div class="ticket-qr-info">
-          <strong>Scan to Verify</strong>
-          <span>Present this ticket at the entrance</span>
-        </div>
-      </div>
-      <div class="ticket-footer">
-        <span class="ticket-id" id="compactTicketId">NACWS-XXXX</span>
-        <span class="ticket-stamp">✦ VERIFIED ENTRY ✦</span>
-      </div>
     </div>
-  </div>
+</div>
+
+<!-- Compact Ticket for Download Capture -->
+<div id="compactTicket" style="display:none;">
+    <div class="ticket compact">
+        <div class="ticket-inner">
+            <div class="ticket-header-logo">
+                <img src="nacws_logo.png" alt="NACWS Logo" class="ticket-logo-top" />
+            </div>
+            <div class="ticket-event-centralized">
+                <h2>CYBERSECURITY SEMINAR 2027</h2>
+            </div>
+            <div class="ticket-user-details-right">
+                <div class="detail-line rank-name"><span id="compactRank">—</span> <span id="compactName">—</span></div>
+                <div class="detail-line unit-org" id="compactOrg">—</div>
+                <div class="detail-line unique-id" id="compactId">—</div>
+                <div class="detail-line user-role" id="compactRole">—</div>
+            </div>
+            <div class="ticket-qr-center">
+                <div id="qrcode-compact"></div>
+            </div>
+            <div class="ticket-meta-single-line">
+                <span>📅 2 – 6 July 2027</span> · <span>⏰ 0900hrs Daily</span> · <span>📍 Main Auditorium, Abuja</span>
+            </div>
+        </div>
+    </div>
 </div>
      <!-- ===== TOAST ===== -->
      <div class="toast" id="toast"><span id="toastMsg">Message</span></div>
