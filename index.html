@@ -318,28 +318,54 @@
     </div>
 </div>
 
-<!-- Compact Ticket for Download Capture -->
-<div id="compactTicket" style="display:none;">
-    <div class="ticket compact">
-        <div class="ticket-inner">
-            <div class="ticket-header-logo">
-                <img src="nacws_logo.png" alt="NACWS Logo" class="ticket-logo-top" />
+<!-- ===== COMPACT TICKET FOR DOWNLOAD (OFFSCREEN) ===== -->
+<div id="compactTicket" class="ticket compact">
+    <div class="ticket-inner">
+        <!-- Unified Header Logo and Event Title -->
+        <div class="ticket-header-logo">
+            <!-- Emulates the main application layout styling -->
+            <img src="nacws_logo.png" alt="NACWS Logo" class="ticket-logo-top">
+        </div>
+        <div class="ticket-event-centralized">
+            <h2>NACWS CYBERSECURITY SEMINAR 2027</h2>
+            <div class="ticket-meta-single-line">EVENT PASS</div>
+        </div>
+
+        <!-- Ticket Core Content Layout -->
+        <div class="ticket-body">
+            <div class="ticket-details">
+                <div class="ticket-field">
+                    <span class="ticket-label">Rank & Name</span>
+                    <span class="ticket-value"><span id="compactRank"></span> <span id="compactName"></span></span>
+                </div>
+                <div class="ticket-field">
+                    <span class="ticket-label">Service Number</span>
+                    <span class="ticket-value" id="compactSvcNo">—</span>
+                </div>
+                <div class="ticket-field">
+                    <span class="ticket-label">Organization / Unit</span>
+                    <span class="ticket-value" id="compactOrg">—</span>
+                </div>
+                <div class="ticket-field">
+                    <span class="ticket-label">Assigned Role</span>
+                    <span class="ticket-value" id="compactRole">—</span>
+                </div>
+                <div class="ticket-field">
+                    <span class="ticket-label">Unique Pass ID</span>
+                    <span class="ticket-value" id="compactId" style="font-family: monospace; color: #c9a84c; font-weight: 700;">—</span>
+                </div>
             </div>
-            <div class="ticket-event-centralized">
-                <h2>CYBERSECURITY SEMINAR 2027</h2>
-            </div>
-            <div class="ticket-user-details-right">
-                <div class="detail-line rank-name"><span id="compactRank">—</span> <span id="compactName">—</span></div>
-                <div class="detail-line unit-org" id="compactOrg">—</div>
-                <div class="detail-line unique-id" id="compactId">—</div>
-                <div class="detail-line user-role" id="compactRole">—</div>
-            </div>
-            <div class="ticket-qr-center">
+
+            <!-- QR Code Section -->
+            <div class="qr-container-compact">
                 <div id="qrcode-compact"></div>
+                <span class="scan-hint-text">SCAN FOR VERIFICATION</span>
             </div>
-            <div class="ticket-meta-single-line">
-                <span>📅 2 – 6 July 2027</span> · <span>⏰ 0900hrs Daily</span> · <span>📍 Main Auditorium, Abuja</span>
-            </div>
+        </div>
+        
+        <!-- Standard Event Footnote -->
+        <div class="ticket-meta-single-line" style="font-size: 0.6rem; opacity: 0.7; margin-top: 12px;">
+            📅 2 – 6 July 2027 · 📍 Main Auditorium, Abuja
         </div>
     </div>
 </div>
