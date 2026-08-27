@@ -1149,6 +1149,71 @@ footer .footer-links a:hover {
     white-space: nowrap;
 }
 
+/* Professional Ticket Layout Styling */
+.ticket.compact {
+    width: 600px !important;
+    background: #ffffff;
+    border: 1px solid #1a2e3b;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+}
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #0d6efd;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.ticket-header h3 {
+    margin: 0;
+    color: #0d6efd;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+}
+
+.ticket-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.ticket-details {
+    flex: 1;
+}
+
+.ticket-field {
+    margin-bottom: 8px;
+}
+
+.ticket-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #6c757d;
+    font-weight: 600;
+    display: block;
+}
+
+.ticket-value {
+    font-size: 14px;
+    color: #212529;
+    font-weight: 500;
+}
+
+.qr-container-compact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px dashed #ccc;
+    padding-left: 20px;
+}
 /* ----- MODAL ACTIONS & EXTRA NOTES ----- */
 .modal-actions {
     display: flex;
@@ -1309,7 +1374,7 @@ footer .footer-links a:hover {
 }
 .app-header .logo-icon {
     width: 44px;
-    height: 44x;
+    height: 44px;
     background: rgba(255,255,255,0.08);
     border-radius: 8px;
     display: flex;
