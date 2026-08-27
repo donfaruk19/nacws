@@ -194,7 +194,7 @@
             }, 200);
             this.openConfirm();
         },
-
+    
 // ===== DOWNLOAD TICKET – COMPACT VERSION =====
 downloadTicket: function() {
   var self = this;
@@ -477,7 +477,7 @@ downloadTicket: function() {
                 }
             });
         }
-    };
+    }
 
 // ============================================================
 // MODULE: VERIFICATION (verify.html)
@@ -868,7 +868,7 @@ var Verify = {
             this.loadData();
         },
 
-        loadData: function() {
+                loadData: function() {
             var self = this;
             if (this.tableBody) {
                 this.tableBody.innerHTML = '<tr><td colspan="10" class="loading">⏳ Loading...</td></tr>';
@@ -886,15 +886,16 @@ var Verify = {
                     } else {
                         throw new Error('Invalid data');
                     }
-                })
+                }) 
                 .catch(function(err) {
                     console.error('Load data error:', err);
                     if (self.tableBody) {
                         self.tableBody.innerHTML = '<tr><td colspan="10" class="loading">❌ Error loading data.</td></tr>';
                     }
                     showToast('Could not load data.', 'error');
-                });
+                }); 
         },
+
 
         renderTable: function() {
             var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
