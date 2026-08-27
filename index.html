@@ -246,9 +246,13 @@
                              <option value="Discussant">Discussant</option>
                              <option value="SGoH">SGoH (Senior Guest of Honour)</option>
                              <option value="Special Guest">Special Guest</option>
-                             <option value="Student">Student</option>
+                             <option value="Student">IT Student</option>
                              <option value="Resource Person">Resource Person</option>
+							 <option value="Panel Judge">Panel Judge</option>
                              <option value="Staff">Staff</option>
+							 <option value="BCC">BCC</option>
+							 <option value="IC2">IC2</option>
+							 <option value="IC3">IC3</option>
                              <option value="Panel Judge">Panel Judge</option>
                          </select>
                      </div>
@@ -274,9 +278,8 @@
 
 <!-- ===== CONFIRMATION MODAL (Ticket View) ===== -->
 <div class="popup-overlay" id="confirmModal">
-    <div class="popup-box ticket-wrapper">
-        <button class="popup-close" id="modalCloseBtn" style="position:sticky;top:0;float:right;z-index:10;background:rgba(0,0,0,.7);border-color:rgba(255,255,255,.2);color:#fff;margin:8px 8px;">✕</button>
-
+    <div class="popup-box ticket-wrapper confirmation-modal-dark">
+        
         <div class="ticket" id="invitationCard">
             <div class="ticket-inner">
                 <!-- Top Header Logo -->
@@ -287,14 +290,27 @@
                 <!-- Centralized Event Title -->
                 <div class="ticket-event-centralized">
                     <h2>CYBERSECURITY SEMINAR 2027</h2>
+                    <div class="ticket-badge-sub">EVENT PASS</div>
                 </div>
 
-                <!-- Right-Aligned Details Block -->
-                <div class="ticket-user-details-right">
-                    <div class="detail-line rank-name"><span id="cardRank">—</span> <span id="cardName">—</span></div>
-                    <div class="detail-line unit-org" id="cardOrg">—</div>
-                    <div class="detail-line unique-id" id="cardId">—</div>
-                    <div class="detail-line user-role" id="cardRole">—</div>
+                <!-- Balanced Symmetrical Grid Layout Details Block -->
+                <div class="ticket-details-grid">
+                    <div class="ticket-grid-row">
+                        <span class="grid-label">Rank & Name:</span>
+                        <span class="grid-value"><span id="cardRank">—</span> <span id="cardName">—</span></span>
+                    </div>
+                    <div class="ticket-grid-row">
+                        <span class="grid-label">Organization:</span>
+                        <span class="grid-value" id="cardOrg">—</span>
+                    </div>
+                    <div class="ticket-grid-row">
+                        <span class="grid-label">Assigned Role:</span>
+                        <span class="grid-value" id="cardRole">—</span>
+                    </div>
+                    <div class="ticket-grid-row">
+                        <span class="grid-label">Unique Pass ID:</span>
+                        <span class="grid-value gold-monospace" id="cardId">—</span>
+                    </div>
                 </div>
 
                 <!-- Central QR Code Section -->
@@ -306,14 +322,14 @@
                 <div class="ticket-meta-single-line">
                     <span>📅 2 – 6 July 2027</span> · 
                     <span>⏰ 0900hrs Daily</span> · 
-                    <span>📍 Main Auditorium, Abuja</span>
+                    <span>📍 NACWS Giri, Abuja</span>
                 </div>
             </div>
         </div>
 
-        <div class="modal-actions">
+        <div class="modal-actions-tray">
             <button class="btn btn-download" id="downloadCardBtn">⬇️ Download Ticket</button>
-            <button class="btn btn-close-modal" id="modalCloseBtn2">✕ Close</button>
+            <button class="btn btn-close-modal" id="modalCloseBtn2">✕ Close Pass</button>
         </div>
     </div>
 </div>
@@ -365,7 +381,7 @@
         
         <!-- Standard Event Footnote -->
         <div class="ticket-meta-single-line" style="font-size: 0.6rem; opacity: 0.7; margin-top: 12px;">
-            📅 2 – 6 July 2027 · 📍 Main Auditorium, Abuja
+            📅 2 – 6 July 2027 · 📍 NACWS Giri, Abuja
         </div>
     </div>
 </div>
