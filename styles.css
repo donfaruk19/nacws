@@ -401,11 +401,11 @@ body {
     justify-content: center;
 }
 .star-box {
-    display: flax;
+    display: flex;
     justify-content: center;
     align-items: center;
-    width: 60;
-    height: 60;
+    width: 60px;
+    height: 60px;
     background-color: #ff0000;
     border: 1px solid #c9a84c;
     border-radius: 4px;
@@ -1106,18 +1106,22 @@ footer .footer-links a:hover {
     margin: 12px 0;
 }
 #qrcode-card, #qrcode-compact {
-    width: 120px;
-    height: 120px;
+    width: 120px !important;
+    height: 120px !important;
     background: #fff;
     padding: 6px;
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(201, 168, 76, 0.2);
     box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
+
 #qrcode-card canvas, #qrcode-compact canvas {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
+    display: block !important;
+    width: 108px !important;
+    height: 108px !important;
     border-radius: 4px;
 }
 
