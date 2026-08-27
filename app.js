@@ -213,12 +213,14 @@ downloadTicket: function() {
 
   var rankEl = document.getElementById('compactRank');
   var nameEl = document.getElementById('compactName');
+  var svcNoEl = document.getElementById('compactSvcNo');
   var orgEl = document.getElementById('compactOrg');
   var idEl = document.getElementById('compactId');
   var roleEl = document.getElementById('compactRole');
 
   if (rankEl) rankEl.textContent = participant.rank || '';
   if (nameEl) nameEl.textContent = participant.fullName || '—';
+  if (svcNoEl) svcNoEl.textContent = participant.serviceNo || '—';
   if (orgEl) orgEl.textContent = participant.organization || '—';
   if (idEl) idEl.textContent = participant.uniqueId || '—';
   if (roleEl) roleEl.textContent = participant.role || '—';
