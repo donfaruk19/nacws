@@ -815,9 +815,8 @@ footer .footer-links a:hover {
 }
 
 /* ============================================================
-   REGISTRATION POPUP & TICKET  –  Clean & Fixed
+   REGISTRATION POPUP & TICKET 
    ============================================================ */
-
 /* ----- OVERLAY ----- */
 .popup-overlay {
     display: none;
@@ -997,7 +996,9 @@ footer .footer-links a:hover {
     outline: none;
 }
 
-/* ----- TICKET CONTAINER ----- */
+/* ============================================================
+   TICKET DISPLAY CONTAINER (MAIN PLATFORM VERSION)
+   ============================================================ */
 .ticket {
     background: linear-gradient(160deg, #0f281b 0%, #1a3c2a 40%, #07472d 100%);
     border-radius: 20px;
@@ -1042,9 +1043,7 @@ footer .footer-links a:hover {
     pointer-events: none;
 }
 
-/* ----- TICKET LAYOUT ELEMENTS ----- */
-
-/* Center Header Logo */
+/* ----- DISPLAY TICKET COMPONENT HOOKS ----- */
 .ticket-header-logo {
     text-align: center;
     margin-bottom: 8px;
@@ -1055,7 +1054,6 @@ footer .footer-links a:hover {
     object-fit: contain;
 }
 
-/* Centralized Event Title */
 .ticket-event-centralized {
     text-align: center;
     margin-bottom: 12px;
@@ -1068,7 +1066,6 @@ footer .footer-links a:hover {
     margin: 0;
 }
 
-/* Right-Aligned User Details Block */
 .ticket-user-details-right {
     text-align: right;
     margin-bottom: 16px;
@@ -1099,13 +1096,13 @@ footer .footer-links a:hover {
     opacity: 0.8;
 }
 
-/* Centered QR Code */
 .ticket-qr-center {
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 12px 0;
 }
+
 #qrcode-card, #qrcode-compact {
     width: 120px !important;
     height: 120px !important;
@@ -1117,7 +1114,6 @@ footer .footer-links a:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    display: block !important;
     margin: 0 auto;
 }
 
@@ -1130,16 +1126,7 @@ footer .footer-links a:hover {
 #qrcode-card img, #qrcode-compact img { 
    display: none !important; 
 }
-/* Download container layout stabilization */
-#compactTicket {
-    position: absolute;
-    left: -9999px;
-    top: 0;
-    width: 350px; 
-    background: #ffffff;
-    box-sizing: border-box;
-}
-/* Single Line Event Info Footer */
+
 .ticket-meta-single-line {
     text-align: center;
     font-size: 0.75rem;
@@ -1150,71 +1137,91 @@ footer .footer-links a:hover {
     white-space: nowrap;
 }
 
-/* Professional Ticket Layout Styling */
+/* ============================================================
+   PROFESSIONAL COMPACT TICKET (DOWNLOAD LOOK & FEEL)
+   ============================================================ */
 .ticket.compact {
-    width: 600px !important;
-    background: #ffffff;
-    border: 1px solid #1a2e3b;
-    border-radius: 8px;
-    padding: 24px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    box-sizing: border-box;
+    width: 450px !important;
+    max-width: 450px !important;
+    background: linear-gradient(160deg, #0f281b 0%, #1a3c2a 40%, #07472d 100%) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 4px !important;
+    color: #ffffff !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4) !important;
 }
 
-.ticket-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #0d6efd;
-    padding-bottom: 12px;
-    margin-bottom: 16px;
+.ticket.compact .ticket-inner {
+    background: linear-gradient(170deg, #0f281b 0%, #1a3c2a 60%, #07472d 100%) !important;
+    border-radius: 17px !important;
+    padding: 24px 20px !important;
 }
 
-.ticket-header h3 {
-    margin: 0;
-    color: #0d6efd;
-    font-size: 20px;
-    letter-spacing: 0.5px;
+.ticket.compact .ticket-body {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 20px !important;
+    margin-top: 16px !important;
+    padding: 0 !important;
 }
 
-.ticket-body {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
+.ticket.compact .ticket-details {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: left !important;
 }
 
-.ticket-details {
-    flex: 1;
+.ticket.compact .ticket-field {
+    display: flex !important;
+    flex-direction: column !important;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.15) !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 0 !important;
+}
+.ticket.compact .ticket-field:last-child {
+    border-bottom: none !important;
 }
 
-.ticket-field {
-    margin-bottom: 8px;
+.ticket.compact .ticket-label {
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    color: #e8d5a3 !important;
+    opacity: 0.75 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+    display: block !important;
 }
 
-.ticket-label {
-    font-size: 11px;
+.ticket.compact .ticket-value {
+    font-size: 14px !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    display: block !important;
+}
+
+.ticket.compact .qr-container-compact {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-left: 1px dashed rgba(201, 168, 76, 0.3) !important;
+    padding-left: 20px !important;
+    min-width: 150px !important;
+}
+
+.ticket.compact .scan-hint-text {
+    font-size: 8px !important;
+    color: #e8d5a3 !important;
+    margin-top: 8px !important;
+    letter-spacing: 1px !important;
+    font-weight: bold !important;
+    opacity: 0.8 !important;
     text-transform: uppercase;
-    color: #6c757d;
-    font-weight: 600;
-    display: block;
 }
 
-.ticket-value {
-    font-size: 14px;
-    color: #212529;
-    font-weight: 500;
-}
-
-.qr-container-compact {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border-left: 1px dashed #ccc;
-    padding-left: 20px;
-}
 /* ----- MODAL ACTIONS & EXTRA NOTES ----- */
 .modal-actions {
     display: flex;
@@ -1240,73 +1247,30 @@ footer .footer-links a:hover {
     margin-top: 12px;
     letter-spacing: .5px;
 }
-
 /* ============================================================
-   FULL TICKET CAPTURE & COMPACT PRINT STYLES
-   ============================================================ */
-
+FULL TICKET CAPTURE & COMPACT PRINT STYLES
+============================================================ */
 /* Direct sizing rules for canvas capture */
-#invitationCard,
-.ticket-wrapper,
-.popup-box.ticket-wrapper {
+#invitationCard,.ticket-wrapper,.popup-box.ticket-wrapper {
     width: 420px !important;
     max-width: 420px !important;
     min-width: 420px !important;
     margin: 0 auto !important;
     box-sizing: border-box !important;
 }
-
-.ticket-wrapper,
-.ticket,
-.ticket-inner {
+.ticket-wrapper,.ticket,.ticket-inner {
     overflow: visible !important;
     height: auto !important;
     max-height: none !important;
 }
-
-/* Compact Ticket (For Off-screen Export) */
+/* Compact Ticket (For Off-screen Export Configuration) */
 #compactTicket {
     display: block !important;
     position: absolute;
     left: -9999px;
     top: 0;
-    width: 320px;
+    width: 450px !important;
     overflow: visible;
-}
-.ticket.compact {
-    width: 320px;
-    max-width: 320px;
-    margin: 0;
-    padding: 2px;
-    border-radius: 14px;
-}
-.ticket.compact .ticket-inner {
-    padding: 16px 16px 12px;
-    border-radius: 13px;
-}
-.ticket.compact .ticket-logo-top {
-    height: 40px;
-}
-.ticket.compact .ticket-event-centralized h2 {
-    font-size: 0.95rem;
-}
-.ticket.compact .ticket-user-details-right .rank-name {
-    font-size: 0.85rem;
-}
-.ticket.compact .ticket-user-details-right .unit-org,
-.ticket.compact .ticket-user-details-right .unique-id,
-.ticket.compact .ticket-user-details-right .user-role {
-    font-size: 0.7rem;
-}
-.ticket.compact #qrcode-compact {
-    width: 90px;
-    height: 90px;
-    padding: 4px;
-}
-.ticket.compact .ticket-meta-single-line {
-    font-size: 0.65rem;
-    padding-top: 6px;
-    margin-top: 6px;
 }
 /* ============================================================
    TOAST
