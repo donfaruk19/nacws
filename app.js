@@ -320,7 +320,7 @@ downloadTicket: function() {
       });
     }, 200); // 200ms buffer ensures QR canvas element is fully rendered before capture
   });
-}
+},
         // ===== GALLERY SLIDER =====
         initGallery: function() {
             const track = document.getElementById('galleryTrack');
