@@ -1116,6 +1116,8 @@ footer .footer-links a:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+    display: block !important;
+    margin: 0 auto;
 }
 
 #qrcode-card canvas, #qrcode-compact canvas {
@@ -1124,7 +1126,18 @@ footer .footer-links a:hover {
     height: 108px !important;
     border-radius: 4px;
 }
-
+#qrcode-card img, #qrcode-compact img { 
+   display: none !important; 
+}
+/* Download container layout stabilization */
+#compactTicket {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 350px; 
+    background: #ffffff;
+    box-sizing: border-box;
+}
 /* Single Line Event Info Footer */
 .ticket-meta-single-line {
     text-align: center;
