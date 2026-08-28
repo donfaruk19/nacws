@@ -332,7 +332,7 @@ body {
     text-align: center;
     color: #f0ede8;
    /* background: #07472d; */
-    background: linear-gradient(rgba(7, 71, 45, 0.85), rgba(7, 71, 45, 0.85)), url('cyber.png');
+    background: linear-gradient(#07472db3, #07472db3), url('cyber.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
