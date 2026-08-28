@@ -349,10 +349,14 @@ body {
     color: #c9a84c;
 }
 .hero-banner-content .hero-subtitle {
-    font-size: .9rem;
-    font-weight: 600;
     color: #c9a84c;
     margin-bottom: 4px;
+    font-size: 1.4rem;
+    font-weight: 600
+}
+.hero-subtitle .hero-deco {
+    font-size: .6rem;
+    color: white;
 }
 .hero-banner-content h1 {
     font-family: 'Playfair Display', serif;
