@@ -245,7 +245,7 @@ body {
     font-size: .85rem;
     font-weight: 500;
     border-bottom: 2px solid transparent;
-    padding: 4px 0;
+    padding: 4px 4px;
     transition: .3s;
 }
 .nav-links a:hover {
@@ -404,19 +404,25 @@ body {
     gap: 14px;
     justify-content: center;
 }
-.star-box {
-    display: flex;
+.army-rank-badge {
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 60px;
-    height: 35px;
-    background-color: #ff0000;
-    border: 1px solid #c9a84c;
-    border-radius: 4px;
-    font-size: 20px;
-    box-sizing: border-box;
-   margin: 0 auto;
+    gap: 6px;                  
+    background-color: #d32f2f; 
+    padding: 6px 14px;         
+    border-radius: 4px;        
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
 }
+
+.army-rank-badge .rank-star {
+    color: #FFD700;           
+    font-size: 20px;           
+    line-height: 1;
+    font-weight: bold;
+    border: 2px solid #c9a84c;
+}
+
     
 /* Responsive */
 @media (max-width: 768px) {
