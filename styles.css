@@ -92,6 +92,7 @@ body {
     background: #a8883a;
     transform: translateY(-2px);
 }
+
 .badge {
     display: inline-block;
     padding: 4px 14px;
@@ -425,7 +426,7 @@ body {
 }
 
 
-    
+
 /* Responsive */
 @media (max-width: 768px) {
     .hero-banner-grid {
@@ -2097,7 +2098,7 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
     .grid-label {
         font-size: 0.65rem !important;
     }
-    
+
     /* Forces action tray items to sit inline comfortably on mobile layouts */
     .modal-actions-tray {
         flex-direction: column;
