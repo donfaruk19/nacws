@@ -6,6 +6,13 @@
 (function() {
     'use strict';
 
+// ============================================================
+    // ALIAS GLOBALS FOR MODULE COMPATIBILITY
+    // ============================================================
+    const QRCode = window.QRCode;
+    const html2canvas = window.html2canvas;
+    const Html5Qrcode = window.Html5Qrcode;
+    
     // ============================================================
     // SHARED HELPERS
     // ============================================================
@@ -46,441 +53,542 @@
     // ============================================================
     // MODULE: REGISTRATION (index.html)
     // ============================================================
-    var Registration = {
-        init: function() {
-            var self = this;
-            this.fullName = document.getElementById('fullName');
-            this.serviceNo = document.getElementById('serviceNo');
-            this.email = document.getElementById('email');
-            this.phone = document.getElementById('phone');
-            this.rank = document.getElementById('rank');
-            this.role = document.getElementById('role');
-            this.organization = document.getElementById('organization');
-            this.special = document.getElementById('special');
-            this.submitBtn = document.getElementById('submitBtn');
-            this.form = document.getElementById('regForm');
-            this.popup = document.getElementById('registerPopup');
-            this.popupClose = document.getElementById('popupCloseBtn');
-            this.popupCancel = document.getElementById('popupCancelBtn');
-            this.confirmModal = document.getElementById('confirmModal');
-            this.modalClose = document.getElementById('modalCloseBtn');
-            this.modalClose2 = document.getElementById('modalCloseBtn2');
-            this.cardName = document.getElementById('cardName');
-            this.cardServiceNo = document.getElementById('cardServiceNo');
-            this.cardRole = document.getElementById('cardRole');
-            this.cardId = document.getElementById('cardId');
-            this.cardEmail = document.getElementById('cardEmail');
-            this.cardOrg = document.getElementById('cardOrg');
-            this.cardTicketId = document.getElementById('cardTicketId');
-            this.qrContainer = document.getElementById('qrcode-card');
-            this.downloadBtn = document.getElementById('downloadCardBtn');
+var Registration = {
+    init: function() {
+        var self = this;
+        this.fullName = document.getElementById('fullName');
+        this.serviceNo = document.getElementById('serviceNo');
+        this.email = document.getElementById('email');
+        this.phone = document.getElementById('phone');
+        this.rank = document.getElementById('rank');
+        this.role = document.getElementById('role');
+        this.organization = document.getElementById('organization');
+        this.special = document.getElementById('special');
+        this.submitBtn = document.getElementById('submitBtn');
+        this.form = document.getElementById('regForm');
+        this.popup = document.getElementById('registerPopup');
+        this.popupClose = document.getElementById('popupCloseBtn');
+        this.popupCancel = document.getElementById('popupCancelBtn');
+        this.confirmModal = document.getElementById('confirmModal');
+        this.modalClose = document.getElementById('modalCloseBtn');
+        this.modalClose2 = document.getElementById('modalCloseBtn2');
+        this.cardRank = document.getElementById('cardRank');          // Added for rank display
+        this.cardName = document.getElementById('cardName');
+        this.cardServiceNo = document.getElementById('cardServiceNo');
+        this.cardRole = document.getElementById('cardRole');
+        this.cardId = document.getElementById('cardId');
+        this.cardEmail = document.getElementById('cardEmail');
+        this.cardOrg = document.getElementById('cardOrg');
+        this.cardTicketId = document.getElementById('cardTicketId');
+        this.qrContainer = document.getElementById('qrcode-card');
+        this.downloadBtn = document.getElementById('downloadCardBtn');
+        this.retrieveBtn = document.getElementById('retrievePassBtn'); // New
 
-            this.currentParticipant = null;
+        this.currentParticipant = null;
 
-            // Bind events
-            document.querySelectorAll('#navRegisterBtn, #heroRegisterBtn, #bannerRegisterBtn, #footerRegisterBtn')
-                .forEach(function(el) {
-                    if (el) el.addEventListener('click', function(e) { e.preventDefault();
-                        self.openPopup(); });
-                });
+        // Bind retrieve button
+        if (this.retrieveBtn) {
+            this.retrieveBtn.addEventListener('click', function() {
+                self.handleRetrieveTicket();
+            });
+        }
 
-            if (this.popupClose) this.popupClose.addEventListener('click', function() { self.closePopup(); });
-            if (this.popupCancel) this.popupCancel.addEventListener('click', function() { self.closePopup(); });
-            if (this.popup) this.popup.addEventListener('click', function(e) { if (e.target === self.popup) self
-                    .closePopup(); });
-
-            if (this.modalClose) this.modalClose.addEventListener('click', function() { self.closeConfirm(); });
-            if (this.modalClose2) this.modalClose2.addEventListener('click', function() { self.closeConfirm(); });
-            if (this.confirmModal) this.confirmModal.addEventListener('click', function(e) { if (e.target === self
-                    .confirmModal) self.closeConfirm(); });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    if (self.confirmModal && self.confirmModal.classList.contains('active')) self.closeConfirm();
-                    if (self.popup && self.popup.classList.contains('active')) self.closePopup();
-                }
+        // Open registration popup
+        document.querySelectorAll('#navRegisterBtn, #heroRegisterBtn, #bannerRegisterBtn, #footerRegisterBtn')
+            .forEach(function(el) {
+                if (el) el.addEventListener('click', function(e) { e.preventDefault();
+                    self.openPopup(); });
             });
 
-            if (this.form) {
-                this.form.addEventListener('submit', function(e) { self.handleSubmit(e); });
+        if (this.popupClose) this.popupClose.addEventListener('click', function() { self.closePopup(); });
+        if (this.popupCancel) this.popupCancel.addEventListener('click', function() { self.closePopup(); });
+        if (this.popup) this.popup.addEventListener('click', function(e) { if (e.target === self.popup) self
+                .closePopup(); });
+
+        if (this.modalClose) this.modalClose.addEventListener('click', function() { self.closeConfirm(); });
+        if (this.modalClose2) this.modalClose2.addEventListener('click', function() { self.closeConfirm(); });
+        if (this.confirmModal) this.confirmModal.addEventListener('click', function(e) { if (e.target === self
+                .confirmModal) self.closeConfirm(); });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (self.confirmModal && self.confirmModal.classList.contains('active')) self.closeConfirm();
+                if (self.popup && self.popup.classList.contains('active')) self.closePopup();
             }
+        });
 
-            if (this.downloadBtn) {
-                this.downloadBtn.addEventListener('click', function() { self.downloadTicket(); });
-            }
+        if (this.form) {
+            this.form.addEventListener('submit', function(e) { self.handleSubmit(e); });
+        }
 
-            // Pre-fill demo
-            if (window.location.search.includes('demo')) {
-                if (this.fullName) this.fullName.value = 'Umar Faruk';
-                if (this.serviceNo) this.serviceNo.value = 'N/2332';
-                if (this.email) this.email.value = 'donfaruk191@gmail.com';
-                if (this.phone) this.phone.value = '+234 800 123 4567';
-                if (this.rank) this.rank.value = 'Major';
-                if (this.role) this.role.value = 'Discussant';
-                if (this.organization) this.organization.value = 'Nigerian Army';
-                if (this.special) this.special.value = 'None';
-            }
-            if (window.location.search.includes('register')) {
-                setTimeout(function() { self.openPopup(); }, 400);
-            }
-            self.initGallery(); 
-        },
+        if (this.downloadBtn) {
+            this.downloadBtn.addEventListener('click', function() { self.downloadTicket(); });
+        }
 
-        openPopup: function() {
-            if (!this.popup) return;
-            this.popup.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        },
+        // Pre-fill demo (kept from old)
+        if (window.location.search.includes('demo')) {
+            if (this.fullName) this.fullName.value = 'Umar Faruk';
+            if (this.serviceNo) this.serviceNo.value = 'N/2332';
+            if (this.email) this.email.value = 'donfaruk191@gmail.com';
+            if (this.phone) this.phone.value = '+234 800 123 4567';
+            if (this.rank) this.rank.value = 'Major';
+            if (this.role) this.role.value = 'Discussant';
+            if (this.organization) this.organization.value = 'Nigerian Army';
+            if (this.special) this.special.value = 'None';
+        }
+        if (window.location.search.includes('register')) {
+            setTimeout(function() { self.openPopup(); }, 400);
+        }
+        this.initGallery();
+    },
 
-        closePopup: function() {
-            if (!this.popup) return;
-            this.popup.classList.remove('active');
-            document.body.style.overflow = '';
-        },
+    openPopup: function() {
+        if (!this.popup) return;
+        this.popup.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    },
 
-        openConfirm: function() {
-            if (!this.confirmModal) return;
-            this.confirmModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        },
+    closePopup: function() {
+        if (!this.popup) return;
+        this.popup.classList.remove('active');
+        document.body.style.overflow = '';
+    },
 
-        closeConfirm: function() {
-            if (!this.confirmModal) return;
-            this.confirmModal.classList.remove('active');
-            document.body.style.overflow = '';
-        },
+    openConfirm: function() {
+        if (!this.confirmModal) return;
+        this.confirmModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    },
 
-        generateQR: function(data) {
-            if (!this.qrContainer) return;
-            this.qrContainer.innerHTML = '';
-            // Ensure container has fixed dimensions
-            this.qrContainer.style.width = '120px';
-            this.qrContainer.style.height = '120px';
+    closeConfirm: function() {
+        if (!this.confirmModal) return;
+        this.confirmModal.classList.remove('active');
+        document.body.style.overflow = '';
+    },
+
+    generateQR: function(data) {
+        if (!this.qrContainer) return;
+        this.qrContainer.innerHTML = '';
+        this.qrContainer.style.width = '120px';
+        this.qrContainer.style.height = '120px';
+        try {
+            new QRCode(this.qrContainer, {
+                text: data,
+                width: 120,
+                height: 120,
+                colorDark: '#07472d',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } catch (e) {
+            this.qrContainer.innerHTML = '<p style="color:red;">QR error</p>';
+            showToast('QR generation error. Try again.', 'error');
+        }
+    },
+
+    // ===== UPDATED SHOW TICKET (with rank spacing) =====
+    showTicket: function(participant) {
+        this.currentParticipant = participant;
+
+        // Format rank with a trailing space if present
+        var formattedRank = (participant.rank && participant.rank !== 'N/A') ? participant.rank.trim() + ' ' : '';
+
+        if (this.cardRank) this.cardRank.textContent = formattedRank;
+        if (this.cardName) this.cardName.textContent = participant.fullName || '';
+        if (this.cardServiceNo) this.cardServiceNo.textContent = participant.serviceNo || 'N/A';
+        if (this.cardRole) this.cardRole.textContent = participant.role || 'N/A';
+        if (this.cardId) this.cardId.textContent = participant.uniqueId;
+        if (this.cardEmail) this.cardEmail.textContent = participant.email;
+        if (this.cardOrg) this.cardOrg.textContent = participant.organization || 'N/A';
+        if (this.cardTicketId) this.cardTicketId.textContent = participant.uniqueId;
+
+        var qrPayload = JSON.stringify({
+            id: participant.uniqueId,
+            name: participant.fullName,
+            email: participant.email,
+            role: participant.role
+        });
+
+        var self = this;
+        setTimeout(function() {
+            self.generateQR(qrPayload);
+        }, 200);
+        this.openConfirm();
+    },
+
+    // ===== UPDATED DOWNLOAD TICKET (with compact ticket and QR) =====
+    downloadTicket: function() {
+        var self = this;
+        var participant = this.currentParticipant;
+        if (!participant) {
+            showToast('No participant data.', 'error');
+            return;
+        }
+
+        var compact = document.getElementById('compactTicket');
+        if (!compact) {
+            showToast('Compact ticket not found.', 'error');
+            return;
+        }
+
+        var rankEl = document.getElementById('compactRank');
+        var nameEl = document.getElementById('compactName');
+        var svcNoEl = document.getElementById('compactSvcNo');
+        var orgEl = document.getElementById('compactOrg');
+        var idEl = document.getElementById('compactId');
+        var roleEl = document.getElementById('compactRole');
+
+        var formattedRank = (participant.rank && participant.rank !== 'N/A') ? participant.rank.trim() + ' ' : '';
+        if (rankEl) rankEl.textContent = formattedRank;
+        if (nameEl) nameEl.textContent = participant.fullName || '—';
+        if (svcNoEl) svcNoEl.textContent = participant.serviceNo || '—';
+        if (orgEl) orgEl.textContent = participant.organization || '—';
+        if (idEl) idEl.textContent = participant.uniqueId || '—';
+        if (roleEl) roleEl.textContent = participant.role || '—';
+
+        // QR Code (only ID, Name, Role for better scan clarity)
+        var qrContainer = document.getElementById('qrcode-compact');
+        if (qrContainer) {
+            qrContainer.innerHTML = '';
+            var qrPayload = JSON.stringify({
+                id: participant.uniqueId || '',
+                name: participant.fullName || '',
+                role: participant.role || ''
+            });
             try {
-                new QRCode(this.qrContainer, {
-                    text: data,
-                    width: 120,
-                    height: 120,
-                    colorDark: '#07472d',
+                new QRCode(qrContainer, {
+                    text: qrPayload,
+                    width: 130,
+                    height: 130,
+                    colorDark: '#000000',
                     colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
+                    correctLevel: QRCode.CorrectLevel.L
                 });
             } catch (e) {
-                this.qrContainer.innerHTML = '<p style="color:red;">QR error</p>';
-                showToast('QR generation error. Try again.', 'error');
+                console.error('QR Generation Error:', e);
+                qrContainer.innerHTML = '<p style="color:red;font-size:0.5rem;">QR error</p>';
             }
-        },
-
-        showTicket: function(participant) {
-            this.currentParticipant = participant;
-            if (this.cardName) this.cardName.textContent = participant.fullName;
-            if (this.cardServiceNo) this.cardServiceNo.textContent = participant.serviceNo || 'N/A';
-            if (this.cardRole) this.cardRole.textContent = participant.role || 'N/A';
-            if (this.cardId) this.cardId.textContent = participant.uniqueId;
-            if (this.cardEmail) this.cardEmail.textContent = participant.email;
-            if (this.cardOrg) this.cardOrg.textContent = participant.organization || 'N/A';
-            if (this.cardTicketId) this.cardTicketId.textContent = participant.uniqueId;
-            var qrPayload = JSON.stringify({
-                id: participant.uniqueId,
-                name: participant.fullName,
-                email: participant.email,
-                serviceNo: participant.serviceNo,
-                role: participant.role
-            });
-            // Delay QR generation to ensure container is ready
-            var self = this;
-            setTimeout(function() {
-                self.generateQR(qrPayload);
-            }, 200);
-            this.openConfirm();
-        },
-    
-// ===== DOWNLOAD TICKET – COMPACT VERSION =====
-downloadTicket: function() {
-  var self = this;
-  var participant = this.currentParticipant;
-  if (!participant) {
-    showToast('No participant data.', 'error');
-    return;
-  }
-
-  // 1. Populate compact ticket fields
-  var compact = document.getElementById('compactTicket');
-  if (!compact) {
-    showToast('Compact ticket not found.', 'error');
-    return;
-  }
-
-  var rankEl = document.getElementById('compactRank');
-  var nameEl = document.getElementById('compactName');
-  var svcNoEl = document.getElementById('compactSvcNo');
-  var orgEl = document.getElementById('compactOrg');
-  var idEl = document.getElementById('compactId');
-  var roleEl = document.getElementById('compactRole');
-
-  if (rankEl) rankEl.textContent = participant.rank || '';
-  if (nameEl) nameEl.textContent = participant.fullName || '—';
-  if (svcNoEl) svcNoEl.textContent = participant.serviceNo || '—';
-  if (orgEl) orgEl.textContent = participant.organization || '—';
-  if (idEl) idEl.textContent = participant.uniqueId || '—';
-  if (roleEl) roleEl.textContent = participant.role || '—';
-
-  // 2. Generate QR code (contains ONLY ID, Name, and Role for optimal scan clarity)
-  var qrContainer = document.getElementById('qrcode-compact');
-  if (qrContainer) {
-    qrContainer.innerHTML = '';
-    
-    var qrPayload = JSON.stringify({
-      id: participant.uniqueId || '',
-      name: participant.fullName || '',
-      role: participant.role || ''
-    });
-
-    try {
-      new QRCode(qrContainer, {
-        text: qrPayload,
-        width: 130, // Increased size to keep QR modules crisp
-        height: 130,
-        colorDark: '#000000', // Black modules offer maximum optical contrast
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.L // Low error correction = larger, easily scannable modules
-      });
-    } catch (e) {
-      console.error('QR Generation Error:', e);
-      qrContainer.innerHTML = '<p style="color:red;font-size:0.5rem;">QR error</p>';
-    }
-  }
-
-  // 3. Position compact ticket offscreen for capture
-  compact.style.display = 'block';
-  compact.style.position = 'absolute';
-  compact.style.left = '-9999px';
-  compact.style.top = '0';
-  compact.style.width = '350px';
-
-  if (self.downloadBtn) {
-    self.downloadBtn.disabled = true;
-    self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
-  }
-
-  var card = compact.querySelector('.ticket') || compact;
-  card.style.overflow = 'visible';
-  card.style.height = 'auto';
-  card.style.maxHeight = 'none';
-
-  // 4. Render and capture ticket canvas without forced height clipping
-  requestAnimationFrame(function() {
-    setTimeout(function() {
-      html2canvas(card, {
-        scale: 2.5,
-        useCORS: true,
-        backgroundColor: '#0f281b',
-        logging: false,
-        // Removed explicit height/windowHeight parameters to eliminate blank canvas space
-        onclone: function(doc) {
-          // Hide redundant fallback images generated by QRCode.js
-          var extraImgs = doc.querySelectorAll('#qrcode-compact img');
-          extraImgs.forEach(function(img) {
-            img.style.display = 'none';
-          });
-
-          var clonedCard = doc.querySelector('.ticket.compact') || doc.getElementById('compactTicket');
-          if (clonedCard) {
-            clonedCard.style.width = '350px';
-            clonedCard.style.margin = '0';
-            clonedCard.style.overflow = 'visible';
-            clonedCard.style.height = 'auto';
-            clonedCard.style.maxHeight = 'none';
-          }
-          doc.body.style.background = '#0f281b';
-          doc.body.style.margin = '0';
         }
-      }).then(function(canvas) {
-        var link = document.createElement('a');
-        link.download = 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        showToast('Ticket downloaded!', 'success');
-      }).catch(function(err) {
-        console.error('html2canvas error:', err);
-        var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
-        if (qrCanvas) {
-          var link = document.createElement('a');
-          link.download = 'NACWS-QR-' + (participant.uniqueId || 'QR') + '.png';
-          link.href = qrCanvas.toDataURL('image/png');
-          link.click();
-          showToast('QR downloaded (fallback).', 'success');
-        } else {
-          showToast('Failed to generate ticket. Please try again.', 'error');
-        }
-      }).finally(function() {
-        compact.style.display = 'none';
+
+        // Offscreen capture setup
+        compact.style.display = 'block';
+        compact.style.position = 'absolute';
+        compact.style.left = '-9999px';
+        compact.style.top = '0';
+        compact.style.width = '350px';
+
         if (self.downloadBtn) {
-          self.downloadBtn.disabled = false;
-          self.downloadBtn.innerHTML = '⬇️ Download Ticket';
+            self.downloadBtn.disabled = true;
+            self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
         }
-      });
-    }, 200); // 200ms buffer ensures QR canvas element is fully rendered before capture
-  });
-},
-        // ===== GALLERY SLIDER =====
-        initGallery: function() {
-            const track = document.getElementById('galleryTrack');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const dotsContainer = document.getElementById('galleryDots');
-            const slider = document.getElementById('gallerySlider');
 
-            if (!track || !prevBtn || !nextBtn || !dotsContainer || !slider) return;
+        var card = compact.querySelector('.ticket') || compact;
+        card.style.overflow = 'visible';
+        card.style.height = 'auto';
+        card.style.maxHeight = 'none';
 
-            const slides = Array.from(track.children);
-            const slideCount = slides.length;
-            let currentIndex = 0;
-            let autoPlayInterval;
-            const autoPlayTime = 4000;
+        requestAnimationFrame(function() {
+            setTimeout(function() {
+                html2canvas(card, {
+                    scale: 2.5,
+                    useCORS: true,
+                    backgroundColor: '#0f281b',
+                    logging: false,
+                    onclone: function(doc) {
+                        var extraImgs = doc.querySelectorAll('#qrcode-compact img');
+                        extraImgs.forEach(function(img) {
+                            img.style.display = 'none';
+                        });
+                        var clonedCard = doc.querySelector('.ticket.compact') || doc.getElementById('compactTicket');
+                        if (clonedCard) {
+                            clonedCard.style.width = '350px';
+                            clonedCard.style.margin = '0';
+                            clonedCard.style.overflow = 'visible';
+                            clonedCard.style.height = 'auto';
+                            clonedCard.style.maxHeight = 'none';
+                        }
+                        doc.body.style.background = '#0f281b';
+                        doc.body.style.margin = '0';
+                    }
+                }).then(function(canvas) {
+                    var link = document.createElement('a');
+                    link.download = 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showToast('Ticket downloaded!', 'success');
+                }).catch(function(err) {
+                    console.error('html2canvas error:', err);
+                    var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
+                    if (qrCanvas) {
+                        var link = document.createElement('a');
+                        link.download = 'NACWS-QR-' + (participant.uniqueId || 'QR') + '.png';
+                        link.href = qrCanvas.toDataURL('image/png');
+                        link.click();
+                        showToast('QR downloaded (fallback).', 'success');
+                    } else {
+                        showToast('Failed to generate ticket. Please try again.', 'error');
+                    }
+                }).finally(function() {
+                    compact.style.display = 'none';
+                    if (self.downloadBtn) {
+                        self.downloadBtn.disabled = false;
+                        self.downloadBtn.innerHTML = '⬇️ Download Ticket';
+                    }
+                });
+            }, 200);
+        });
+    },
 
-            let startX = 0;
-            let isDragging = false;
+    // ===== RETRIEVE / REDOWNLOAD TICKET =====
+    handleRetrieveTicket: function() {
+    var self = this;
+    var input = prompt("Enter your registered email or Unique Pass ID:");
+    if (!input) return;
+    input = input.trim();
 
-            dotsContainer.innerHTML = '';
+    showToast('Searching...', '');
 
-            slides.forEach((_, i) => {
-                const dot = document.createElement('button');
-                dot.classList.add('gallery-dot');
-                dot.setAttribute('aria-label', `Go to slide ${i+1}`);
-                if (i === 0) dot.classList.add('active');
-                dot.addEventListener('click', () => goToSlide(i));
-                dotsContainer.appendChild(dot);
-            });
-            const dots = Array.from(dotsContainer.children);
-
-            function updateSlider() {
-                track.style.transform = `translateX(-${currentIndex * 100}%)`;
-                dots.forEach(dot => dot.classList.remove('active'));
-                dots[currentIndex].classList.add('active');
-            }
-            function nextSlide() { currentIndex = (currentIndex + 1) % slideCount; updateSlider(); }
-            function prevSlide() { currentIndex = (currentIndex - 1 + slideCount) % slideCount; updateSlider(); }
-            function goToSlide(index) { currentIndex = index; updateSlider(); resetAutoPlay(); }
-            function startAutoPlay() { stopAutoPlay(); autoPlayInterval = setInterval(nextSlide, autoPlayTime); }
-            function stopAutoPlay() { clearInterval(autoPlayInterval); }
-            function resetAutoPlay() { stopAutoPlay(); startAutoPlay(); }
-
-            nextBtn.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
-            prevBtn.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
-            slider.addEventListener('mouseenter', stopAutoPlay);
-            slider.addEventListener('mouseleave', startAutoPlay);
-
-            track.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isDragging = true;
-                stopAutoPlay();
-                track.style.transition = 'none';
-            });
-            track.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                const diff = e.touches[0].clientX - startX;
-                track.style.transform = `translateX(${-currentIndex * 100 + (diff / slider.offsetWidth) * 100}%)`;
-            });
-            track.addEventListener('touchend', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                track.style.transition = 'transform 0.8s cubic-bezier(.77,0,.18,1)';
-                const diff = e.changedTouches[0].clientX - startX;
-                if (diff > 50) { prevSlide(); } else if (diff < -50) { nextSlide(); }
-                updateSlider();
-                startAutoPlay();
-            });
-
-            startAutoPlay();
-        },
-
-        // ===== HANDLE SUBMIT with validation =====
-        handleSubmit: function(e) {
-            e.preventDefault();
-            var self = this;
-            var name = this.fullName ? this.fullName.value.trim() : '';
-            var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
-            var mail = this.email ? this.email.value.trim() : '';
-            var phoneVal = this.phone ? this.phone.value.trim() : '';
-            var roleVal = this.role ? this.role.value.trim() : '';
-            var org = this.organization ? this.organization.value.trim() : '';
-            var rankVal = this.rank ? this.rank.value.trim() : '';
-
-            // Validation patterns
-            var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
-            var servicePattern = /^[a-zA-Z0-9()\/]+$/;
-            var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            var phonePattern = /^\+?[0-9\s\-()]+$/;
-            var orgPattern = /^[a-zA-Z0-9\- ]+$/;
-            var rankPattern = /^[a-zA-Z0-9\-/ ]+$/;
-
-            if (!name) { showToast('Please enter your full name.', 'error'); if (this.fullName) this.fullName.focus(); return; }
-            if (!namePattern.test(name)) { showToast('Name contains invalid characters.', 'error'); if (this.fullName) this.fullName.focus(); return; }
-            if (!serviceNo) { showToast('Please enter your service number.', 'error'); if (this.serviceNo) this.serviceNo.focus(); return; }
-            if (!servicePattern.test(serviceNo)) { showToast('Service number contains invalid characters.', 'error'); if (this.serviceNo) this.serviceNo.focus(); return; }
-            if (!mail || !emailPattern.test(mail)) { showToast('Please enter a valid email.', 'error'); if (this.email) this.email.focus(); return; }
-            if (!phoneVal || !phonePattern.test(phoneVal)) { showToast('Please enter a valid phone number.', 'error'); if (this.phone) this.phone.focus(); return; }
-            if (!roleVal) { showToast('Please select your role.', 'error'); if (this.role) this.role.focus(); return; }
-            if (!org) { showToast('Please enter your organization.', 'error'); if (this.organization) this.organization.focus(); return; }
-            if (!orgPattern.test(org)) { showToast('Organization contains invalid characters.', 'error'); if (this.organization) this.organization.focus(); return; }
-            if (rankVal && !rankPattern.test(rankVal)) { showToast('Rank contains invalid characters.', 'error'); if (this.rank) this.rank.focus(); return; }
-
-            var clean = {
-                fullName: sanitize(name),
-                serviceNo: sanitize(serviceNo),
-                email: sanitize(mail),
-                phone: sanitize(phoneVal),
-                rank: sanitize(rankVal || 'N/A'),
-                role: sanitize(roleVal),
-                organization: sanitize(org),
-                special: sanitize((this.special ? this.special.value.trim() : '') || 'N/A')
-            };
-
-            if (this.submitBtn) {
-                this.submitBtn.disabled = true;
-                this.submitBtn.innerHTML = '<span class="spinner"></span> Submitting…';
-            }
-
-            var uniqueId = generateUniqueId();
-            var payload = {
-                uniqueId: uniqueId,
-                fullName: clean.fullName,
-                serviceNo: clean.serviceNo,
-                email: clean.email,
-                phone: clean.phone,
-                rank: clean.rank,
-                role: clean.role,
-                organization: clean.organization,
-                special: clean.special,
-                registrationDate: new Date().toISOString(),
-                verified: false
-            };
-
-            fetch(APP_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(function() {
-                self.showTicket(payload);
-                showToast('Registration successful! Check your email.', 'success');
-                if (self.form) self.form.reset();
-                self.closePopup();
-            }).catch(function() {
-                self.showTicket(payload);
-                showToast('Registered locally. Email will be sent when online.', 'success');
-                if (self.form) self.form.reset();
-                self.closePopup();
-            }).finally(function() {
-                if (self.submitBtn) {
-                    self.submitBtn.disabled = false;
-                    self.submitBtn.innerHTML = 'Submit Now';
+    fetch(APP_SCRIPT_URL + '?action=all')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (Array.isArray(data)) {
+                var match = data.find(function(row) {
+                    var emailMatch = row.Email && row.Email.trim().toLowerCase() === input.toLowerCase();
+                    var idMatch = row.UniqueID && row.UniqueID.trim().toUpperCase() === input.toUpperCase();
+                    return emailMatch || idMatch;
+                });
+                    if (match) {
+                        self.showTicket({
+                            uniqueId: match.UniqueID,
+                            fullName: match.FullName,
+                            serviceNo: match.ServiceNo,
+                            email: match.Email,
+                            rank: match.Rank,
+                            role: match.Role,
+                            organization: match.Organization
+                        });
+                        showToast('Pass retrieved successfully!', 'success');
+                    } else {
+                        showToast('Pass ID not found. Check your entry.', 'error');
+                    }
                 }
+            })
+            .catch(function(err) {
+                showToast('Unable to reach server. Try again.', 'error');
             });
-        }
-    }
+    },
 
+    // ===== HANDLE SUBMIT – with optional Service No, duplicate check, and special field validation =====
+    handleSubmit: function(e) {
+        e.preventDefault();
+        var self = this;
+        var name = this.fullName ? this.fullName.value.trim() : '';
+        var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
+        var mail = this.email ? this.email.value.trim() : '';
+        var phoneVal = this.phone ? this.phone.value.trim() : '';
+        var roleVal = this.role ? this.role.value.trim() : '';
+        var org = this.organization ? this.organization.value.trim() : '';
+        var rankVal = this.rank ? this.rank.value.trim() : '';
+        var specialVal = this.special ? this.special.value.trim() : '';
+
+        // Validation patterns (kept from old version)
+        var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
+        var servicePattern = /^[a-zA-Z0-9()\/]+$/;
+        var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        var phonePattern = /^\+?[0-9\s\-()]+$/;
+        var orgPattern = /^[a-zA-Z0-9\- ]+$/;
+        var rankPattern = /^[a-zA-Z0-9\-/ ]+$/;
+        var specialPattern = /^[a-zA-Z0-9\s\-.,!?()]+$/;  // Added for special field
+
+        // --- Required fields ---
+        if (!name) { showToast('Please enter your full name.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+        if (!namePattern.test(name)) { showToast('Name contains invalid characters.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+
+        // Service Number is OPTIONAL – skip validation if empty
+        if (serviceNo && !servicePattern.test(serviceNo)) {
+            showToast('Service number contains invalid characters.', 'error');
+            if (this.serviceNo) this.serviceNo.focus();
+            return;
+        }
+
+        if (!mail || !emailPattern.test(mail)) { showToast('Please enter a valid email.', 'error'); if (this.email) this.email.focus(); return; }
+        if (!phoneVal || !phonePattern.test(phoneVal)) { showToast('Please enter a valid phone number.', 'error'); if (this.phone) this.phone.focus(); return; }
+        if (!roleVal) { showToast('Please select your role.', 'error'); if (this.role) this.role.focus(); return; }
+        if (!org) { showToast('Please enter your organization.', 'error'); if (this.organization) this.organization.focus(); return; }
+        if (!orgPattern.test(org)) { showToast('Organization contains invalid characters.', 'error'); if (this.organization) this.organization.focus(); return; }
+        if (rankVal && !rankPattern.test(rankVal)) { showToast('Rank contains invalid characters.', 'error'); if (this.rank) this.rank.focus(); return; }
+
+        // Special requirements – optional but validate if provided
+        if (specialVal) {
+            if (specialVal.length > 500) { showToast('Special requirements too long (max 500 chars).', 'error'); if (this.special) this.special.focus(); return; }
+            if (!specialPattern.test(specialVal)) { showToast('Special requirements contain invalid characters.', 'error'); if (this.special) this.special.focus(); return; }
+        }
+
+        var clean = {
+            fullName: sanitize(name),
+            serviceNo: sanitize(serviceNo || 'N/A'),   // default to 'N/A' if empty
+            email: sanitize(mail),
+            phone: sanitize(phoneVal),
+            rank: sanitize(rankVal || 'N/A'),
+            role: sanitize(roleVal),
+            organization: sanitize(org),
+            special: sanitize(specialVal || 'N/A')
+        };
+
+        if (this.submitBtn) {
+            this.submitBtn.disabled = true;
+            this.submitBtn.innerHTML = '<span class="spinner"></span> Checking records…';
+        }
+
+        // --- DUPLICATE CHECK (email and, if provided, service number) ---
+        fetch(APP_SCRIPT_URL + '?action=all')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (Array.isArray(data)) {
+                    var duplicate = data.find(function(row) {
+                        var emailMatch = row.Email && row.Email.trim().toLowerCase() === mail.toLowerCase();
+                        var serviceMatch = false;
+                        // Only check service number if the user provided one (non-empty and not 'N/A')
+                        if (serviceNo && serviceNo !== 'N/A' && row.ServiceNo) {
+                            serviceMatch = row.ServiceNo.trim().toLowerCase() === serviceNo.toLowerCase();
+                        }
+                        return emailMatch || serviceMatch;
+                    });
+
+                    if (duplicate) {
+                        showToast('Error: Email or Service No is already registered!', 'error');
+                        if (self.submitBtn) {
+                            self.submitBtn.disabled = false;
+                            self.submitBtn.innerHTML = 'Submit Now';
+                        }
+                        return;
+                    }
+                }
+
+                // No duplicate – proceed with registration
+                self.processRegistration(clean);
+            })
+            .catch(function(err) {
+                // If offline check fails, proceed locally (optimistic registration)
+                self.processRegistration(clean);
+            });
+    },
+
+    // ===== PROCESS REGISTRATION (sends data to Google Apps Script) =====
+    processRegistration: function(clean) {
+        var self = this;
+        var uniqueId = generateUniqueId();
+        var payload = {
+            uniqueId: uniqueId,
+            fullName: clean.fullName,
+            serviceNo: clean.serviceNo,
+            email: clean.email,
+            phone: clean.phone,
+            rank: clean.rank,
+            role: clean.role,
+            organization: clean.organization,
+            special: clean.special,
+            registrationDate: new Date().toISOString(),
+            verified: false
+        };
+
+        fetch(APP_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(function() {
+            self.showTicket(payload);
+            showToast('Registration successful! Check your email.', 'success');
+            if (self.form) self.form.reset();
+            self.closePopup();
+        }).catch(function() {
+            self.showTicket(payload);
+            showToast('Registered locally. Email will be sent when online.', 'success');
+            if (self.form) self.form.reset();
+            self.closePopup();
+        }).finally(function() {
+            if (self.submitBtn) {
+                self.submitBtn.disabled = false;
+                self.submitBtn.innerHTML = 'Submit Now';
+            }
+        });
+    },
+
+    // ===== GALLERY SLIDER (unchanged from old version) =====
+    initGallery: function() {
+        const track = document.getElementById('galleryTrack');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('galleryDots');
+        const slider = document.getElementById('gallerySlider');
+
+        if (!track || !prevBtn || !nextBtn || !dotsContainer || !slider) return;
+
+        const slides = Array.from(track.children);
+        const slideCount = slides.length;
+        let currentIndex = 0;
+        let autoPlayInterval;
+        const autoPlayTime = 4000;
+
+        let startX = 0;
+        let isDragging = false;
+
+        dotsContainer.innerHTML = '';
+
+        slides.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.classList.add('gallery-dot');
+            dot.setAttribute('aria-label', `Go to slide ${i+1}`);
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(i));
+            dotsContainer.appendChild(dot);
+        });
+        const dots = Array.from(dotsContainer.children);
+
+        function updateSlider() {
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[currentIndex].classList.add('active');
+        }
+        function nextSlide() { currentIndex = (currentIndex + 1) % slideCount; updateSlider(); }
+        function prevSlide() { currentIndex = (currentIndex - 1 + slideCount) % slideCount; updateSlider(); }
+        function goToSlide(index) { currentIndex = index; updateSlider(); resetAutoPlay(); }
+        function startAutoPlay() { stopAutoPlay(); autoPlayInterval = setInterval(nextSlide, autoPlayTime); }
+        function stopAutoPlay() { clearInterval(autoPlayInterval); }
+        function resetAutoPlay() { stopAutoPlay(); startAutoPlay(); }
+
+        nextBtn.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
+        prevBtn.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
+        slider.addEventListener('mouseenter', stopAutoPlay);
+        slider.addEventListener('mouseleave', startAutoPlay);
+
+        track.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            stopAutoPlay();
+            track.style.transition = 'none';
+        });
+        track.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const diff = e.touches[0].clientX - startX;
+            track.style.transform = `translateX(${-currentIndex * 100 + (diff / slider.offsetWidth) * 100}%)`;
+        });
+        track.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            track.style.transition = 'transform 0.8s cubic-bezier(.77,0,.18,1)';
+            const diff = e.changedTouches[0].clientX - startX;
+            if (diff > 50) { prevSlide(); } else if (diff < -50) { nextSlide(); }
+            updateSlider();
+            startAutoPlay();
+        });
+
+        startAutoPlay();
+    }
+};
+        
+            
 // ============================================================
 // MODULE: VERIFICATION (verify.html)
 // ============================================================
