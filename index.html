@@ -30,12 +30,15 @@
             <ul class="nav-links">
                 <li><a href="#schedule">Schedule</a></li>
                 <li><a href="#" id="navRegisterBtn" class="btn btn-primary btn-sm">Register Now</a></li>
+                <li>
+    <button type="button" id="retrievePassBtn" class="btn btn-secondary btn-sm"> Find My Ticket</button>
+</li>
             </ul>
         </div>
     </nav>
 <!-- ===== HERO – Two‑column layout ===== -->
 <section class="hero-banner" id="about">
-		<!-- Above: Replaced text inside with the transparent image -->
+                <!-- Above: Replaced text inside with the transparent image -->
    <!-- <div class="hero-banner-content">
          <img src="cyber.png" alt="Seminar Banner" class="hero-banner-img" />
      </div> -->
@@ -218,8 +221,8 @@
                          <input type="text" id="fullName" placeholder="e.g. A Umar Faruk" required />
                      </div>
                      <div class="form-group">
-                         <label>Service No <span class="req">*</span></label>
-                         <input type="text" id="serviceNo" placeholder="e.g. N/12346, Nil" required />
+                         <label>Service No</label>
+                         <input type="text" id="serviceNo" placeholder="e.g. N/12346, Nil" />
                      </div>
                  </div>
                  <div class="form-row">
@@ -248,11 +251,11 @@
                              <option value="Special Guest">Special Guest</option>
                              <option value="Student">IT Student</option>
                              <option value="Resource Person">Resource Person</option>
-							 <option value="Panel Judge">Panel Judge</option>
+                                                         <option value="Panel Judge">Panel Judge</option>
                              <option value="Staff">Staff</option>
-							 <option value="BCC">BCC</option>
-							 <option value="IC2">IC2</option>
-							 <option value="IC3">IC3</option>
+                                                         <option value="BCC">BCC</option>
+                                                         <option value="IC2">IC2</option>
+                                                         <option value="IC3">IC3</option>
                              <option value="Panel Judge">Panel Judge</option>
                          </select>
                      </div>
@@ -279,7 +282,7 @@
 <!-- ===== CONFIRMATION MODAL (Ticket View) ===== -->
 <div class="popup-overlay" id="confirmModal">
     <div class="popup-box ticket-wrapper confirmation-modal-dark">
-        
+
         <div class="ticket" id="invitationCard">
             <div class="ticket-inner">
                 <!-- Top Header Logo -->
@@ -378,7 +381,7 @@
                 <span class="scan-hint-text">SCAN FOR VERIFICATION</span>
             </div>
         </div>
-        
+
         <!-- Standard Event Footnote -->
         <div class="ticket-meta-single-line" style="font-size: 0.6rem; opacity: 0.7; margin-top: 12px;">
             📅 2 – 6 July 2027 · 📍 NACWS Giri, Abuja
