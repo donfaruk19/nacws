@@ -12,11 +12,11 @@
     const QRCode = window.QRCode;
     const html2canvas = window.html2canvas;
     const Html5Qrcode = window.Html5Qrcode;
-    
+
     // ============================================================
     // SHARED HELPERS
     // ============================================================
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNJew8Gd3hQdwDu0uG4ECDYmveAlNwjDHJOr8taQZ0ujGxiVN-hXxu5OLC9kUhB1i9/exec';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxe2bEANjaM4Ta4yU2G5AGN9sCKX2GXAmu3OWYXDucc9wY4neU6RjWqXIXv07i-GMdsPQ/exec';
     let toastTimer = null;
 
     function showToast(msg, type) {
@@ -587,8 +587,8 @@ var Registration = {
         startAutoPlay();
     }
 };
-        
-            
+
+
 // ============================================================
 // MODULE: VERIFICATION (verify.html)
 // ============================================================
@@ -960,143 +960,266 @@ var Verify = {
     // MODULE: ADMIN (admin.html)
     // ============================================================
     var Admin = {
-        allData: [],
+    allData: [],
+    sessionToken: null,
+    adminEmail: null,
 
-        init: function() {
-            var self = this;
-            this.searchInput = document.getElementById('searchInput');
-            this.filterVerified = document.getElementById('filterVerified');
-            this.tableBody = document.getElementById('adminTableBody');
+    init: function() {
+        var self = this;
 
-            if (this.searchInput) {
-                this.searchInput.addEventListener('input', function() { self.renderTable(); });
-            }
-            if (this.filterVerified) {
-                this.filterVerified.addEventListener('change', function() { self.renderTable(); });
-            }
-
+        // Check for saved session
+        this.sessionToken = localStorage.getItem('adminToken');
+        this.adminEmail = localStorage.getItem('adminEmail');
+        if (this.sessionToken && this.adminEmail) {
+            // Attempt to load data – if token invalid, server will reject and we'll logout
+            this.showDashboard();
             this.loadData();
-        },
+        } else {
+            this.showLogin();
+        }
 
-                loadData: function() {
-            var self = this;
-            if (this.tableBody) {
-                this.tableBody.innerHTML = '<tr><td colspan="10" class="loading">⏳ Loading...</td></tr>';
+        // Bind login form
+        var loginForm = document.getElementById('adminLoginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var email = document.getElementById('adminEmail').value.trim();
+                var password = document.getElementById('adminPassword').value.trim();
+                if (email && password) {
+                    self.login(email, password);
+                } else {
+                    showToast('Please enter email and password.', 'error');
+                }
+            });
+        }
+
+        // Bind logout button
+        var logoutBtn = document.getElementById('adminLogoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                self.logout();
+            });
+        }
+
+        // Search & filter
+        this.searchInput = document.getElementById('searchInput');
+        this.filterVerified = document.getElementById('filterVerified');
+        this.tableBody = document.getElementById('adminTableBody');
+
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', function() { self.renderTable(); });
+        }
+        if (this.filterVerified) {
+            this.filterVerified.addEventListener('change', function() { self.renderTable(); });
+        }
+    },
+
+    showLogin: function() {
+        var overlay = document.getElementById('adminLoginOverlay');
+        if (overlay) overlay.classList.remove('hidden');
+        var dashboard = document.getElementById('adminDashboard');
+        if (dashboard) dashboard.style.display = 'none';
+    },
+
+    showDashboard: function() {
+        var overlay = document.getElementById('adminLoginOverlay');
+        if (overlay) overlay.classList.add('hidden');
+        var dashboard = document.getElementById('adminDashboard');
+        if (dashboard) dashboard.style.display = 'block';
+    },
+
+    login: function(email, password) {
+        var self = this;
+        var btn = document.getElementById('adminLoginBtn');
+        var errorEl = document.getElementById('loginError');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-sm"></span> Verifying...';
+        }
+        if (errorEl) errorEl.classList.remove('show');
+
+        fetch(APP_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'admin_login', email: email, password: password })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success && data.token) {
+                self.sessionToken = data.token;
+                self.adminEmail = data.email;
+                localStorage.setItem('adminToken', data.token);
+                localStorage.setItem('adminEmail', data.email);
+                self.showDashboard();
+                self.loadData();
+                showToast('Login successful!', 'success');
+            } else {
+                if (errorEl) {
+                    errorEl.textContent = data.error || 'Invalid credentials.';
+                    errorEl.classList.add('show');
+                }
+                showToast('Login failed: ' + (data.error || 'Unknown error'), 'error');
             }
-            fetch(APP_SCRIPT_URL + '?action=all')
-                .then(function(response) {
-                    if (!response.ok) throw new Error('Network error');
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (Array.isArray(data)) {
-                        self.allData = data;
-                        self.renderTable();
-                        self.updateStats(data);
-                    } else {
-                        throw new Error('Invalid data');
-                    }
-                }) 
-                .catch(function(err) {
-                    console.error('Load data error:', err);
-                    if (self.tableBody) {
-                        self.tableBody.innerHTML = '<tr><td colspan="10" class="loading">❌ Error loading data.</td></tr>';
-                    }
-                    showToast('Could not load data.', 'error');
-                }); 
-        },
+        })
+        .catch(function(err) {
+            if (errorEl) {
+                errorEl.textContent = 'Network error. Please try again.';
+                errorEl.classList.add('show');
+            }
+            showToast('Could not connect to server.', 'error');
+        })
+        .finally(function() {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '🔑 Sign In';
+            }
+        });
+    },
 
+    logout: function() {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminEmail');
+        this.sessionToken = null;
+        this.adminEmail = null;
+        this.allData = [];
+        this.showLogin();
+        showToast('Logged out.', '');
+    },
 
-        renderTable: function() {
-            var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
-            var filter = this.filterVerified ? this.filterVerified.value : '';
+    loadData: function() {
+        var self = this;
+        if (!this.sessionToken || !this.adminEmail) {
+            showToast('Not authenticated. Please log in.', 'error');
+            return;
+        }
+        if (this.tableBody) {
+            this.tableBody.innerHTML = '<tr><td colspan="10" class="loading">⏳ Loading...</td></tr>';
+        }
+        var url = APP_SCRIPT_URL + '?action=all&email=' + encodeURIComponent(this.adminEmail) +
+                  '&token=' + encodeURIComponent(this.sessionToken);
+        fetch(url)
+            .then(function(response) {
+                if (!response.ok) throw new Error('Network error');
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success === false && data.error === 'Unauthorized. Please log in again.') {
+                    self.logout();
+                    showToast('Session expired. Please log in again.', 'error');
+                    return;
+                }
+                if (Array.isArray(data)) {
+                    self.allData = data;
+                    self.renderTable();
+                    self.updateStats(data);
+                } else {
+                    throw new Error('Invalid data');
+                }
+            })
+            .catch(function(err) {
+                if (self.tableBody) {
+                    self.tableBody.innerHTML = '<tr><td colspan="10" class="loading">❌ Error loading data.</td></tr>';
+                }
+                showToast('Could not load data.', 'error');
+            });
+    },
 
-            var filtered = this.allData.filter(function(row) {
-                var match = true;
-                if (search) {
-                    match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
+    renderTable: function() {
+        var self = this;
+        var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
+        var filter = this.filterVerified ? this.filterVerified.value : '';
+
+        var filtered = this.allData.filter(function(row) {
+            var match = true;
+            if (search) {
+                match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
                         (row.Email && row.Email.toLowerCase().includes(search)) ||
                         (row.UniqueID && row.UniqueID.toLowerCase().includes(search)) ||
                         (row.ServiceNo && row.ServiceNo.toLowerCase().includes(search));
-                }
-                if (match && filter !== '') {
-                    var isVerified = row.Verified === true || row.Verified === 'TRUE';
-                    match = (filter === 'true') === isVerified;
-                }
-                return match;
-            });
-
-            if (!this.tableBody) return;
-            if (filtered.length === 0) {
-                this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
-                return;
             }
-
-            var html = '';
-            filtered.forEach(function(row) {
-                var verified = row.Verified === true || row.Verified === 'TRUE';
-                var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
-                html += '<tr>' +
-                    '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
-                    '<td>' + (row.ServiceNo || '—') + '</td>' +
-                    '<td>' + (row.Rank || '—') + '</td>' +
-                    '<td>' + (row.FullName || '—') + '</td>' +
-                    '<td>' + (row.Email || '—') + '</td>' +
-                    '<td>' + (row.Phone || '—') + '</td>' +
-                    '<td>' + (row.Organization || '—') + '</td>' +
-                    '<td>' + (row.Role || '—') + '</td>' +
-                    '<td>' + date + '</td>' +
-                    '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified Attendance' : '⏳ Pending') + '</span></td>' +
-                    '</tr>';
-            });
-            this.tableBody.innerHTML = html;
-        },
-
-        updateStats: function(data) {
-            var total = data.length;
-            var verified = data.filter(function(r) { return r.Verified === true || r.Verified === 'TRUE'; }).length;
-            var totalEl = document.getElementById('totalCount');
-            var verifiedEl = document.getElementById('verifiedCount');
-            var unverifiedEl = document.getElementById('unverifiedCount');
-            if (totalEl) totalEl.textContent = total;
-            if (verifiedEl) verifiedEl.textContent = verified;
-            if (unverifiedEl) unverifiedEl.textContent = total - verified;
-        },
-
-        exportCSV: function() {
-            if (this.allData.length === 0) {
-                showToast('No data to export.', 'error');
-                return;
+            if (match && filter !== '') {
+                var isVerified = row.Verified === true || row.Verified === 'TRUE';
+                match = (filter === 'true') === isVerified;
             }
-            var headers = ['UniqueID', 'ServiceNo', 'Rank', 'FullName', 'Email', 'Phone', 'Organization', 'Role', 'RegistrationDate', 'Verified'];
-            var rows = this.allData.map(function(row) {
-                return [
-                    row.UniqueID,
-                    row.ServiceNo,
-                    row.Rank,
-                    row.FullName,
-                    row.Email,
-                    row.Phone,
-                    row.Organization,
-                    row.Role,
-                    row.RegistrationDate,
-                    (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
-                ];
-            });
-            var csv = headers.join(',') + '\n';
-            rows.forEach(function(row) {
-                csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') + '\n';
-            });
-            var blob = new Blob([csv], { type: 'text/csv' });
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast('CSV exported!', 'success');
+            return match;
+        });
+
+        if (!this.tableBody) return;
+        if (filtered.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
+            return;
         }
-    };
+
+        var html = '';
+        filtered.forEach(function(row) {
+            var verified = row.Verified === true || row.Verified === 'TRUE';
+            var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
+            html += '<tr>' +
+                '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
+                '<td>' + (row.ServiceNo || '—') + '</td>' +
+                '<td>' + (row.Rank || '—') + '</td>' +
+                '<td>' + (row.FullName || '—') + '</td>' +
+                '<td>' + (row.Email || '—') + '</td>' +
+                '<td>' + (row.Phone || '—') + '</td>' +
+                '<td>' + (row.Organization || '—') + '</td>' +
+                '<td>' + (row.Role || '—') + '</td>' +
+                '<td>' + date + '</td>' +
+                '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified' : '⏳ Pending') + '</span></td>' +
+                '</tr>';
+        });
+        this.tableBody.innerHTML = html;
+    },
+
+    updateStats: function(data) {
+        var total = data.length;
+        var verified = data.filter(function(r) { return r.Verified === true || r.Verified === 'TRUE'; }).length;
+        var totalEl = document.getElementById('totalCount');
+        var verifiedEl = document.getElementById('verifiedCount');
+        var unverifiedEl = document.getElementById('unverifiedCount');
+        if (totalEl) totalEl.textContent = total;
+        if (verifiedEl) verifiedEl.textContent = verified;
+        if (unverifiedEl) unverifiedEl.textContent = total - verified;
+    },
+
+    exportCSV: function() {
+        if (!this.sessionToken || !this.adminEmail) {
+            showToast('Not authenticated. Please log in.', 'error');
+            return;
+        }
+        if (this.allData.length === 0) {
+            showToast('No data to export.', 'error');
+            return;
+        }
+        // Use current data (already loaded). If you want fresh, call loadData() first, but that's async.
+        var headers = ['UniqueID', 'ServiceNo', 'Rank', 'FullName', 'Email', 'Phone', 'Organization', 'Role', 'RegistrationDate', 'Verified'];
+        var rows = this.allData.map(function(row) {
+            return [
+                row.UniqueID,
+                row.ServiceNo,
+                row.Rank,
+                row.FullName,
+                row.Email,
+                row.Phone,
+                row.Organization,
+                row.Role,
+                row.RegistrationDate,
+                (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
+            ];
+        });
+        var csv = headers.join(',') + '\n';
+        rows.forEach(function(row) {
+            csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') + '\n';
+        });
+        var blob = new Blob([csv], { type: 'text/csv' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('CSV exported!', 'success');
+    }
+};
 
     // ============================================================
     // EXPOSE MODULES
