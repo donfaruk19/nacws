@@ -16,7 +16,7 @@
     // ============================================================
     // SHARED HELPERS
     // ============================================================
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxraPDyRttXV8WZXDai_0Zb4qMj8e4zmmHwC0uShcfqS1-5M0b1foNondOhqvoOZkETfw/exec';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbycubumcmrZm9i3qrxJ6OtrdWtAQEnw7vz2KSkDdq60ocIWF0AAZGG7LWNUBqXevdLZZQ/exec';
     let toastTimer = null;
 
     function showToast(msg, type) {
@@ -340,7 +340,7 @@ var Registration = {
     },
 
     // ===== RETRIEVE / REDOWNLOAD TICKET =====
-    handleRetrieveTicket: function() {
+handleRetrieveTicket: function() {
     var self = this;
     var input = prompt("Enter your registered email or Unique Pass ID:");
     if (!input) return;
@@ -348,131 +348,110 @@ var Registration = {
 
     showToast('Searching...', '');
 
-    fetch(APP_SCRIPT_URL + '?action=all')
+    // Use the secure 'find' endpoint – only one record is returned
+    var url = APP_SCRIPT_URL + '?action=find&q=' + encodeURIComponent(input);
+    fetch(url)
         .then(function(res) { return res.json(); })
         .then(function(data) {
-            if (Array.isArray(data)) {
-                var match = data.find(function(row) {
-                    var emailMatch = row.Email && row.Email.trim().toLowerCase() === input.toLowerCase();
-                    var idMatch = row.UniqueID && row.UniqueID.trim().toUpperCase() === input.toUpperCase();
-                    return emailMatch || idMatch;
-                });
-                    if (match) {
-                        self.showTicket({
-                            uniqueId: match.UniqueID,
-                            fullName: match.FullName,
-                            serviceNo: match.ServiceNo,
-                            email: match.Email,
-                            rank: match.Rank,
-                            role: match.Role,
-                            organization: match.Organization
-                        });
-                        showToast('Pass retrieved successfully!', 'success');
-                    } else {
-                        showToast('Pass ID not found. Check your entry.', 'error');
-                    }
-                }
-            })
-            .catch(function(err) {
-                showToast('Unable to reach server. Try again.', 'error');
+            if (data.success === false || !data.UniqueID) {
+                showToast('No participant found with that email or ID.', 'error');
+                return;
+            }
+            // Participant found
+            self.showTicket({
+                uniqueId: data.UniqueID,
+                fullName: data.FullName,
+                serviceNo: data.ServiceNo,
+                email: data.Email,
+                rank: data.Rank,
+                role: data.Role,
+                organization: data.Organization
             });
-    },
+            showToast('Pass retrieved successfully!', 'success');
+        })
+        .catch(function(err) {
+            showToast('Unable to reach server. Try again.', 'error');
+        });
+},
 
     // ===== HANDLE SUBMIT – with optional Service No, duplicate check, and special field validation =====
-    handleSubmit: function(e) {
-        e.preventDefault();
-        var self = this;
-        var name = this.fullName ? this.fullName.value.trim() : '';
-        var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
-        var mail = this.email ? this.email.value.trim() : '';
-        var phoneVal = this.phone ? this.phone.value.trim() : '';
-        var roleVal = this.role ? this.role.value.trim() : '';
-        var org = this.organization ? this.organization.value.trim() : '';
-        var rankVal = this.rank ? this.rank.value.trim() : '';
-        var specialVal = this.special ? this.special.value.trim() : '';
+handleSubmit: function(e) {
+    e.preventDefault();
+    var self = this;
+    var name = this.fullName ? this.fullName.value.trim() : '';
+    var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
+    var mail = this.email ? this.email.value.trim() : '';
+    var phoneVal = this.phone ? this.phone.value.trim() : '';
+    var roleVal = this.role ? this.role.value.trim() : '';
+    var org = this.organization ? this.organization.value.trim() : '';
+    var rankVal = this.rank ? this.rank.value.trim() : '';
+    var specialVal = this.special ? this.special.value.trim() : '';
 
-        // Validation patterns (kept from old version)
-        var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
-        var servicePattern = /^[a-zA-Z0-9()\/]+$/;
-        var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        var phonePattern = /^\+?[0-9\s\-()]+$/;
-        var orgPattern = /^[a-zA-Z0-9\- ]+$/;
-        var rankPattern = /^[a-zA-Z0-9\-/ ]+$/;
-        var specialPattern = /^[a-zA-Z0-9\s\-.,!?()]+$/;  // Added for special field
+    // Validation patterns (same as before)
+    var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
+    var servicePattern = /^[a-zA-Z0-9()\/]+$/;
+    var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    var phonePattern = /^\+?[0-9\s\-()]+$/;
+    var orgPattern = /^[a-zA-Z0-9\- ]+$/;
+    var rankPattern = /^[a-zA-Z0-9\-/ ]+$/;
+    var specialPattern = /^[a-zA-Z0-9\s\-.,!?()]+$/;
 
-        // --- Required fields ---
-        if (!name) { showToast('Please enter your full name.', 'error'); if (this.fullName) this.fullName.focus(); return; }
-        if (!namePattern.test(name)) { showToast('Name contains invalid characters.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+    if (!name) { showToast('Please enter your full name.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+    if (!namePattern.test(name)) { showToast('Name contains invalid characters.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+    if (serviceNo && !servicePattern.test(serviceNo)) {
+        showToast('Service number contains invalid characters.', 'error');
+        if (this.serviceNo) this.serviceNo.focus();
+        return;
+    }
+    if (!mail || !emailPattern.test(mail)) { showToast('Please enter a valid email.', 'error'); if (this.email) this.email.focus(); return; }
+    if (!phoneVal || !phonePattern.test(phoneVal)) { showToast('Please enter a valid phone number.', 'error'); if (this.phone) this.phone.focus(); return; }
+    if (!roleVal) { showToast('Please select your role.', 'error'); if (this.role) this.role.focus(); return; }
+    if (!org) { showToast('Please enter your organization.', 'error'); if (this.organization) this.organization.focus(); return; }
+    if (!orgPattern.test(org)) { showToast('Organization contains invalid characters.', 'error'); if (this.organization) this.organization.focus(); return; }
+    if (rankVal && !rankPattern.test(rankVal)) { showToast('Rank contains invalid characters.', 'error'); if (this.rank) this.rank.focus(); return; }
+    if (specialVal) {
+        if (specialVal.length > 500) { showToast('Special requirements too long (max 500 chars).', 'error'); if (this.special) this.special.focus(); return; }
+        if (!specialPattern.test(specialVal)) { showToast('Special requirements contain invalid characters.', 'error'); if (this.special) this.special.focus(); return; }
+    }
 
-        // Service Number is OPTIONAL – skip validation if empty
-        if (serviceNo && !servicePattern.test(serviceNo)) {
-            showToast('Service number contains invalid characters.', 'error');
-            if (this.serviceNo) this.serviceNo.focus();
-            return;
-        }
+    var clean = {
+        fullName: sanitize(name),
+        serviceNo: sanitize(serviceNo || 'N/A'),
+        email: sanitize(mail),
+        phone: sanitize(phoneVal),
+        rank: sanitize(rankVal || 'N/A'),
+        role: sanitize(roleVal),
+        organization: sanitize(org),
+        special: sanitize(specialVal || 'N/A')
+    };
 
-        if (!mail || !emailPattern.test(mail)) { showToast('Please enter a valid email.', 'error'); if (this.email) this.email.focus(); return; }
-        if (!phoneVal || !phonePattern.test(phoneVal)) { showToast('Please enter a valid phone number.', 'error'); if (this.phone) this.phone.focus(); return; }
-        if (!roleVal) { showToast('Please select your role.', 'error'); if (this.role) this.role.focus(); return; }
-        if (!org) { showToast('Please enter your organization.', 'error'); if (this.organization) this.organization.focus(); return; }
-        if (!orgPattern.test(org)) { showToast('Organization contains invalid characters.', 'error'); if (this.organization) this.organization.focus(); return; }
-        if (rankVal && !rankPattern.test(rankVal)) { showToast('Rank contains invalid characters.', 'error'); if (this.rank) this.rank.focus(); return; }
+    if (this.submitBtn) {
+        this.submitBtn.disabled = true;
+        this.submitBtn.innerHTML = '<span class="spinner"></span> Checking records…';
+    }
 
-        // Special requirements – optional but validate if provided
-        if (specialVal) {
-            if (specialVal.length > 500) { showToast('Special requirements too long (max 500 chars).', 'error'); if (this.special) this.special.focus(); return; }
-            if (!specialPattern.test(specialVal)) { showToast('Special requirements contain invalid characters.', 'error'); if (this.special) this.special.focus(); return; }
-        }
-
-        var clean = {
-            fullName: sanitize(name),
-            serviceNo: sanitize(serviceNo || 'N/A'),   // default to 'N/A' if empty
-            email: sanitize(mail),
-            phone: sanitize(phoneVal),
-            rank: sanitize(rankVal || 'N/A'),
-            role: sanitize(roleVal),
-            organization: sanitize(org),
-            special: sanitize(specialVal || 'N/A')
-        };
-
-        if (this.submitBtn) {
-            this.submitBtn.disabled = true;
-            this.submitBtn.innerHTML = '<span class="spinner"></span> Checking records…';
-        }
-
-        // --- DUPLICATE CHECK (email and, if provided, service number) ---
-        fetch(APP_SCRIPT_URL + '?action=all')
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (Array.isArray(data)) {
-                    var duplicate = data.find(function(row) {
-                        var emailMatch = row.Email && row.Email.trim().toLowerCase() === mail.toLowerCase();
-                        var serviceMatch = false;
-                        // Only check service number if the user provided one (non-empty and not 'N/A')
-                        if (serviceNo && serviceNo !== 'N/A' && row.ServiceNo) {
-                            serviceMatch = row.ServiceNo.trim().toLowerCase() === serviceNo.toLowerCase();
-                        }
-                        return emailMatch || serviceMatch;
-                    });
-
-                    if (duplicate) {
-                        showToast('Error: Email or Service No is already registered!', 'error');
-                        if (self.submitBtn) {
-                            self.submitBtn.disabled = false;
-                            self.submitBtn.innerHTML = 'Submit Now';
-                        }
-                        return;
-                    }
+    // --- SECURE DUPLICATE CHECK using dedicated endpoint ---
+    var checkUrl = APP_SCRIPT_URL + '?action=check&email=' + encodeURIComponent(mail) +
+                   '&serviceNo=' + encodeURIComponent(serviceNo || '');
+    fetch(checkUrl)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.duplicate) {
+                showToast('Error: Email or Service No is already registered!', 'error');
+                if (self.submitBtn) {
+                    self.submitBtn.disabled = false;
+                    self.submitBtn.innerHTML = 'Submit Now';
                 }
-
-                // No duplicate – proceed with registration
-                self.processRegistration(clean);
-            })
-            .catch(function(err) {
-                // If offline check fails, proceed locally (optimistic registration)
-                self.processRegistration(clean);
-            });
-    },
+                return;
+            }
+            // No duplicate – proceed
+            self.processRegistration(clean);
+        })
+        .catch(function(err) {
+            // If offline, proceed anyway (optimistic)
+            self.processRegistration(clean);
+        });
+},
 
     // ===== PROCESS REGISTRATION (sends data to Google Apps Script) =====
     processRegistration: function(clean) {
@@ -826,48 +805,36 @@ var Verify = {
             });
     },
 
-    verifyParticipant: function(id) {
-        var self = this;
-        if (!id || !id.trim()) { showToast('Enter a valid ID.', 'error'); return; }
-        this.currentId = id.trim();
-        if (this.resultCard) {
-            this.resultCard.classList.add('show');
-            if (this.statusIcon) this.statusIcon.textContent = '⏳';
-            if (this.statusText) {
-                this.statusText.textContent = 'Searching...';
-                this.statusText.className = 'status-text';
-            }
-            if (this.resultName) this.resultName.textContent = '—';
-            if (this.resultServiceNo) this.resultServiceNo.textContent = '—';
-            if (this.resultId) this.resultId.textContent = this.currentId;
-            if (this.resultEmail) this.resultEmail.textContent = '—';
-            if (this.resultOrg) this.resultOrg.textContent = '—';
-            if (this.resultRole) this.resultRole.textContent = '—';
-            if (this.btnMarkVerified) {
-                this.btnMarkVerified.disabled = true;
-                this.btnMarkVerified.innerHTML = '⏳ Searching...';
-            }
+verifyParticipant: function(id) {
+    var self = this;
+    if (!id || !id.trim()) { showToast('Enter a valid ID.', 'error'); return; }
+    this.currentId = id.trim();
+    if (this.resultCard) {
+        this.resultCard.classList.add('show');
+        if (this.statusIcon) this.statusIcon.textContent = '⏳';
+        if (this.statusText) {
+            this.statusText.textContent = 'Searching...';
+            this.statusText.className = 'status-text';
         }
+        if (this.resultName) this.resultName.textContent = '—';
+        if (this.resultServiceNo) this.resultServiceNo.textContent = '—';
+        if (this.resultId) this.resultId.textContent = this.currentId;
+        if (this.resultEmail) this.resultEmail.textContent = '—';
+        if (this.resultOrg) this.resultOrg.textContent = '—';
+        if (this.resultRole) this.resultRole.textContent = '—';
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.disabled = true;
+            this.btnMarkVerified.innerHTML = '⏳ Searching...';
+        }
+    }
 
-        this.fetchAllData().then(function(allData) {
-            if (!allData || allData.length === 0) {
-                if (self.statusIcon) self.statusIcon.textContent = '⚠️';
-                if (self.statusText) {
-                    self.statusText.textContent = 'No Data';
-                    self.statusText.className = 'status-text not-found';
-                }
-                if (self.btnMarkVerified) {
-                    self.btnMarkVerified.disabled = true;
-                    self.btnMarkVerified.innerHTML = '⚠️ No Data';
-                }
-                showToast('Could not retrieve registration data.', 'error');
-                return;
-            }
-            var participant = allData.find(function(row) { return row.UniqueID === self.currentId; });
-            if (participant) {
-                self.currentParticipant = participant;
-                self.displayResult(participant);
-            } else {
+    // --- SECURE: fetch only the participant by ID ---
+    var url = APP_SCRIPT_URL + '?action=get&id=' + encodeURIComponent(this.currentId);
+    fetch(url)
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success === false) {
+                // Not found
                 if (self.statusIcon) self.statusIcon.textContent = '❌';
                 if (self.statusText) {
                     self.statusText.textContent = 'Not Found';
@@ -884,9 +851,16 @@ var Verify = {
                     self.btnMarkVerified.innerHTML = '❌ Not Registered';
                 }
                 showToast('Participant not found. Please check the ID.', 'error');
+                return;
             }
+            // Participant found
+            self.currentParticipant = data;
+            self.displayResult(data);
+        })
+        .catch(function(err) {
+            showToast('Could not fetch participant data.', 'error');
         });
-    },
+},
 
     displayResult: function(participant) {
         var isVerified = participant.Verified === true || participant.Verified === 'TRUE';
@@ -903,7 +877,7 @@ var Verify = {
         if (this.resultRole) this.resultRole.textContent = participant.Role || '—';
         if (this.btnMarkVerified) {
             this.btnMarkVerified.disabled = isVerified;
-            this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Verified Attendance';
+            this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Attendance';
         }
         if (this.resultCard) this.resultCard.classList.add('show');
     },
@@ -931,7 +905,7 @@ var Verify = {
                     showToast('Verification failed: ' + (result.error || 'Unknown'), 'error');
                     if (self.btnMarkVerified) {
                         self.btnMarkVerified.disabled = false;
-                        self.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
+                        self.btnMarkVerified.innerHTML = '✅ Mark as Attendance';
                     }
                 }
             })
@@ -940,7 +914,7 @@ var Verify = {
                 showToast('Could not connect to the server.', 'error');
                 if (self.btnMarkVerified) {
                     self.btnMarkVerified.disabled = false;
-                    self.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
+                    self.btnMarkVerified.innerHTML = '✅ Mark as Attendance';
                 }
             });
     },
