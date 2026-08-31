@@ -16,7 +16,7 @@
     // ============================================================
     // SHARED HELPERS
     // ============================================================
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkZoMmmKVqOxAw0LzmN2zgtVl447o6i-46Jdk6qQD1umvuRZNYBxir6FVP8oPZ1ZHmeA/exec';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7MNX9a8GzCPKp2s333bG_8fbxrIAPK3w-foFYGY8DbmkCP8Ytb1JNWjBTl-f0g2-i_A/exec';
     let toastTimer = null;
 
     function showToast(msg, type) {
@@ -448,8 +448,11 @@ handleSubmit: function(e) {
             self.processRegistration(clean);
         })
         .catch(function(err) {
-            // If offline, proceed anyway (optimistic)
-            self.processRegistration(clean);
+            showToast('Could not verify duplicate. Please check your network.', 'error');
+            if (self.submitBtn) {
+                self.submitBtn.disabled = false;
+                self.submitBtn.innerHTML = 'Submit Now';
+            }
         });
 },
 
