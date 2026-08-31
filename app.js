@@ -477,6 +477,7 @@ handleSubmit: function(e) {
         fetch(APP_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
+            redirect: 'follow',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(function() {
