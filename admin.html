@@ -5,22 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NACWS · Admin Dashboard</title>
     <link rel="stylesheet" href="styles.css" />
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-    <div class="admin-container">
+    <!-- ==========================================================
+         ADMIN LOGIN OVERLAY
+         ========================================================== -->
+    <div class="admin-login-overlay" id="adminLoginOverlay">
+        <div class="admin-login-box">
+            <div class="login-logo">
+                <img src="nacws_logo.png" alt="NACWS Logo" />
+            </div>
+            <h2>🔐 Admin Access</h2>
+            <p class="login-sub">Enter your credentials to manage registrations.</p>
+            <div class="login-error" id="loginError">Invalid email or password. Please try again.</div>
+            <form id="adminLoginForm" novalidate>
+                <div class="form-group">
+                    <label for="adminEmail">Email Address</label>
+                    <input type="email" id="adminEmail" placeholder="admin@example.com" required autofocus />
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" placeholder="••••••••" required />
+                </div>
+                <button type="submit" class="btn-login" id="adminLoginBtn">🔑 Sign In</button>
+            </form>
+            <p class="login-footnote">🔒 Secure · All data encrypted in transit</p>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         ADMIN DASHBOARD (hidden until login)
+         ========================================================== -->
+    <div class="admin-container" id="adminDashboard" style="display:none;">
         <div class="admin-header">
             <div>
-                <h1><img src="nacws-logo.jpg" style="height:40px; width:auto;" alt="NACWS Logo" class="logo-img" /> Registration Dashboard</h1>
+                <h1>
+                    <img src="nacws-logo.jpg" style="height:40px; width:auto;" alt="NACWS Logo" class="logo-img" />
+                    Registration Dashboard
+                </h1>
                 <div style="font-size:0.8rem;opacity:0.7;">NACWS Cybersecurity Seminar 2027</div>
             </div>
-            <div>
+            <div class="header-right">
                 <span class="badge badge-gold"><span class="status-dot online"></span> Live</span>
-                <button class="btn btn-gold" onclick="NACWS.admin.exportCSV()" style="margin-left:12px;">⬇️ Export CSV</button>
+                <button class="btn btn-gold" onclick="NACWS.admin.exportCSV()" style="margin-left:8px;">⬇️ Export CSV</button>
+                <button class="btn-logout" id="adminLogoutBtn">🚪 Logout</button>
             </div>
         </div>
 
