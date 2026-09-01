@@ -476,9 +476,8 @@ handleSubmit: function(e) {
 
         fetch(APP_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'cors',
             redirect: 'follow',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(function() {
             self.showTicket(payload);
@@ -1018,7 +1017,7 @@ verifyParticipant: function(id) {
 
         fetch(APP_SCRIPT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors'
             body: JSON.stringify({ action: 'admin_login', email: email, password: password })
         })
         .then(function(response) { return response.json(); })
