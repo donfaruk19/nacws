@@ -1,3 +1,4 @@
+/* NACWS Secure v2.0 – Same visuals, hardened */
 /* ============================================================
    RESET & BASE
    ============================================================ */
@@ -2218,3 +2219,16 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
         padding: 16px !important;
     }
 }
+
+/* Logout btn styling fix */
+.btn-logout {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-left: 12px;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.2); }
