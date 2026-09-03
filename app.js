@@ -1,7 +1,6 @@
 
 /**
- * NACWS SECURE v2.5 – No-Preflight CORS Fix
- * All fetches use simple requests to avoid OPTIONS preflight on GAS
+ * NACWS SECURE v2.5 
  */
 (function() {
   'use strict';
