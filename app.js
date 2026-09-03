@@ -4,7 +4,7 @@
  */
 (function() {
   'use strict';
-  const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymwT9T38THRaWT56uhYXLFGijYZYzKoLwzS-Mhh0IQLmJAu056_LVCP3NBUgL27nQoWw/exec';
+  const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUzNdx6cXB3ZJzo5fKrUNVQPmLeaGhRddAm3TdNbz2uLu8Ep7FAUJ__J6jsxrLshiDEw/exec';
   let toastTimer = null;
 
   function showToast(msg, type) {
