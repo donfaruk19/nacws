@@ -1,10 +1,11 @@
 
 /**
- * NACWS SECURE v2.5 
+ * NACWS SECURE v2.5 – No-Preflight CORS Fix
+ * All fetches use simple requests to avoid OPTIONS preflight on GAS
  */
 (function() {
   'use strict';
-  const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUzNdx6cXB3ZJzo5fKrUNVQPmLeaGhRddAm3TdNbz2uLu8Ep7FAUJ__J6jsxrLshiDEw/exec';
+  const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQrickxhT2ajKg2BDOKH5UXwKtmPAX634Z-23IWZVaD9p8E3-_CcW2djPMdKCZFU52wA/exec';
   let toastTimer = null;
 
   function showToast(msg, type) {
@@ -410,7 +411,7 @@
     displayResult:function(p){
       var isVerified=p.Verified===true||p.Verified==='TRUE';
       if(this.statusIcon) this.statusIcon.textContent=isVerified?'✅':'⏳';
-      if(this.statusText){ this.statusText.textContent=isVerified?'Already Verified':'Not Yet Verified'; this.statusText.className='status-text '+(isVerified?'verified':'unverified'); }
+      if(this.statusText){ this.statusText.textContent=isVerified?'Already Present':'Not Yet Present'; this.statusText.className='status-text '+(isVerified?'verified':'unverified'); }
       if(this.resultName) this.resultName.textContent=p.FullName||'—';
       if(this.resultServiceNo) this.resultServiceNo.textContent=p.ServiceNo||'—';
       if(this.resultId) this.resultId.textContent=p.UniqueID||this.currentId;
@@ -418,8 +419,8 @@
       if(this.resultOrg) this.resultOrg.textContent=p.Organization||'—';
       if(this.resultRole) this.resultRole.textContent=p.Role||'—';
       if(this.btnMarkVerified){
-        if(isVerified){ this.btnMarkVerified.disabled=true; this.btnMarkVerified.innerHTML='✅ Already Verified'; }
-        else{ this.btnMarkVerified.disabled=false; this.btnMarkVerified.innerHTML='✅ Mark as Verified'; }
+        if(isVerified){ this.btnMarkVerified.disabled=true; this.btnMarkVerified.innerHTML='✅ Already Present'; }
+        else{ this.btnMarkVerified.disabled=false; this.btnMarkVerified.innerHTML='✅ Mark as Present'; }
       }
     },
     async markVerified(){
@@ -433,8 +434,8 @@
         var url = APP_SCRIPT_URL + '?action=verify&id='+encodeURIComponent(this.currentId)+'&email='+encodeURIComponent(email)+'&token='+encodeURIComponent(token);
         const data = await secureFetch(url);
         if(data.success){ showToast('Verified!','success'); if(self.statusIcon) self.statusIcon.textContent='✅'; if(self.statusText){ self.statusText.textContent='Verified'; self.statusText.className='status-text verified'; } self.btnMarkVerified.innerHTML='✅ Verified'; }
-        else{ showToast(data.error||'Failed','error'); if(self.btnMarkVerified){ self.btnMarkVerified.disabled=false; self.btnMarkVerified.innerHTML='✅ Mark as Verified'; } }
-      }catch(err){ showToast('Network error','error'); if(self.btnMarkVerified){ self.btnMarkVerified.disabled=false; self.btnMarkVerified.innerHTML='✅ Mark as Verified'; } }
+        else{ showToast(data.error||'Failed','error'); if(self.btnMarkVerified){ self.btnMarkVerified.disabled=false; self.btnMarkVerified.innerHTML='✅ Mark as Present'; } }
+      }catch(err){ showToast('Network error','error'); if(self.btnMarkVerified){ self.btnMarkVerified.disabled=false; self.btnMarkVerified.innerHTML='✅ Mark as Present'; } }
     },
     clearResult(){ if(this.resultCard) this.resultCard.classList.remove('show'); this.currentId=null; this.currentParticipant=null; }
   };
