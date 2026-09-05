@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><style>
+<head>
+<style>
 @font-face {
   font-family: "Optimistic";
   font-style: normal;
@@ -26,8 +27,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NACWS · Cybersecurity Seminar 2027</title>
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://api.ipify.org;">
-    <!-- X-Frame-Options must be HTTP header, not meta – handled by _headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://api.qrserver.com https://*.qrserver.com https://api.ipify.org; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.qrserver.com https://*.qrserver.com https://cdnjs.cloudflare.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://api.ipify.org https://api.qrserver.com;">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     
     <link rel="stylesheet" href="styles.css" />
@@ -41,7 +41,7 @@
     <!-- ===== BANNER ===== -->
     <div class="banner">
         <div class="banner__text">
-             <strong>NACWS Seminar on Cybersecurity 2027</strong> · 2 – 6 July · 0900hrs daily ·
+             <strong>NACWS Cybersecurity Seminar 2027</strong> · 2 – 6 July · 0900hrs daily ·
             <a href="#" id="bannerRegisterBtn">Register Now →</a>
         </div>
     </div>
@@ -58,7 +58,7 @@
                 <li><a href="#schedule">Schedule</a></li>
                 <li><a href="#" id="navRegisterBtn" class="btn btn-primary btn-sm">Register Now</a></li>
                 <li>
-    <button type="button" id="retrievePassBtn" class="btn btn-secondary btn-sm"> Find My Ticket</button>
+    <button type="button" id="retrievePassBtn" class="btn btn-secondary btn-sm">Find Ticket</button>
 </li>
             </ul>
         </div>
@@ -79,8 +79,8 @@
              On Behalf of <br><strong class="army-rank-badge"><span class="rank-star">&#10038; &#10038; &#10038;</span></strong><br>THE CHIEF OF ARMY STAFF
          </div>
          <div class="hero-subtitle">LT GEN W SHAIBU<span class="hero-deco"> NAM GSS DSO (LR) FTAM psc fdc(++) fndu(USA) CM FCM FCMN NAOOOM NAPH MSS MA MNIM</span></div>
-         <p class="hero-tagline">Welcomes you to</p>
-         <h1>SEMINAR ON CYBERSECURITY <br> <span class="gold">⫷2027⫸</span></h1>
+         <p class="hero-tagline">Cordially Invite you to</p>
+         <h1>NACWS CYBERSECURITY SEMINAR<br> <span class="gold">⫷2027⫸</span></h1>
          <div class="hero-theme">
              🎯 <strong>Theme:</strong> "Cybersecurity and National Stability: Safeguarding Critical Infrastructure Against Disruption, Sabotage and Cyber Threats"
          </div>
@@ -118,11 +118,11 @@
      </div>
 </section>
 
-<!-- ===== GALLERY – 2026 Seminar Images ===== -->
+<!-- ===== GALLERY – 2026 Cybersecurity Seminar===== -->
 <section class="gallery-section">
      <div class="container">
          <div class="section-header">
-             <h2 class="section-title">Highlights from <span class="gold">2026 Seminar</span></h2>
+             <h2 class="section-title">Highlights from <span class="gold">2026 Cybersecurity Seminar</span></h2>
              <p class="section-sub">Relive the moments from last year's impacted event.</p>
          </div>
 
@@ -279,7 +279,7 @@
                              <option value="Student">IT Student</option>
                              <option value="Resource Person">Resource Person</option>
                                                          <option value="Panel Judge">Panel Judge</option>
-                             <option value="Staff">Staff</option>
+                             <option value="Instructor">Instructor</option>
                                                          <option value="BCC">BCC</option>
                                                          <option value="IC2">IC2</option>
                                                          <option value="IC3">IC3</option>
