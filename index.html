@@ -35,13 +35,12 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
-<script>if(location.protocol!=='https:' && location.hostname!=='localhost' && location.hostname!=='127.0.0.1'){location.replace('https://'+location.host+location.pathname+location.search);}</script>
 </head>
 <body>
     <!-- ===== BANNER ===== -->
     <div class="banner">
         <div class="banner__text">
-             <strong>NACWS Cybersecurity Seminar 2027</strong> · 2 – 6 July · 0900hrs daily ·
+             <strong>NACWS Seminar on Cybersecurity 2027</strong> · 2 – 6 July · 0900hrs daily ·
             <a href="#" id="bannerRegisterBtn">Register Now →</a>
         </div>
     </div>
@@ -51,14 +50,14 @@
         <div class="container">
             <a href="#" class="logo">
                 <div class="logo-placeholder">
-                    <img src="nacws_logo.png" onerror="this.style.display='none'" alt="NACWS Logo" class="logo-img" />
+                    <img src="nacws_logo.png" alt="NACWS Logo" class="logo-img fallback-img" />
                 </div>
             </a>
             <ul class="nav-links">
                 <li><a href="#schedule">Schedule</a></li>
                 <li><a href="#" id="navRegisterBtn" class="btn btn-primary btn-sm">Register Now</a></li>
                 <li>
-    <button type="button" id="retrievePassBtn" class="btn btn-secondary btn-sm">Find Ticket</button>
+    <button type="button" id="retrievePassBtn" class="btn btn-secondary btn-sm"> Find My Ticket</button>
 </li>
             </ul>
         </div>
@@ -79,8 +78,8 @@
              On Behalf of <br><strong class="army-rank-badge"><span class="rank-star">&#10038; &#10038; &#10038;</span></strong><br>THE CHIEF OF ARMY STAFF
          </div>
          <div class="hero-subtitle">LT GEN W SHAIBU<span class="hero-deco"> NAM GSS DSO (LR) FTAM psc fdc(++) fndu(USA) CM FCM FCMN NAOOOM NAPH MSS MA MNIM</span></div>
-         <p class="hero-tagline">Cordially Invite you to</p>
-         <h1>NACWS CYBERSECURITY SEMINAR<br> <span class="gold">⫷2027⫸</span></h1>
+         <p class="hero-tagline">Welcomes you to</p>
+         <h1>SEMINAR ON CYBERSECURITY <br> <span class="gold">⫷2027⫸</span></h1>
          <div class="hero-theme">
              🎯 <strong>Theme:</strong> "Cybersecurity and National Stability: Safeguarding Critical Infrastructure Against Disruption, Sabotage and Cyber Threats"
          </div>
@@ -118,11 +117,11 @@
      </div>
 </section>
 
-<!-- ===== GALLERY – 2026 Cybersecurity Seminar===== -->
+<!-- ===== GALLERY – 2026 Seminar Images ===== -->
 <section class="gallery-section">
      <div class="container">
          <div class="section-header">
-             <h2 class="section-title">Highlights from <span class="gold">2026 Cybersecurity Seminar</span></h2>
+             <h2 class="section-title">Highlights from <span class="gold">2026 Seminar</span></h2>
              <p class="section-sub">Relive the moments from last year's impacted event.</p>
          </div>
 
@@ -279,7 +278,7 @@
                              <option value="Student">IT Student</option>
                              <option value="Resource Person">Resource Person</option>
                                                          <option value="Panel Judge">Panel Judge</option>
-                             <option value="Instructor">Instructor</option>
+                             <option value="Staff">Staff</option>
                                                          <option value="BCC">BCC</option>
                                                          <option value="IC2">IC2</option>
                                                          <option value="IC3">IC3</option>
@@ -306,6 +305,25 @@
          </div>
      </div>
 
+     <!-- ===== FIND MY TICKET POPUP (replaces the old browser prompt()) ===== -->
+     <div class="popup-overlay" id="retrievePopup">
+         <div class="popup-box" style="max-width:440px;">
+             <button class="popup-close" id="retrievePopupCloseBtn">✕</button>
+             <h2>🔍 Find My Ticket</h2>
+             <p class="sub">Enter the email or Unique Pass ID you registered with.</p>
+             <form id="retrieveForm" novalidate>
+                 <div class="form-group">
+                     <label>Email or Unique Pass ID <span class="req">*</span></label>
+                     <input type="text" id="retrieveQuery" placeholder="you@example.com or NACWS-260626-142120-ABC123" required autofocus />
+                 </div>
+                 <div class="form-actions">
+                     <button type="submit" class="btn btn-primary" id="retrieveSubmitBtn">🔍 Find Ticket</button>
+                     <button type="button" class="btn btn-ghost" id="retrievePopupCancelBtn">Cancel</button>
+                 </div>
+             </form>
+         </div>
+     </div>
+
 <!-- ===== CONFIRMATION MODAL (Ticket View) ===== -->
 <div class="popup-overlay" id="confirmModal">
     <div class="popup-box ticket-wrapper confirmation-modal-dark">
@@ -314,7 +332,7 @@
             <div class="ticket-inner">
                 <!-- Top Header Logo -->
                 <div class="ticket-header-logo">
-                    <img src="nacws-logo.png" onerror="this.style.display='none'" alt="NACWS Logo" class="ticket-logo-top" />
+                    <img src="nacws-logo.png" alt="NACWS Logo" class="ticket-logo-top fallback-img" />
                 </div>
 
                 <!-- Centralized Event Title -->
@@ -370,7 +388,7 @@
         <!-- Unified Header Logo and Event Title -->
         <div class="ticket-header-logo">
             <!-- Emulates the main application layout styling -->
-            <img src="nacws-logo.png" onerror="this.style.display='none'" alt="NACWS Logo" class="ticket-logo-top">
+            <img src="nacws-logo.png" alt="NACWS Logo" class="ticket-logo-top fallback-img">
         </div>
         <div class="ticket-event-centralized">
             <h2>NACWS CYBERSECURITY SEMINAR 2027</h2>
@@ -418,12 +436,12 @@
      <!-- ===== TOAST ===== -->
      <div class="toast" id="toast"><span id="toastMsg">Message</span></div>
 
-     <!-- ===== REQUIRED LIBRARIES ===== -->
+     <!-- ===== REQUIRED LIBRARIES (third-party, not app code — left as-is) ===== -->
      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-     <!-- ===== JAVASCRIPT ===== -->
+     <!-- ===== APP JAVASCRIPT (only script for this site's own logic) ===== -->
      <script type="module" src="./app.js"></script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
