@@ -7,6 +7,30 @@
     'use strict';
 
     // ============================================================
+    // FORCE HTTPS (moved from an inline <script> in <head>)
+    // Runs immediately on script load. Note: since this file is
+    // loaded as a deferred module, this now fires slightly later
+    // than the old inline <head> script did (after HTML parsing
+    // instead of before it) — the redirect still happens, just a
+    // beat later than a blocking inline script would.
+    // ============================================================
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        location.replace('https://' + location.host + location.pathname + location.search);
+    }
+
+    // ============================================================
+    // IMAGE FALLBACK (moved from inline onerror="..." attributes)
+    // Any <img class="fallback-img"> hides itself if it fails to load.
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('img.fallback-img').forEach(function(img) {
+            img.addEventListener('error', function() {
+                img.style.display = 'none';
+            });
+        });
+    });
+
+// ============================================================
     // ALIAS GLOBALS FOR MODULE COMPATIBILITY
     // ============================================================
     const QRCode = window.QRCode;
@@ -16,7 +40,7 @@
     // ============================================================
     // SHARED HELPERS
     // ============================================================
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQrickxhT2ajKg2BDOKH5UXwKtmPAX634Z-23IWZVaD9p8E3-_CcW2djPMdKCZFU52wA/exec';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYu6nZVjwvD1Vgo4XRU1U1rWNqRsITzmbMuBlonXMQ8GKZGT2gzGUq8NNafda9j1lqHQ/exec';
     let toastTimer = null;
 
     function showToast(msg, type) {
@@ -53,1134 +77,1341 @@
     // ============================================================
     // MODULE: REGISTRATION (index.html)
     // ============================================================
-    var Registration = {
-        init: function() {
-            var self = this;
-            this.fullName = document.getElementById('fullName');
-            this.serviceNo = document.getElementById('serviceNo');
-            this.email = document.getElementById('email');
-            this.phone = document.getElementById('phone');
-            this.rank = document.getElementById('rank');
-            this.role = document.getElementById('role');
-            this.organization = document.getElementById('organization');
-            this.special = document.getElementById('special');
-            this.submitBtn = document.getElementById('submitBtn');
-            this.form = document.getElementById('regForm');
-            this.popup = document.getElementById('registerPopup');
-            this.popupClose = document.getElementById('popupCloseBtn');
-            this.popupCancel = document.getElementById('popupCancelBtn');
-            this.confirmModal = document.getElementById('confirmModal');
-            this.modalClose = document.getElementById('modalCloseBtn');
-            this.modalClose2 = document.getElementById('modalCloseBtn2');
-            this.cardRank = document.getElementById('cardRank');          
-            this.cardName = document.getElementById('cardName');
-            this.cardServiceNo = document.getElementById('cardServiceNo');
-            this.cardRole = document.getElementById('cardRole');
-            this.cardId = document.getElementById('cardId');
-            this.cardEmail = document.getElementById('cardEmail');
-            this.cardOrg = document.getElementById('cardOrg');
-            this.cardTicketId = document.getElementById('cardTicketId');
-            this.qrContainer = document.getElementById('qrcode-card');
-            this.downloadBtn = document.getElementById('downloadCardBtn');
-            this.retrieveBtn = document.getElementById('retrievePassBtn');
+var Registration = {
+    init: function() {
+        var self = this;
+        this.fullName = document.getElementById('fullName');
+        this.serviceNo = document.getElementById('serviceNo');
+        this.email = document.getElementById('email');
+        this.phone = document.getElementById('phone');
+        this.rank = document.getElementById('rank');
+        this.role = document.getElementById('role');
+        this.organization = document.getElementById('organization');
+        this.special = document.getElementById('special');
+        this.submitBtn = document.getElementById('submitBtn');
+        this.form = document.getElementById('regForm');
+        this.popup = document.getElementById('registerPopup');
+        this.popupClose = document.getElementById('popupCloseBtn');
+        this.popupCancel = document.getElementById('popupCancelBtn');
+        this.confirmModal = document.getElementById('confirmModal');
+        this.modalClose = document.getElementById('modalCloseBtn');
+        this.modalClose2 = document.getElementById('modalCloseBtn2');
+        this.cardRank = document.getElementById('cardRank');          // Added for rank display
+        this.cardName = document.getElementById('cardName');
+        this.cardServiceNo = document.getElementById('cardServiceNo');
+        this.cardRole = document.getElementById('cardRole');
+        this.cardId = document.getElementById('cardId');
+        this.cardEmail = document.getElementById('cardEmail');
+        this.cardOrg = document.getElementById('cardOrg');
+        this.cardTicketId = document.getElementById('cardTicketId');
+        this.qrContainer = document.getElementById('qrcode-card');
+        this.downloadBtn = document.getElementById('downloadCardBtn');
+        this.retrieveBtn = document.getElementById('retrievePassBtn'); // New
+        this.retrievePopup = document.getElementById('retrievePopup');
+        this.retrievePopupClose = document.getElementById('retrievePopupCloseBtn');
+        this.retrievePopupCancel = document.getElementById('retrievePopupCancelBtn');
+        this.retrieveForm = document.getElementById('retrieveForm');
+        this.retrieveQuery = document.getElementById('retrieveQuery');
+        this.retrieveSubmitBtn = document.getElementById('retrieveSubmitBtn');
 
-            this.currentParticipant = null;
+        this.currentParticipant = null;
 
-            // Bind retrieve button
-            if (this.retrieveBtn) {
-                this.retrieveBtn.addEventListener('click', function() {
-                    self.handleRetrieveTicket();
-                });
-            }
+        // Bind retrieve button — opens the in-app modal instead of a browser prompt()
+        if (this.retrieveBtn) {
+            this.retrieveBtn.addEventListener('click', function() {
+                self.openRetrievePopup();
+            });
+        }
+        if (this.retrievePopupClose) this.retrievePopupClose.addEventListener('click', function() { self.closeRetrievePopup(); });
+        if (this.retrievePopupCancel) this.retrievePopupCancel.addEventListener('click', function() { self.closeRetrievePopup(); });
+        if (this.retrievePopup) this.retrievePopup.addEventListener('click', function(e) { if (e.target === self.retrievePopup) self.closeRetrievePopup(); });
+        if (this.retrieveForm) {
+            this.retrieveForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                self.handleRetrieveTicket();
+            });
+        }
 
-            // Open registration popup
-            document.querySelectorAll('#navRegisterBtn, #heroRegisterBtn, #bannerRegisterBtn, #footerRegisterBtn')
-                .forEach(function(el) {
-                    if (el) el.addEventListener('click', function(e) { 
-                        e.preventDefault();
-                        self.openPopup(); 
-                    });
-                });
-
-            if (this.popupClose) this.popupClose.addEventListener('click', function() { self.closePopup(); });
-            if (this.popupCancel) this.popupCancel.addEventListener('click', function() { self.closePopup(); });
-            if (this.popup) this.popup.addEventListener('click', function(e) { if (e.target === self.popup) self.closePopup(); });
-
-            if (this.modalClose) this.modalClose.addEventListener('click', function() { self.closeConfirm(); });
-            if (this.modalClose2) this.modalClose2.addEventListener('click', function() { self.closeConfirm(); });
-            if (this.confirmModal) this.confirmModal.addEventListener('click', function(e) { if (e.target === self.confirmModal) self.closeConfirm(); });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    if (self.confirmModal && self.confirmModal.classList.contains('active')) self.closeConfirm();
-                    if (self.popup && self.popup.classList.contains('active')) self.closePopup();
-                }
+        // Open registration popup
+        document.querySelectorAll('#navRegisterBtn, #heroRegisterBtn, #bannerRegisterBtn, #footerRegisterBtn')
+            .forEach(function(el) {
+                if (el) el.addEventListener('click', function(e) { e.preventDefault();
+                    self.openPopup(); });
             });
 
-            if (this.form) {
-                this.form.addEventListener('submit', function(e) { self.handleSubmit(e); });
+        if (this.popupClose) this.popupClose.addEventListener('click', function() { self.closePopup(); });
+        if (this.popupCancel) this.popupCancel.addEventListener('click', function() { self.closePopup(); });
+        if (this.popup) this.popup.addEventListener('click', function(e) { if (e.target === self.popup) self
+                .closePopup(); });
+
+        if (this.modalClose) this.modalClose.addEventListener('click', function() { self.closeConfirm(); });
+        if (this.modalClose2) this.modalClose2.addEventListener('click', function() { self.closeConfirm(); });
+        if (this.confirmModal) this.confirmModal.addEventListener('click', function(e) { if (e.target === self
+                .confirmModal) self.closeConfirm(); });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (self.confirmModal && self.confirmModal.classList.contains('active')) self.closeConfirm();
+                if (self.popup && self.popup.classList.contains('active')) self.closePopup();
+                if (self.retrievePopup && self.retrievePopup.classList.contains('active')) self.closeRetrievePopup();
             }
+        });
 
-            if (this.downloadBtn) {
-                this.downloadBtn.addEventListener('click', function() { self.downloadTicket(); });
-            }
+        if (this.form) {
+            this.form.addEventListener('submit', function(e) { self.handleSubmit(e); });
+        }
 
-            // Pre-fill demo
-            if (window.location.search.includes('demo')) {
-                if (this.fullName) this.fullName.value = 'Umar Faruk';
-                if (this.serviceNo) this.serviceNo.value = 'N/2332';
-                if (this.email) this.email.value = 'donfaruk191@gmail.com';
-                if (this.phone) this.phone.value = '+234 800 123 4567';
-                if (this.rank) this.rank.value = 'Major';
-                if (this.role) this.role.value = 'Discussant';
-                if (this.organization) this.organization.value = 'Nigerian Army';
-                if (this.special) this.special.value = 'None';
-            }
-            if (window.location.search.includes('register')) {
-                setTimeout(function() { self.openPopup(); }, 400);
-            }
-            this.initGallery();
-        },
+        if (this.downloadBtn) {
+            this.downloadBtn.addEventListener('click', function() { self.downloadTicket(); });
+        }
 
-        openPopup: function() {
-            if (!this.popup) return;
-            this.popup.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        },
+        // Pre-fill demo (kept from old)
+        if (window.location.search.includes('demo')) {
+            if (this.fullName) this.fullName.value = 'Umar Faruk';
+            if (this.serviceNo) this.serviceNo.value = 'N/2332';
+            if (this.email) this.email.value = 'donfaruk191@gmail.com';
+            if (this.phone) this.phone.value = '+234 800 123 4567';
+            if (this.rank) this.rank.value = 'Major';
+            if (this.role) this.role.value = 'Discussant';
+            if (this.organization) this.organization.value = 'Nigerian Army';
+            if (this.special) this.special.value = 'None';
+        }
+        if (window.location.search.includes('register')) {
+            setTimeout(function() { self.openPopup(); }, 400);
+        }
+        this.initGallery();
+    },
 
-        closePopup: function() {
-            if (!this.popup) return;
-            this.popup.classList.remove('active');
-            document.body.style.overflow = '';
-        },
+    openPopup: function() {
+        if (!this.popup) return;
+        this.popup.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    },
 
-        openConfirm: function() {
-            if (!this.confirmModal) return;
-            this.confirmModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        },
+    closePopup: function() {
+        if (!this.popup) return;
+        this.popup.classList.remove('active');
+        document.body.style.overflow = '';
+    },
 
-        closeConfirm: function() {
-            if (!this.confirmModal) return;
-            this.confirmModal.classList.remove('active');
-            document.body.style.overflow = '';
-        },
+    openRetrievePopup: function() {
+        if (!this.retrievePopup) return;
+        this.retrievePopup.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        if (this.retrieveQuery) this.retrieveQuery.focus();
+    },
 
-        generateQR: function(data) {
-            if (!this.qrContainer) return;
-            this.qrContainer.innerHTML = '';
-            this.qrContainer.style.width = '120px';
-            this.qrContainer.style.height = '120px';
+    closeRetrievePopup: function() {
+        if (!this.retrievePopup) return;
+        this.retrievePopup.classList.remove('active');
+        document.body.style.overflow = '';
+        if (this.retrieveForm) this.retrieveForm.reset();
+    },
+
+    openConfirm: function() {
+        if (!this.confirmModal) return;
+        this.confirmModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    },
+
+    closeConfirm: function() {
+        if (!this.confirmModal) return;
+        this.confirmModal.classList.remove('active');
+        document.body.style.overflow = '';
+    },
+
+    generateQR: function(data) {
+        if (!this.qrContainer) return;
+        this.qrContainer.innerHTML = '';
+        this.qrContainer.style.width = '120px';
+        this.qrContainer.style.height = '120px';
+        try {
+            new QRCode(this.qrContainer, {
+                text: data,
+                width: 120,
+                height: 120,
+                colorDark: '#07472d',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } catch (e) {
+            this.qrContainer.innerHTML = '<p style="color:red;">QR error</p>';
+            showToast('QR generation error. Try again.', 'error');
+        }
+    },
+
+    // ===== UPDATED SHOW TICKET (with rank spacing) =====
+    showTicket: function(participant) {
+        this.currentParticipant = participant;
+
+        // Format rank with a trailing space if present
+        var formattedRank = (participant.rank && participant.rank !== 'N/A') ? participant.rank.trim() + ' ' : '';
+
+        if (this.cardRank) this.cardRank.textContent = formattedRank;
+        if (this.cardName) this.cardName.textContent = participant.fullName || '';
+        if (this.cardServiceNo) this.cardServiceNo.textContent = participant.serviceNo || 'N/A';
+        if (this.cardRole) this.cardRole.textContent = participant.role || 'N/A';
+        if (this.cardId) this.cardId.textContent = participant.uniqueId;
+        if (this.cardEmail) this.cardEmail.textContent = participant.email;
+        if (this.cardOrg) this.cardOrg.textContent = participant.organization || 'N/A';
+        if (this.cardTicketId) this.cardTicketId.textContent = participant.uniqueId;
+
+        var qrPayload = JSON.stringify({
+            id: participant.uniqueId,
+            name: participant.fullName,
+            email: participant.email,
+            role: participant.role
+        });
+
+        var self = this;
+        setTimeout(function() {
+            self.generateQR(qrPayload);
+        }, 200);
+        this.openConfirm();
+    },
+
+    // ===== UPDATED DOWNLOAD TICKET (with compact ticket and QR) =====
+    downloadTicket: function() {
+        var self = this;
+        var participant = this.currentParticipant;
+        if (!participant) {
+            showToast('No participant data.', 'error');
+            return;
+        }
+
+        var compact = document.getElementById('compactTicket');
+        if (!compact) {
+            showToast('Compact ticket not found.', 'error');
+            return;
+        }
+
+        var rankEl = document.getElementById('compactRank');
+        var nameEl = document.getElementById('compactName');
+        var svcNoEl = document.getElementById('compactSvcNo');
+        var orgEl = document.getElementById('compactOrg');
+        var idEl = document.getElementById('compactId');
+        var roleEl = document.getElementById('compactRole');
+
+        var formattedRank = (participant.rank && participant.rank !== 'N/A') ? participant.rank.trim() + ' ' : '';
+        if (rankEl) rankEl.textContent = formattedRank;
+        if (nameEl) nameEl.textContent = participant.fullName || '—';
+        if (svcNoEl) svcNoEl.textContent = participant.serviceNo || '—';
+        if (orgEl) orgEl.textContent = participant.organization || '—';
+        if (idEl) idEl.textContent = participant.uniqueId || '—';
+        if (roleEl) roleEl.textContent = participant.role || '—';
+
+        // QR Code (only ID, Name, Role for better scan clarity)
+        var qrContainer = document.getElementById('qrcode-compact');
+        if (qrContainer) {
+            qrContainer.innerHTML = '';
+            var qrPayload = JSON.stringify({
+                id: participant.uniqueId || '',
+                name: participant.fullName || '',
+                role: participant.role || ''
+            });
             try {
-                new QRCode(this.qrContainer, {
-                    text: data,
-                    width: 120,
-                    height: 120,
-                    colorDark: '#07472d',
+                new QRCode(qrContainer, {
+                    text: qrPayload,
+                    width: 130,
+                    height: 130,
+                    colorDark: '#000000',
                     colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
+                    correctLevel: QRCode.CorrectLevel.L
                 });
             } catch (e) {
-                this.qrContainer.innerHTML = '<p style="color:red;">QR error</p>';
-                showToast('QR generation error. Try again.', 'error');
+                console.error('QR Generation Error:', e);
+                qrContainer.innerHTML = '<p style="color:red;font-size:0.5rem;">QR error</p>';
             }
-        },
+        }
 
-        showTicket: function(participant) {
-            this.currentParticipant = participant;
+        // Offscreen capture setup
+        compact.style.display = 'block';
+        compact.style.position = 'absolute';
+        compact.style.left = '-9999px';
+        compact.style.top = '0';
+        compact.style.width = '350px';
 
-            var formattedRank = (participant.rank && participant.rank !== 'N/A') ? participant.rank.trim() + ' ' : '';
+        if (self.downloadBtn) {
+            self.downloadBtn.disabled = true;
+            self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
+        }
 
-            if (this.cardRank) this.cardRank.textContent = formattedRank;
-            if (this.cardName) this.cardName.textContent = participant.fullName || '';
-            if (this.cardServiceNo) this.cardServiceNo.textContent = participant.serviceNo || 'N/A';
-            if (this.cardRole) this.cardRole.textContent = participant.role || 'N/A';
-            if (this.cardId) this.cardId.textContent = participant.uniqueId;
-            if (this.cardEmail) this.cardEmail.textContent = participant.email;
-            if (this.cardOrg) this.cardOrg.textContent = participant.organization || 'N/A';
-            if (this.cardTicketId) this.cardTicketId.textContent = participant.uniqueId;
+        var card = compact.querySelector('.ticket') || compact;
+        card.style.overflow = 'visible';
+        card.style.height = 'auto';
+        card.style.maxHeight = 'none';
 
-            var qrPayload = JSON.stringify({
-                id: participant.uniqueId,
-                name: participant.fullName,
-                email: participant.email,
-                role: participant.role
-            });
-
-            var self = this;
+        requestAnimationFrame(function() {
             setTimeout(function() {
-                self.generateQR(qrPayload);
-            }, 200);
-            this.openConfirm();
-        },
-
-        downloadTicket: function() {
-            var self = this;
-            var participant = this.currentParticipant;
-            if (!participant) {
-                showToast('No participant data.', 'error');
-                return;
-            }
-
-            var compact = document.getElementById('compactTicket');
-            if (!compact) {
-                showToast('Compact ticket not found.', 'error');
-                return;
-            }
-
-            var rankEl = document.getElementById('compactRank');
-            var nameEl = document.getElementById('compactName');
-            var svcNoEl = document.getElementById('compactSvcNo');
-            var orgEl = document.getElementById('compactOrg');
-            var idEl = document.getElementById('compactId');
-            var roleEl = document.getElementById('compactRole');
-
-            var formattedRank = (participant.rank && participant.rank !== 'N/A') ? participant.rank.trim() + ' ' : '';
-            if (rankEl) rankEl.textContent = formattedRank;
-            if (nameEl) nameEl.textContent = participant.fullName || '—';
-            if (svcNoEl) svcNoEl.textContent = participant.serviceNo || '—';
-            if (orgEl) orgEl.textContent = participant.organization || '—';
-            if (idEl) idEl.textContent = participant.uniqueId || '—';
-            if (roleEl) roleEl.textContent = participant.role || '—';
-
-            var qrContainer = document.getElementById('qrcode-compact');
-            if (qrContainer) {
-                qrContainer.innerHTML = '';
-                var qrPayload = JSON.stringify({
-                    id: participant.uniqueId || '',
-                    name: participant.fullName || '',
-                    role: participant.role || ''
-                });
-                try {
-                    new QRCode(qrContainer, {
-                        text: qrPayload,
-                        width: 130,
-                        height: 130,
-                        colorDark: '#000000',
-                        colorLight: '#ffffff',
-                        correctLevel: QRCode.CorrectLevel.L
-                    });
-                } catch (e) {
-                    console.error('QR Generation Error:', e);
-                    qrContainer.innerHTML = '<p style="color:red;font-size:0.5rem;">QR error</p>';
-                }
-            }
-
-            compact.style.display = 'block';
-            compact.style.position = 'absolute';
-            compact.style.left = '-9999px';
-            compact.style.top = '0';
-            compact.style.width = '350px';
-
-            if (self.downloadBtn) {
-                self.downloadBtn.disabled = true;
-                self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
-            }
-
-            var card = compact.querySelector('.ticket') || compact;
-            card.style.overflow = 'visible';
-            card.style.height = 'auto';
-            card.style.maxHeight = 'none';
-
-            requestAnimationFrame(function() {
-                setTimeout(function() {
-                    html2canvas(card, {
-                        scale: 2.5,
-                        useCORS: true,
-                        backgroundColor: '#0f281b',
-                        logging: false,
-                        onclone: function(doc) {
-                            var extraImgs = doc.querySelectorAll('#qrcode-compact img');
-                            extraImgs.forEach(function(img) {
-                                img.style.display = 'none';
-                            });
-                            var clonedCard = doc.querySelector('.ticket.compact') || doc.getElementById('compactTicket');
-                            if (clonedCard) {
-                                clonedCard.style.width = '350px';
-                                clonedCard.style.margin = '0';
-                                clonedCard.style.overflow = 'visible';
-                                clonedCard.style.height = 'auto';
-                                clonedCard.style.maxHeight = 'none';
-                            }
-                            doc.body.style.background = '#0f281b';
-                            doc.body.style.margin = '0';
+                html2canvas(card, {
+                    scale: 2.5,
+                    useCORS: true,
+                    backgroundColor: '#0f281b',
+                    logging: false,
+                    onclone: function(doc) {
+                        var extraImgs = doc.querySelectorAll('#qrcode-compact img');
+                        extraImgs.forEach(function(img) {
+                            img.style.display = 'none';
+                        });
+                        var clonedCard = doc.querySelector('.ticket.compact') || doc.getElementById('compactTicket');
+                        if (clonedCard) {
+                            clonedCard.style.width = '350px';
+                            clonedCard.style.margin = '0';
+                            clonedCard.style.overflow = 'visible';
+                            clonedCard.style.height = 'auto';
+                            clonedCard.style.maxHeight = 'none';
                         }
-                    }).then(function(canvas) {
+                        doc.body.style.background = '#0f281b';
+                        doc.body.style.margin = '0';
+                    }
+                }).then(function(canvas) {
+                    var link = document.createElement('a');
+                    link.download = 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showToast('Ticket downloaded!', 'success');
+                }).catch(function(err) {
+                    console.error('html2canvas error:', err);
+                    var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
+                    if (qrCanvas) {
                         var link = document.createElement('a');
-                        link.download = 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png';
-                        link.href = canvas.toDataURL('image/png');
+                        link.download = 'NACWS-QR-' + (participant.uniqueId || 'QR') + '.png';
+                        link.href = qrCanvas.toDataURL('image/png');
                         link.click();
-                        showToast('Ticket downloaded!', 'success');
-                    }).catch(function(err) {
-                        console.error('html2canvas error:', err);
-                        var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
-                        if (qrCanvas) {
-                            var link = document.createElement('a');
-                            link.download = 'NACWS-QR-' + (participant.uniqueId || 'QR') + '.png';
-                            link.href = qrCanvas.toDataURL('image/png');
-                            link.click();
-                            showToast('QR downloaded (fallback).', 'success');
-                        } else {
-                            showToast('Failed to generate ticket. Please try again.', 'error');
-                        }
-                    }).finally(function() {
-                        compact.style.display = 'none';
-                        if (self.downloadBtn) {
-                            self.downloadBtn.disabled = false;
-                            self.downloadBtn.innerHTML = '⬇️ Download Ticket';
-                        }
-                    });
-                }, 200);
-            });
-        },
-
-        handleRetrieveTicket: function() {
-            var self = this;
-            var input = prompt("Enter your registered email or Unique Pass ID:");
-            if (!input) return;
-            input = input.trim();
-
-            showToast('Searching...', '');
-
-            var url = APP_SCRIPT_URL + '?action=find&q=' + encodeURIComponent(input);
-            fetch(url)
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (data.success === false || !data.UniqueID) {
-                        showToast('No participant found with that email or ID.', 'error');
-                        return;
+                        showToast('QR downloaded (fallback).', 'success');
+                    } else {
+                        showToast('Failed to generate ticket. Please try again.', 'error');
                     }
-                    self.showTicket({
-                        uniqueId: data.UniqueID,
-                        fullName: data.FullName,
-                        serviceNo: data.ServiceNo,
-                        email: data.Email,
-                        rank: data.Rank,
-                        role: data.Role,
-                        organization: data.Organization
-                    });
-                    showToast('Pass retrieved successfully!', 'success');
-                })
-                .catch(function(err) {
-                    showToast('Unable to reach server. Try again.', 'error');
+                }).finally(function() {
+                    compact.style.display = 'none';
+                    if (self.downloadBtn) {
+                        self.downloadBtn.disabled = false;
+                        self.downloadBtn.innerHTML = '⬇️ Download Ticket';
+                    }
                 });
-        },
+            }, 200);
+        });
+    },
 
-        handleSubmit: function(e) {
-            e.preventDefault();
-            var self = this;
-            var name = this.fullName ? this.fullName.value.trim() : '';
-            var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
-            var mail = this.email ? this.email.value.trim() : '';
-            var phoneVal = this.phone ? this.phone.value.trim() : '';
-            var roleVal = this.role ? this.role.value.trim() : '';
-            var org = this.organization ? this.organization.value.trim() : '';
-            var rankVal = this.rank ? this.rank.value.trim() : '';
-            var specialVal = this.special ? this.special.value.trim() : '';
+    // ===== RETRIEVE / REDOWNLOAD TICKET =====
+handleRetrieveTicket: function() {
+    var self = this;
+    var input = this.retrieveQuery ? this.retrieveQuery.value.trim() : '';
+    if (!input) { showToast('Enter your email or Unique Pass ID.', 'error'); return; }
 
-            var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
-            var servicePattern = /^[a-zA-Z0-9()\/]+$/;
-            var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            var phonePattern = /^\+?[0-9\s\-()]+$/;
-            var orgPattern = /^[a-zA-Z0-9\- ]+$/;
-            var rankPattern = /^[a-zA-Z0-9\-/ ]+$/;
-            var specialPattern = /^[a-zA-Z0-9\s\-.,!?()]+$/;
+    if (this.retrieveSubmitBtn) {
+        this.retrieveSubmitBtn.disabled = true;
+        this.retrieveSubmitBtn.innerHTML = '<span class="spinner"></span> Searching...';
+    }
 
-            if (!name) { showToast('Please enter your full name.', 'error'); if (this.fullName) this.fullName.focus(); return; }
-            if (!namePattern.test(name)) { showToast('Name contains invalid characters.', 'error'); if (this.fullName) this.fullName.focus(); return; }
-            if (serviceNo && !servicePattern.test(serviceNo)) {
-                showToast('Service number contains invalid characters.', 'error');
-                if (this.serviceNo) this.serviceNo.focus();
+    // Use the secure 'find' endpoint – only one record is returned
+    var url = APP_SCRIPT_URL + '?action=find&q=' + encodeURIComponent(input);
+    fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success === false || !data.UniqueID) {
+                showToast('No participant found with that email or ID.', 'error');
                 return;
             }
-            if (!mail || !emailPattern.test(mail)) { showToast('Please enter a valid email.', 'error'); if (this.email) this.email.focus(); return; }
-            if (!phoneVal || !phonePattern.test(phoneVal)) { showToast('Please enter a valid phone number.', 'error'); if (this.phone) this.phone.focus(); return; }
-            if (!roleVal) { showToast('Please select your role.', 'error'); if (this.role) this.role.focus(); return; }
-            if (!org) { showToast('Please enter your organization.', 'error'); if (this.organization) this.organization.focus(); return; }
-            if (!orgPattern.test(org)) { showToast('Organization contains invalid characters.', 'error'); if (this.organization) this.organization.focus(); return; }
-            if (rankVal && !rankPattern.test(rankVal)) { showToast('Rank contains invalid characters.', 'error'); if (this.rank) this.rank.focus(); return; }
-            if (specialVal) {
-                if (specialVal.length > 500) { showToast('Special requirements too long (max 500 chars).', 'error'); if (this.special) this.special.focus(); return; }
-                if (!specialPattern.test(specialVal)) { showToast('Special requirements contain invalid characters.', 'error'); if (this.special) this.special.focus(); return; }
+            // Participant found
+            self.closeRetrievePopup();
+            self.showTicket({
+                uniqueId: data.UniqueID,
+                fullName: data.FullName,
+                serviceNo: data.ServiceNo,
+                email: data.Email,
+                rank: data.Rank,
+                role: data.Role,
+                organization: data.Organization
+            });
+            showToast('Pass retrieved successfully!', 'success');
+        })
+        .catch(function(err) {
+            showToast('Unable to reach server. Try again.', 'error');
+        })
+        .finally(function() {
+            if (self.retrieveSubmitBtn) {
+                self.retrieveSubmitBtn.disabled = false;
+                self.retrieveSubmitBtn.innerHTML = '🔍 Find Ticket';
             }
+        });
+},
 
-            var clean = {
-                fullName: sanitize(name),
-                serviceNo: sanitize(serviceNo || 'N/A'),
-                email: sanitize(mail),
-                phone: sanitize(phoneVal),
-                rank: sanitize(rankVal || 'N/A'),
-                role: sanitize(roleVal),
-                organization: sanitize(org),
-                special: sanitize(specialVal || 'N/A')
-            };
+    // ===== HANDLE SUBMIT – with optional Service No, duplicate check, and special field validation =====
+handleSubmit: function(e) {
+    e.preventDefault();
+    var self = this;
+    var name = this.fullName ? this.fullName.value.trim() : '';
+    var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
+    var mail = this.email ? this.email.value.trim() : '';
+    var phoneVal = this.phone ? this.phone.value.trim() : '';
+    var roleVal = this.role ? this.role.value.trim() : '';
+    var org = this.organization ? this.organization.value.trim() : '';
+    var rankVal = this.rank ? this.rank.value.trim() : '';
+    var specialVal = this.special ? this.special.value.trim() : '';
 
-            if (this.submitBtn) {
-                this.submitBtn.disabled = true;
-                this.submitBtn.innerHTML = '<span class="spinner"></span> Checking records…';
-            }
+    // Validation patterns (same as before)
+    var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
+    var servicePattern = /^[a-zA-Z0-9()\/]+$/;
+    var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    var phonePattern = /^\+?[0-9\s\-()]+$/;
+    var orgPattern = /^[a-zA-Z0-9\- ]+$/;
+    var rankPattern = /^[a-zA-Z0-9\-/ ]+$/;
+    var specialPattern = /^[a-zA-Z0-9\s\-.,!?()]+$/;
 
-            var checkUrl = APP_SCRIPT_URL + '?action=check&email=' + encodeURIComponent(mail) +
-                           '&serviceNo=' + encodeURIComponent(serviceNo || '');
-            fetch(checkUrl)
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (data.duplicate) {
-                        showToast('Error: Email or Service No is already registered!', 'error');
-                        if (self.submitBtn) {
-                            self.submitBtn.disabled = false;
-                            self.submitBtn.innerHTML = 'Submit Now';
-                        }
-                        return;
-                    }
-                    self.processRegistration(clean);
-                })
-                .catch(function(err) {
-                    showToast('Could not verify duplicate. Please check your network.', 'error');
-                    if (self.submitBtn) {
-                        self.submitBtn.disabled = false;
-                        self.submitBtn.innerHTML = 'Submit Now';
-                    }
-                });
-        },
+    if (!name) { showToast('Please enter your full name.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+    if (!namePattern.test(name)) { showToast('Name contains invalid characters.', 'error'); if (this.fullName) this.fullName.focus(); return; }
+    if (serviceNo && !servicePattern.test(serviceNo)) {
+        showToast('Service number contains invalid characters.', 'error');
+        if (this.serviceNo) this.serviceNo.focus();
+        return;
+    }
+    if (!mail || !emailPattern.test(mail)) { showToast('Please enter a valid email.', 'error'); if (this.email) this.email.focus(); return; }
+    if (!phoneVal || !phonePattern.test(phoneVal)) { showToast('Please enter a valid phone number.', 'error'); if (this.phone) this.phone.focus(); return; }
+    if (!roleVal) { showToast('Please select your role.', 'error'); if (this.role) this.role.focus(); return; }
+    if (!org) { showToast('Please enter your organization.', 'error'); if (this.organization) this.organization.focus(); return; }
+    if (!orgPattern.test(org)) { showToast('Organization contains invalid characters.', 'error'); if (this.organization) this.organization.focus(); return; }
+    if (rankVal && !rankPattern.test(rankVal)) { showToast('Rank contains invalid characters.', 'error'); if (this.rank) this.rank.focus(); return; }
+    if (specialVal) {
+        if (specialVal.length > 500) { showToast('Special requirements too long (max 500 chars).', 'error'); if (this.special) this.special.focus(); return; }
+        if (!specialPattern.test(specialVal)) { showToast('Special requirements contain invalid characters.', 'error'); if (this.special) this.special.focus(); return; }
+    }
 
-        processRegistration: function(clean) {
-            var self = this;
-            var uniqueId = generateUniqueId();
-            var payload = {
-                uniqueId: uniqueId,
-                fullName: clean.fullName,
-                serviceNo: clean.serviceNo,
-                email: clean.email,
-                phone: clean.phone,
-                rank: clean.rank,
-                role: clean.role,
-                organization: clean.organization,
-                special: clean.special,
-                registrationDate: new Date().toISOString(),
-                verified: false
-            };
+    var clean = {
+        fullName: sanitize(name),
+        serviceNo: sanitize(serviceNo || 'N/A'),
+        email: sanitize(mail),
+        phone: sanitize(phoneVal),
+        rank: sanitize(rankVal || 'N/A'),
+        role: sanitize(roleVal),
+        organization: sanitize(org),
+        special: sanitize(specialVal || 'N/A')
+    };
 
-            fetch(APP_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                redirect: 'follow',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(function() {
-                self.showTicket(payload);
-                showToast('Registration successful! Check your email.', 'success');
-                if (self.form) self.form.reset();
-                self.closePopup();
-            }).catch(function() {
-                self.showTicket(payload);
-                showToast('Registered locally. Email will be sent when online.', 'success');
-                if (self.form) self.form.reset();
-                self.closePopup();
-            }).finally(function() {
+    if (this.submitBtn) {
+        this.submitBtn.disabled = true;
+        this.submitBtn.innerHTML = '<span class="spinner"></span> Checking records…';
+    }
+
+    // --- SECURE DUPLICATE CHECK using dedicated endpoint ---
+    var checkUrl = APP_SCRIPT_URL + '?action=check&email=' + encodeURIComponent(mail) +
+                   '&serviceNo=' + encodeURIComponent(serviceNo || '');
+    fetch(checkUrl)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.duplicate) {
+                showToast('Error: Email or Service No is already registered!', 'error');
                 if (self.submitBtn) {
                     self.submitBtn.disabled = false;
                     self.submitBtn.innerHTML = 'Submit Now';
                 }
-            });
-        },
-
-        initGallery: function() {
-            const track = document.getElementById('galleryTrack');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const dotsContainer = document.getElementById('galleryDots');
-            const slider = document.getElementById('gallerySlider');
-
-            if (!track || !prevBtn || !nextBtn || !dotsContainer || !slider) return;
-
-            const slides = Array.from(track.children);
-            const slideCount = slides.length;
-            let currentIndex = 0;
-            let autoPlayInterval;
-            const autoPlayTime = 4000;
-
-            let startX = 0;
-            let isDragging = false;
-
-            dotsContainer.innerHTML = '';
-
-            slides.forEach((_, i) => {
-                const dot = document.createElement('button');
-                dot.classList.add('gallery-dot');
-                dot.setAttribute('aria-label', `Go to slide ${i+1}`);
-                if (i === 0) dot.classList.add('active');
-                dot.addEventListener('click', () => goToSlide(i));
-                dotsContainer.appendChild(dot);
-            });
-            const dots = Array.from(dotsContainer.children);
-
-            function updateSlider() {
-                track.style.transform = `translateX(-${currentIndex * 100}%)`;
-                dots.forEach(dot => dot.classList.remove('active'));
-                dots[currentIndex].classList.add('active');
+                return;
             }
-            function nextSlide() { currentIndex = (currentIndex + 1) % slideCount; updateSlider(); }
-            function prevSlide() { currentIndex = (currentIndex - 1 + slideCount) % slideCount; updateSlider(); }
-            function goToSlide(index) { currentIndex = index; updateSlider(); resetAutoPlay(); }
-            function startAutoPlay() { stopAutoPlay(); autoPlayInterval = setInterval(nextSlide, autoPlayTime); }
-            function stopAutoPlay() { clearInterval(autoPlayInterval); }
-            function resetAutoPlay() { stopAutoPlay(); startAutoPlay(); }
+            // No duplicate – proceed
+            self.processRegistration(clean);
+        })
+        .catch(function(err) {
+            showToast('Could not verify duplicate. Please check your network.', 'error');
+            if (self.submitBtn) {
+                self.submitBtn.disabled = false;
+                self.submitBtn.innerHTML = 'Submit Now';
+            }
+        });
+},
 
-            nextBtn.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
-            prevBtn.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
-            slider.addEventListener('mouseenter', stopAutoPlay);
-            slider.addEventListener('mouseleave', startAutoPlay);
+    // ===== PROCESS REGISTRATION (sends data to Google Apps Script) =====
+    processRegistration: function(clean) {
+        var self = this;
+        var uniqueId = generateUniqueId();
+        var payload = {
+            uniqueId: uniqueId,
+            fullName: clean.fullName,
+            serviceNo: clean.serviceNo,
+            email: clean.email,
+            phone: clean.phone,
+            rank: clean.rank,
+            role: clean.role,
+            organization: clean.organization,
+            special: clean.special,
+            registrationDate: new Date().toISOString(),
+            verified: false
+        };
 
-            track.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isDragging = true;
-                stopAutoPlay();
-                track.style.transition = 'none';
-            });
-            track.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                const diff = e.touches[0].clientX - startX;
-                track.style.transform = `translateX(${-currentIndex * 100 + (diff / slider.offsetWidth) * 100}%)`;
-            });
-            track.addEventListener('touchend', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                track.style.transition = 'transform 0.8s cubic-bezier(.77,0,.18,1)';
-                const diff = e.changedTouches[0].clientX - startX;
-                if (diff > 50) { prevSlide(); } else if (diff < -50) { nextSlide(); }
-                updateSlider();
-                startAutoPlay();
-            });
+        fetch(APP_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(function() {
+            self.showTicket(payload);
+            showToast('Registration successful! Check your email.', 'success');
+            if (self.form) self.form.reset();
+            self.closePopup();
+        }).catch(function() {
+            self.showTicket(payload);
+            showToast('Registered locally. Email will be sent when online.', 'success');
+            if (self.form) self.form.reset();
+            self.closePopup();
+        }).finally(function() {
+            if (self.submitBtn) {
+                self.submitBtn.disabled = false;
+                self.submitBtn.innerHTML = 'Submit Now';
+            }
+        });
+    },
 
+    // ===== GALLERY SLIDER (unchanged from old version) =====
+    initGallery: function() {
+        const track = document.getElementById('galleryTrack');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('galleryDots');
+        const slider = document.getElementById('gallerySlider');
+
+        if (!track || !prevBtn || !nextBtn || !dotsContainer || !slider) return;
+
+        const slides = Array.from(track.children);
+        const slideCount = slides.length;
+        let currentIndex = 0;
+        let autoPlayInterval;
+        const autoPlayTime = 4000;
+
+        let startX = 0;
+        let isDragging = false;
+
+        dotsContainer.innerHTML = '';
+
+        slides.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.classList.add('gallery-dot');
+            dot.setAttribute('aria-label', `Go to slide ${i+1}`);
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(i));
+            dotsContainer.appendChild(dot);
+        });
+        const dots = Array.from(dotsContainer.children);
+
+        function updateSlider() {
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[currentIndex].classList.add('active');
+        }
+        function nextSlide() { currentIndex = (currentIndex + 1) % slideCount; updateSlider(); }
+        function prevSlide() { currentIndex = (currentIndex - 1 + slideCount) % slideCount; updateSlider(); }
+        function goToSlide(index) { currentIndex = index; updateSlider(); resetAutoPlay(); }
+        function startAutoPlay() { stopAutoPlay(); autoPlayInterval = setInterval(nextSlide, autoPlayTime); }
+        function stopAutoPlay() { clearInterval(autoPlayInterval); }
+        function resetAutoPlay() { stopAutoPlay(); startAutoPlay(); }
+
+        nextBtn.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
+        prevBtn.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
+        slider.addEventListener('mouseenter', stopAutoPlay);
+        slider.addEventListener('mouseleave', startAutoPlay);
+
+        track.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            stopAutoPlay();
+            track.style.transition = 'none';
+        });
+        track.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const diff = e.touches[0].clientX - startX;
+            track.style.transform = `translateX(${-currentIndex * 100 + (diff / slider.offsetWidth) * 100}%)`;
+        });
+        track.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            track.style.transition = 'transform 0.8s cubic-bezier(.77,0,.18,1)';
+            const diff = e.changedTouches[0].clientX - startX;
+            if (diff > 50) { prevSlide(); } else if (diff < -50) { nextSlide(); }
+            updateSlider();
             startAutoPlay();
-        }
-    };
+        });
+
+        startAutoPlay();
+    }
+};
 
 
-    // ============================================================
-    // MODULE: VERIFICATION (verify.html)
-    // ============================================================
-    var Verify = {
-        init: function() {
-            var self = this;
-            this.readerEl = document.getElementById('reader');
-            this.btnStart = document.getElementById('btnStartScanner');
-            this.btnStop = document.getElementById('btnStopScanner');
-            this.scanArea = document.getElementById('scanArea');
-            this.modeScan = document.getElementById('modeScan');
-            this.modeManual = document.getElementById('modeManual');
-            this.manualArea = document.getElementById('manualArea');
-            this.manualId = document.getElementById('manualId');
-            this.btnManualVerify = document.getElementById('btnManualVerify');
-            this.resultCard = document.getElementById('resultCard');
-            this.statusIcon = document.getElementById('statusIcon');
-            this.statusText = document.getElementById('statusText');
-            this.resultName = document.getElementById('resultName');
-            this.resultServiceNo = document.getElementById('resultServiceNo');
-            this.resultId = document.getElementById('resultId');
-            this.resultEmail = document.getElementById('resultEmail');
-            this.resultOrg = document.getElementById('resultOrg');
-            this.resultRole = document.getElementById('resultRole');
-            this.btnMarkVerified = document.getElementById('btnMarkVerified');
-            this.btnClearResult = document.getElementById('btnClearResult');
-            this.installBanner = document.getElementById('installBanner');
-            this.installBtn = document.getElementById('installBtn');
+// ============================================================
+// MODULE: VERIFICATION (verify.html)
+// ============================================================
+var Verify = {
+    init: function() {
+        var self = this;
+        this.readerEl = document.getElementById('reader');
+        this.btnStart = document.getElementById('btnStartScanner');
+        this.btnStop = document.getElementById('btnStopScanner');
+        this.scanArea = document.getElementById('scanArea');
+        this.modeScan = document.getElementById('modeScan');
+        this.modeManual = document.getElementById('modeManual');
+        this.manualArea = document.getElementById('manualArea');
+        this.manualId = document.getElementById('manualId');
+        this.btnManualVerify = document.getElementById('btnManualVerify');
+        this.resultCard = document.getElementById('resultCard');
+        this.statusIcon = document.getElementById('statusIcon');
+        this.statusText = document.getElementById('statusText');
+        this.resultName = document.getElementById('resultName');
+        this.resultServiceNo = document.getElementById('resultServiceNo');
+        this.resultId = document.getElementById('resultId');
+        this.resultEmail = document.getElementById('resultEmail');
+        this.resultOrg = document.getElementById('resultOrg');
+        this.resultRole = document.getElementById('resultRole');
+        this.btnMarkVerified = document.getElementById('btnMarkVerified');
+        this.btnClearResult = document.getElementById('btnClearResult');
+        this.installBanner = document.getElementById('installBanner');
+        this.installBtn = document.getElementById('installBtn');
 
-            this.html5QrCode = null;
-            this.isScanning = false;
-            this.currentParticipant = null;
-            this.currentId = null;
-            this.cachedData = [];
+        // Login elements
+        this.loginOverlay = document.getElementById('verifyLoginOverlay');
+        this.loginForm = document.getElementById('verifyLoginForm');
+        this.loginError = document.getElementById('verifyLoginError');
+        this.loginBtn = document.getElementById('verifyLoginBtn');
+        this.logoutBtn = document.getElementById('verifyLogoutBtn');
+        this.mainContainer = document.getElementById('verifyMainContainer');
 
-            if (this.modeScan) {
-                this.modeScan.addEventListener('click', function() {
-                    self.modeScan.classList.add('active');
-                    if (self.modeManual) self.modeManual.classList.remove('active');
-                    if (self.manualArea) self.manualArea.classList.remove('active');
-                    if (self.scanArea) self.scanArea.style.display = 'block';
-                    showToast('QR scan mode active', '');
-                });
-            }
-            if (this.modeManual) {
-                this.modeManual.addEventListener('click', function() {
-                    self.modeManual.classList.add('active');
-                    if (self.modeScan) self.modeScan.classList.remove('active');
-                    if (self.manualArea) self.manualArea.classList.add('active');
-                    if (self.scanArea) self.scanArea.style.display = 'none';
-                    if (self.isScanning) self.stopScanner();
-                    showToast('Manual entry mode active', '');
-                });
-            }
-            if (this.modeScan) this.modeScan.classList.add('active');
+        this.html5QrCode = null;
+        this.isScanning = false;
+        this.currentParticipant = null;
+        this.currentId = null;
+        this.cachedData = [];
 
-            if (this.btnStart) {
-                this.btnStart.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    self.startScanner();
-                });
-            }
-            if (this.btnStop) {
-                this.btnStop.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    self.stopScanner();
-                });
-            }
+        // Restore session if present
+        this.sessionToken = localStorage.getItem('verifierToken');
+        this.verifierEmail = localStorage.getItem('verifierEmail');
 
-            if (this.btnManualVerify) {
-                this.btnManualVerify.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var id = self.manualId ? self.manualId.value.trim() : '';
-                    if (!id) { showToast('Enter a Unique ID.', 'error'); return; }
-                    self.verifyParticipant(id);
-                });
-            }
-            if (this.manualId) {
-                this.manualId.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter' && self.btnManualVerify) self.btnManualVerify.click();
-                });
-            }
-
-            if (this.btnMarkVerified) {
-                this.btnMarkVerified.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    self.markAsVerified();
-                });
-            }
-            if (this.btnClearResult) {
-                this.btnClearResult.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    self.clearResult();
-                });
-            }
-
-            var deferredPrompt = null;
-            window.addEventListener('beforeinstallprompt', function(e) {
+        if (this.loginForm) {
+            this.loginForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                deferredPrompt = e;
-                if (self.installBanner) self.installBanner.classList.add('show');
-            });
-            if (this.installBtn) {
-                this.installBtn.addEventListener('click', function() {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        deferredPrompt.userChoice.then(function(result) {
-                            if (result.outcome === 'accepted') {
-                                if (self.installBanner) self.installBanner.classList.remove('show');
-                                showToast('App installed!', 'success');
-                            } else {
-                                showToast('Installation cancelled.', '');
-                            }
-                            deferredPrompt = null;
-                        });
-                    }
-                });
-            }
-            window.addEventListener('appinstalled', function() {
-                if (self.installBanner) self.installBanner.classList.remove('show');
-                showToast('✅ App installed! Find it on your home screen.', 'success');
-            });
-
-            if (window.location.protocol === 'file:') {
-                var manifestLink = document.getElementById('manifestLink');
-                if (manifestLink) manifestLink.remove();
-            }
-
-            console.log('✅ NACWS Verify module loaded.');
-        },
-
-        startScanner: function() {
-            var self = this;
-            if (this.isScanning) return;
-            if (!this.html5QrCode) {
-                this.html5QrCode = new Html5Qrcode('reader');
-            }
-            var config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
-            this.html5QrCode.start(
-                { facingMode: 'environment' },
-                config,
-                function(decodedText) { self.onScanSuccess(decodedText); },
-                function(err) { /* silent scan error */ }
-            ).then(function() {
-                self.isScanning = true;
-                if (self.scanArea) self.scanArea.classList.add('scanning-active');
-                if (self.btnStart) {
-                    self.btnStart.textContent = '⏳ Scanning...';
-                    self.btnStart.disabled = true;
-                }
-                showToast('Camera started. Point at a QR code.', '');
-            }).catch(function(err) {
-                console.error('Scanner start error:', err);
-                showToast('Could not access camera. Please check permissions.', 'error');
-                if (self.btnStart) {
-                    self.btnStart.disabled = false;
-                    self.btnStart.textContent = '▶ Start Camera';
-                }
-            });
-        },
-
-        stopScanner: function() {
-            var self = this;
-            if (!this.html5QrCode || !this.isScanning) return;
-            this.html5QrCode.stop().then(function() {
-                self.isScanning = false;
-                if (self.scanArea) self.scanArea.classList.remove('scanning-active');
-                if (self.btnStart) {
-                    self.btnStart.textContent = '▶ Start Camera';
-                    self.btnStart.disabled = false;
-                }
-                showToast('Camera stopped.', '');
-            }).catch(function(err) {
-                console.error('Stop error:', err);
-            });
-        },
-
-        onScanSuccess: function(decodedText) {
-            var scannedId = '';
-
-            if (!decodedText) {
-                showToast('Empty QR code payload.', 'error');
-                return;
-            }
-
-            try {
-                var parsed = JSON.parse(decodedText);
-                if (parsed && parsed.id) {
-                    scannedId = String(parsed.id).trim();
-                } else if (typeof parsed === 'string') {
-                    scannedId = parsed.trim();
-                }
-            } catch (e) {
-                scannedId = String(decodedText).trim();
-            }
-
-            if (scannedId) {
-                if (this.isScanning) {
-                    this.stopScanner();
-                }
-                showToast('QR Code captured successfully!', 'success');
-                this.verifyParticipant(scannedId);
-            } else {
-                showToast('Invalid QR Code format.', 'error');
-            }
-        },
-
-        fetchAllData: function() {
-            var self = this;
-            return fetch(APP_SCRIPT_URL + '?action=all')
-                .then(function(response) {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (Array.isArray(data)) {
-                        self.cachedData = data;
-                        return data;
-                    }
-                    throw new Error('Unexpected data format');
-                })
-                .catch(function(err) {
-                    console.error('Fetch error:', err);
-                    showToast('Could not load participant data.', 'error');
-                    return [];
-                });
-        },
-
-        verifyParticipant: function(id) {
-            var self = this;
-            if (!id || !id.trim()) { showToast('Enter a valid ID.', 'error'); return; }
-            this.currentId = id.trim();
-            if (this.resultCard) {
-                this.resultCard.classList.add('show');
-                if (this.statusIcon) this.statusIcon.textContent = '⏳';
-                if (this.statusText) {
-                    this.statusText.textContent = 'Searching...';
-                    this.statusText.className = 'status-text';
-                }
-                if (this.resultName) this.resultName.textContent = '—';
-                if (this.resultServiceNo) this.resultServiceNo.textContent = '—';
-                if (this.resultId) this.resultId.textContent = this.currentId;
-                if (this.resultEmail) this.resultEmail.textContent = '—';
-                if (this.resultOrg) this.resultOrg.textContent = '—';
-                if (this.resultRole) this.resultRole.textContent = '—';
-                if (this.btnMarkVerified) {
-                    this.btnMarkVerified.disabled = true;
-                    this.btnMarkVerified.innerHTML = '⏳ Searching...';
-                }
-            }
-
-            var url = APP_SCRIPT_URL + '?action=get&id=' + encodeURIComponent(this.currentId);
-            fetch(url)
-                .then(function(response) { return response.json(); })
-                .then(function(data) {
-                    if (data.success === false) {
-                        if (self.statusIcon) self.statusIcon.textContent = '❌';
-                        if (self.statusText) {
-                            self.statusText.textContent = 'Not Found';
-                            self.statusText.className = 'status-text not-found';
-                        }
-                        if (self.resultName) self.resultName.textContent = '—';
-                        if (self.resultServiceNo) self.resultServiceNo.textContent = '—';
-                        if (self.resultId) self.resultId.textContent = self.currentId;
-                        if (self.resultEmail) self.resultEmail.textContent = '—';
-                        if (self.resultOrg) self.resultOrg.textContent = '—';
-                        if (self.resultRole) self.resultRole.textContent = '—';
-                        if (self.btnMarkVerified) {
-                            self.btnMarkVerified.disabled = true;
-                            self.btnMarkVerified.innerHTML = '❌ Not Registered';
-                        }
-                        showToast('Participant not found. Please check the ID.', 'error');
-                        return;
-                    }
-                    self.currentParticipant = data;
-                    self.displayResult(data);
-                })
-                .catch(function(err) {
-                    showToast('Could not fetch participant data.', 'error');
-                });
-        },
-
-        displayResult: function(participant) {
-            var isVerified = participant.Verified === true || participant.Verified === 'TRUE';
-            if (this.statusIcon) this.statusIcon.textContent = isVerified ? '✅' : '⏳';
-            if (this.statusText) {
-                this.statusText.textContent = isVerified ? 'Already Verified' : 'Not Yet Verified';
-                this.statusText.className = 'status-text ' + (isVerified ? 'verified' : 'unverified');
-            }
-            if (this.resultName) this.resultName.textContent = participant.FullName || '—';
-            if (this.resultServiceNo) this.resultServiceNo.textContent = participant.ServiceNo || '—';
-            if (this.resultId) this.resultId.textContent = participant.UniqueID || '—';
-            if (this.resultEmail) this.resultEmail.textContent = participant.Email || '—';
-            if (this.resultOrg) this.resultOrg.textContent = participant.Organization || '—';
-            if (this.resultRole) this.resultRole.textContent = participant.Role || '—';
-            if (this.btnMarkVerified) {
-                this.btnMarkVerified.disabled = isVerified;
-                this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Attendance';
-            }
-            if (this.resultCard) this.resultCard.classList.add('show');
-        },
-
-        markAsVerified: function() {
-            var self = this;
-            if (!this.currentParticipant || !this.currentId) return;
-            if (this.currentParticipant.Verified === true || this.currentParticipant.Verified === 'TRUE') {
-                showToast('Already verified.', '');
-                return;
-            }
-            if (this.btnMarkVerified) {
-                this.btnMarkVerified.disabled = true;
-                this.btnMarkVerified.innerHTML = '<span class="spinner"></span> Updating...';
-            }
-            var url = APP_SCRIPT_URL + '?action=verify&id=' + encodeURIComponent(this.currentId);
-            fetch(url)
-                .then(function(response) { return response.json(); })
-                .then(function(result) {
-                    if (result.success) {
-                        self.currentParticipant.Verified = true;
-                        self.displayResult(self.currentParticipant);
-                        showToast('✅ Verified successfully!', 'success');
-                    } else {
-                        showToast('Verification failed: ' + (result.error || 'Unknown'), 'error');
-                        if (self.btnMarkVerified) {
-                            self.btnMarkVerified.disabled = false;
-                            self.btnMarkVerified.innerHTML = '✅ Mark as Attendance';
-                        }
-                    }
-                })
-                .catch(function(err) {
-                    console.error('Mark verified error:', err);
-                    showToast('Could not connect to the server.', 'error');
-                    if (self.btnMarkVerified) {
-                        self.btnMarkVerified.disabled = false;
-                        self.btnMarkVerified.innerHTML = '✅ Mark as Attendance';
-                    }
-                });
-        },
-
-        clearResult: function() {
-            if (this.resultCard) this.resultCard.classList.remove('show');
-            this.currentParticipant = null;
-            this.currentId = null;
-            if (this.btnMarkVerified) {
-                this.btnMarkVerified.disabled = false;
-                this.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
-            }
-            if (this.manualId) this.manualId.value = '';
-        }
-    };
-
-    // ============================================================
-    // MODULE: ADMIN (admin.html)
-    // ============================================================
-    var Admin = {
-        allData: [],
-        sessionToken: null,
-        adminEmail: null,
-
-        init: function() {
-            var self = this;
-
-            this.sessionToken = localStorage.getItem('adminToken');
-            this.adminEmail = localStorage.getItem('adminEmail');
-            if (this.sessionToken && this.adminEmail) {
-                this.showDashboard();
-                this.loadData();
-            } else {
-                this.showLogin();
-            }
-
-            var loginForm = document.getElementById('adminLoginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    var email = document.getElementById('adminEmail').value.trim();
-                    var password = document.getElementById('adminPassword').value.trim();
-                    if (email && password) {
-                        self.login(email, password);
-                    } else {
-                        showToast('Please enter email and password.', 'error');
-                    }
-                });
-            }
-
-            var logoutBtn = document.getElementById('adminLogoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    self.logout();
-                });
-            }
-
-            this.searchInput = document.getElementById('searchInput');
-            this.filterVerified = document.getElementById('filterVerified');
-            this.tableBody = document.getElementById('adminTableBody');
-
-            if (this.searchInput) {
-                this.searchInput.addEventListener('input', function() { self.renderTable(); });
-            }
-            if (this.filterVerified) {
-                this.filterVerified.addEventListener('change', function() { self.renderTable(); });
-            }
-        },
-
-        showLogin: function() {
-            var overlay = document.getElementById('adminLoginOverlay');
-            if (overlay) overlay.classList.remove('hidden');
-            var dashboard = document.getElementById('adminDashboard');
-            if (dashboard) dashboard.style.display = 'none';
-        },
-
-        showDashboard: function() {
-            var overlay = document.getElementById('adminLoginOverlay');
-            if (overlay) overlay.classList.add('hidden');
-            var dashboard = document.getElementById('adminDashboard');
-            if (dashboard) dashboard.style.display = 'block';
-        },
-
-        login: function(email, password) {
-            var self = this;
-            var btn = document.getElementById('adminLoginBtn');
-            var errorEl = document.getElementById('loginError');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-sm"></span> Verifying...';
-            }
-            if (errorEl) errorEl.classList.remove('show');
-
-            fetch(APP_SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'admin_login', email: email, password: password })
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success && data.token) {
-                    self.sessionToken = data.token;
-                    self.adminEmail = data.email;
-                    localStorage.setItem('adminToken', data.token);
-                    localStorage.setItem('adminEmail', data.email);
-                    self.showDashboard();
-                    self.loadData();
-                    showToast('Login successful!', 'success');
+                var email = document.getElementById('verifyEmail').value.trim();
+                var password = document.getElementById('verifyPassword').value.trim();
+                if (email && password) {
+                    self.login(email, password);
                 } else {
-                    if (errorEl) {
-                        errorEl.textContent = data.error || 'Invalid credentials.';
-                        errorEl.classList.add('show');
-                    }
-                    showToast('Login failed: ' + (data.error || 'Unknown error'), 'error');
+                    showToast('Please enter email and password.', 'error');
                 }
+            });
+        }
+        if (this.logoutBtn) {
+            this.logoutBtn.addEventListener('click', function() { self.logout(); });
+        }
+
+        if (this.sessionToken && this.verifierEmail) {
+            this.showMain();
+        } else {
+            this.showLogin();
+        }
+
+        // Mode toggle
+        if (this.modeScan) {
+            this.modeScan.addEventListener('click', function() {
+                self.modeScan.classList.add('active');
+                if (self.modeManual) self.modeManual.classList.remove('active');
+                if (self.manualArea) self.manualArea.classList.remove('active');
+                if (self.scanArea) self.scanArea.style.display = 'block';
+                showToast('QR scan mode active', '');
+            });
+        }
+        if (this.modeManual) {
+            this.modeManual.addEventListener('click', function() {
+                self.modeManual.classList.add('active');
+                if (self.modeScan) self.modeScan.classList.remove('active');
+                if (self.manualArea) self.manualArea.classList.add('active');
+                if (self.scanArea) self.scanArea.style.display = 'none';
+                if (self.isScanning) self.stopScanner();
+                showToast('Manual entry mode active', '');
+            });
+        }
+        if (this.modeScan) this.modeScan.classList.add('active');
+
+        // Scanner control buttons
+        if (this.btnStart) {
+            this.btnStart.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.startScanner();
+            });
+        }
+        if (this.btnStop) {
+            this.btnStop.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.stopScanner();
+            });
+        }
+
+        // Manual verify submission
+        if (this.btnManualVerify) {
+            this.btnManualVerify.addEventListener('click', function(e) {
+                e.preventDefault();
+                var id = self.manualId ? self.manualId.value.trim() : '';
+                if (!id) { showToast('Enter a Unique ID.', 'error'); return; }
+                self.verifyParticipant(id);
+            });
+        }
+        if (this.manualId) {
+            this.manualId.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && self.btnManualVerify) self.btnManualVerify.click();
+            });
+        }
+
+        // Result action buttons
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.markAsVerified();
+            });
+        }
+        if (this.btnClearResult) {
+            this.btnClearResult.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.clearResult();
+            });
+        }
+
+        // PWA Installation handling
+        var deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (self.installBanner) self.installBanner.classList.add('show');
+        });
+        if (this.installBtn) {
+            this.installBtn.addEventListener('click', function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(function(result) {
+                        if (result.outcome === 'accepted') {
+                            if (self.installBanner) self.installBanner.classList.remove('show');
+                            showToast('App installed!', 'success');
+                        } else {
+                            showToast('Installation cancelled.', '');
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+            });
+        }
+        window.addEventListener('appinstalled', function() {
+            if (self.installBanner) self.installBanner.classList.remove('show');
+            showToast('✅ App installed! Find it on your home screen.', 'success');
+        });
+
+        if (window.location.protocol === 'file:') {
+            var manifestLink = document.getElementById('manifestLink');
+            if (manifestLink) manifestLink.remove();
+        }
+
+        console.log('✅ NACWS Verify module loaded.');
+    },
+
+    showLogin: function() {
+        if (this.loginOverlay) this.loginOverlay.style.display = 'flex';
+        if (this.mainContainer) this.mainContainer.style.display = 'none';
+    },
+
+    showMain: function() {
+        if (this.loginOverlay) this.loginOverlay.style.display = 'none';
+        if (this.mainContainer) this.mainContainer.style.display = 'block';
+    },
+
+    login: function(email, password) {
+        var self = this;
+        if (this.loginBtn) {
+            this.loginBtn.disabled = true;
+            this.loginBtn.innerHTML = '<span class="spinner-sm"></span> Verifying...';
+        }
+        if (this.loginError) this.loginError.classList.remove('show');
+
+        fetch(APP_SCRIPT_URL, {
+            method: 'POST',
+            // text/plain avoids a CORS preflight that Apps Script can't answer for POST + JSON.
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'admin_login', email: email, password: password })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success && data.token) {
+                self.sessionToken = data.token;
+                self.verifierEmail = data.email;
+                localStorage.setItem('verifierToken', data.token);
+                localStorage.setItem('verifierEmail', data.email);
+                self.showMain();
+                showToast('Login successful!', 'success');
+            } else {
+                if (self.loginError) {
+                    self.loginError.textContent = data.error || 'Invalid credentials.';
+                    self.loginError.classList.add('show');
+                }
+                showToast('Login failed: ' + (data.error || 'Unknown error'), 'error');
+            }
+        })
+        .catch(function(err) {
+            if (self.loginError) {
+                self.loginError.textContent = 'Network error. Please try again.';
+                self.loginError.classList.add('show');
+            }
+            showToast('Could not connect to server.', 'error');
+        })
+        .finally(function() {
+            if (self.loginBtn) {
+                self.loginBtn.disabled = false;
+                self.loginBtn.innerHTML = '🔑 Sign In';
+            }
+        });
+    },
+
+    logout: function() {
+        localStorage.removeItem('verifierToken');
+        localStorage.removeItem('verifierEmail');
+        this.sessionToken = null;
+        this.verifierEmail = null;
+        if (this.isScanning) this.stopScanner();
+        this.showLogin();
+        showToast('Logged out.', '');
+    },
+
+    startScanner: function() {
+        var self = this;
+        if (this.isScanning) return;
+        if (!this.html5QrCode) {
+            this.html5QrCode = new Html5Qrcode('reader');
+        }
+        var config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+        this.html5QrCode.start(
+            { facingMode: 'environment' },
+            config,
+            function(decodedText) { self.onScanSuccess(decodedText); },
+            function(err) { /* silent scan error */ }
+        ).then(function() {
+            self.isScanning = true;
+            if (self.scanArea) self.scanArea.classList.add('scanning-active');
+            if (self.btnStart) {
+                self.btnStart.textContent = '⏳ Scanning...';
+                self.btnStart.disabled = true;
+            }
+            showToast('Camera started. Point at a QR code.', '');
+        }).catch(function(err) {
+            console.error('Scanner start error:', err);
+            showToast('Could not access camera. Please check permissions.', 'error');
+            if (self.btnStart) {
+                self.btnStart.disabled = false;
+                self.btnStart.textContent = '▶ Start Camera';
+            }
+        });
+    },
+
+    stopScanner: function() {
+        var self = this;
+        if (!this.html5QrCode || !this.isScanning) return;
+        this.html5QrCode.stop().then(function() {
+            self.isScanning = false;
+            if (self.scanArea) self.scanArea.classList.remove('scanning-active');
+            if (self.btnStart) {
+                self.btnStart.textContent = '▶ Start Camera';
+                self.btnStart.disabled = false;
+            }
+            showToast('Camera stopped.', '');
+        }).catch(function(err) {
+            console.error('Stop error:', err);
+        });
+    },
+
+    // ===== UPDATED ON SCAN SUCCESS HANDLER =====
+    onScanSuccess: function(decodedText) {
+        var scannedId = '';
+
+        if (!decodedText) {
+            showToast('Empty QR code payload.', 'error');
+            return;
+        }
+
+        try {
+            // Attempt parsing JSON payload (containing { id, name, role })
+            var parsed = JSON.parse(decodedText);
+            if (parsed && parsed.id) {
+                scannedId = String(parsed.id).trim();
+            } else if (typeof parsed === 'string') {
+                scannedId = parsed.trim();
+            }
+        } catch (e) {
+            // Fallback for raw text string IDs
+            scannedId = String(decodedText).trim();
+        }
+
+        if (scannedId) {
+            // Automatically pause the scanner stream so it doesn't repeatedly trigger while processing
+            if (this.isScanning) {
+                this.stopScanner();
+            }
+            showToast('QR Code captured successfully!', 'success');
+            this.verifyParticipant(scannedId);
+        } else {
+            showToast('Invalid QR Code format.', 'error');
+        }
+    },
+
+    fetchAllData: function() {
+        var self = this;
+        return fetch(APP_SCRIPT_URL + '?action=all')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(function(data) {
+                if (Array.isArray(data)) {
+                    self.cachedData = data;
+                    return data;
+                }
+                throw new Error('Unexpected data format');
             })
             .catch(function(err) {
-                if (errorEl) {
-                    errorEl.textContent = 'Network error. Please try again.';
-                    errorEl.classList.add('show');
-                }
-                showToast('Could not connect to server.', 'error');
-            })
-            .finally(function() {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '🔑 Sign In';
-                }
+                console.error('Fetch error:', err);
+                showToast('Could not load participant data.', 'error');
+                return [];
             });
-        },
+    },
 
-        logout: function() {
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminEmail');
-            this.sessionToken = null;
-            this.adminEmail = null;
-            this.allData = [];
-            this.showLogin();
-            showToast('Logged out.', '');
-        },
+verifyParticipant: function(id) {
+    var self = this;
+    if (!id || !id.trim()) { showToast('Enter a valid ID.', 'error'); return; }
+    this.currentId = id.trim();
+    if (this.resultCard) {
+        this.resultCard.classList.add('show');
+        if (this.statusIcon) this.statusIcon.textContent = '⏳';
+        if (this.statusText) {
+            this.statusText.textContent = 'Searching...';
+            this.statusText.className = 'status-text';
+        }
+        if (this.resultName) this.resultName.textContent = '—';
+        if (this.resultServiceNo) this.resultServiceNo.textContent = '—';
+        if (this.resultId) this.resultId.textContent = this.currentId;
+        if (this.resultEmail) this.resultEmail.textContent = '—';
+        if (this.resultOrg) this.resultOrg.textContent = '—';
+        if (this.resultRole) this.resultRole.textContent = '—';
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.disabled = true;
+            this.btnMarkVerified.innerHTML = '⏳ Searching...';
+        }
+    }
 
-        loadData: function() {
-            var self = this;
-            if (!this.sessionToken || !this.adminEmail) {
-                showToast('Not authenticated. Please log in.', 'error');
+    // --- SECURE: fetch only the participant by ID ---
+    var url = APP_SCRIPT_URL + '?action=get&id=' + encodeURIComponent(this.currentId);
+    fetch(url)
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success === false) {
+                // Not found
+                if (self.statusIcon) self.statusIcon.textContent = '❌';
+                if (self.statusText) {
+                    self.statusText.textContent = 'Not Found';
+                    self.statusText.className = 'status-text not-found';
+                }
+                if (self.resultName) self.resultName.textContent = '—';
+                if (self.resultServiceNo) self.resultServiceNo.textContent = '—';
+                if (self.resultId) self.resultId.textContent = self.currentId;
+                if (self.resultEmail) self.resultEmail.textContent = '—';
+                if (self.resultOrg) self.resultOrg.textContent = '—';
+                if (self.resultRole) self.resultRole.textContent = '—';
+                if (self.btnMarkVerified) {
+                    self.btnMarkVerified.disabled = true;
+                    self.btnMarkVerified.innerHTML = '❌ Not Registered';
+                }
+                showToast('Participant not found. Please check the ID.', 'error');
                 return;
             }
-            if (this.tableBody) {
-                this.tableBody.innerHTML = '<tr><td colspan="10" class="loading">⏳ Loading...</td></tr>';
-            }
-            var url = APP_SCRIPT_URL + '?action=all&email=' + encodeURIComponent(this.adminEmail) +
-                      '&token=' + encodeURIComponent(this.sessionToken);
-            fetch(url)
-                .then(function(response) {
-                    if (!response.ok) throw new Error('Network error');
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data.success === false && data.error === 'Unauthorized. Please log in again.') {
+            // Participant found
+            self.currentParticipant = data;
+            self.displayResult(data);
+        })
+        .catch(function(err) {
+            showToast('Could not fetch participant data.', 'error');
+        });
+},
+
+    displayResult: function(participant) {
+        var isVerified = participant.Verified === true || participant.Verified === 'TRUE';
+        if (this.statusIcon) this.statusIcon.textContent = isVerified ? '✅' : '⏳';
+        if (this.statusText) {
+            this.statusText.textContent = isVerified ? 'Already Verified' : 'Not Yet Verified';
+            this.statusText.className = 'status-text ' + (isVerified ? 'verified' : 'unverified');
+        }
+        if (this.resultName) this.resultName.textContent = participant.FullName || '—';
+        if (this.resultServiceNo) this.resultServiceNo.textContent = participant.ServiceNo || '—';
+        if (this.resultId) this.resultId.textContent = participant.UniqueID || '—';
+        if (this.resultEmail) this.resultEmail.textContent = participant.Email || '—';
+        if (this.resultOrg) this.resultOrg.textContent = participant.Organization || '—';
+        if (this.resultRole) this.resultRole.textContent = participant.Role || '—';
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.disabled = isVerified;
+            this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Attendance';
+        }
+        if (this.resultCard) this.resultCard.classList.add('show');
+    },
+
+    markAsVerified: function() {
+        var self = this;
+        if (!this.currentParticipant || !this.currentId) return;
+        if (this.currentParticipant.Verified === true || this.currentParticipant.Verified === 'TRUE') {
+            showToast('Already verified.', '');
+            return;
+        }
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.disabled = true;
+            this.btnMarkVerified.innerHTML = '<span class="spinner"></span> Updating...';
+        }
+        if (!this.sessionToken || !this.verifierEmail) {
+            showToast('Not authenticated. Please log in.', 'error');
+            this.showLogin();
+            return;
+        }
+        var url = APP_SCRIPT_URL + '?action=verify&id=' + encodeURIComponent(this.currentId) +
+                  '&email=' + encodeURIComponent(this.verifierEmail) +
+                  '&token=' + encodeURIComponent(this.sessionToken);
+        fetch(url)
+            .then(function(response) { return response.json(); })
+            .then(function(result) {
+                if (result.success) {
+                    self.currentParticipant.Verified = true;
+                    self.displayResult(self.currentParticipant);
+                    showToast('✅ Verified successfully!', 'success');
+                } else {
+                    if (result.error === 'Unauthorized') {
                         self.logout();
                         showToast('Session expired. Please log in again.', 'error');
                         return;
                     }
-                    if (Array.isArray(data)) {
-                        self.allData = data;
-                        self.renderTable();
-                        self.updateStats(data);
-                    } else {
-                        throw new Error('Invalid data');
+                    showToast('Verification failed: ' + (result.error || 'Unknown'), 'error');
+                    if (self.btnMarkVerified) {
+                        self.btnMarkVerified.disabled = false;
+                        self.btnMarkVerified.innerHTML = '✅ Mark as Attendance';
                     }
-                })
-                .catch(function(err) {
-                    if (self.tableBody) {
-                        self.tableBody.innerHTML = '<tr><td colspan="10" class="loading">❌ Error loading data.</td></tr>';
-                    }
-                    showToast('Could not load data.', 'error');
-                });
-        },
-
-        renderTable: function() {
-            var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
-            var filter = this.filterVerified ? this.filterVerified.value : '';
-
-            var filtered = this.allData.filter(function(row) {
-                var match = true;
-                if (search) {
-                    match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
-                            (row.Email && row.Email.toLowerCase().includes(search)) ||
-                            (row.UniqueID && row.UniqueID.toLowerCase().includes(search)) ||
-                            (row.ServiceNo && row.ServiceNo.toLowerCase().includes(search));
                 }
-                if (match && filter !== '') {
-                    var isVerified = row.Verified === true || row.Verified === 'TRUE';
-                    match = (filter === 'true') === isVerified;
+            })
+            .catch(function(err) {
+                console.error('Mark verified error:', err);
+                showToast('Could not connect to the server.', 'error');
+                if (self.btnMarkVerified) {
+                    self.btnMarkVerified.disabled = false;
+                    self.btnMarkVerified.innerHTML = '✅ Mark as Attendance';
                 }
-                return match;
             });
+    },
 
-            if (!this.tableBody) return;
-            if (filtered.length === 0) {
-                this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
-                return;
-            }
-
-            var html = '';
-            filtered.forEach(function(row) {
-                var verified = row.Verified === true || row.Verified === 'TRUE';
-                var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
-                html += '<tr>' +
-                    '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
-                    '<td>' + (row.ServiceNo || '—') + '</td>' +
-                    '<td>' + (row.Rank || '—') + '</td>' +
-                    '<td>' + (row.FullName || '—') + '</td>' +
-                    '<td>' + (row.Email || '—') + '</td>' +
-                    '<td>' + (row.Phone || '—') + '</td>' +
-                    '<td>' + (row.Organization || '—') + '</td>' +
-                    '<td>' + (row.Role || '—') + '</td>' +
-                    '<td>' + date + '</td>' +
-                    '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified' : '⏳ Pending') + '</span></td>' +
-                    '</tr>';
-            });
-            this.tableBody.innerHTML = html;
-        },
-
-        updateStats: function(data) {
-            var total = data.length;
-            var verified = data.filter(function(r) { return r.Verified === true || r.Verified === 'TRUE'; }).length;
-            var totalEl = document.getElementById('totalCount');
-            var verifiedEl = document.getElementById('verifiedCount');
-            var unverifiedEl = document.getElementById('unverifiedCount');
-            if (totalEl) totalEl.textContent = total;
-            if (verifiedEl) verifiedEl.textContent = verified;
-            if (unverifiedEl) unverifiedEl.textContent = total - verified;
-        },
-
-        exportCSV: function() {
-            if (!this.sessionToken || !this.adminEmail) {
-                showToast('Not authenticated. Please log in.', 'error');
-                return;
-            }
-            if (this.allData.length === 0) {
-                showToast('No data to export.', 'error');
-                return;
-            }
-            var headers = ['UniqueID', 'ServiceNo', 'Rank', 'FullName', 'Email', 'Phone', 'Organization', 'Role', 'RegistrationDate', 'Verified'];
-            var rows = this.allData.map(function(row) {
-                return [
-                    row.UniqueID,
-                    row.ServiceNo,
-                    row.Rank,
-                    row.FullName,
-                    row.Email,
-                    row.Phone,
-                    row.Organization,
-                    row.Role,
-                    row.RegistrationDate,
-                    (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
-                ];
-            });
-            var csv = headers.join(',') + '\n';
-            rows.forEach(function(row) {
-                csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') + '\n';
-            });
-            var blob = new Blob([csv], { type: 'text/csv' });
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast('CSV exported!', 'success');
+    clearResult: function() {
+        if (this.resultCard) this.resultCard.classList.remove('show');
+        this.currentParticipant = null;
+        this.currentId = null;
+        if (this.btnMarkVerified) {
+            this.btnMarkVerified.disabled = false;
+            this.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
         }
-    };
+        if (this.manualId) this.manualId.value = '';
+    }
+};
+    // ============================================================
+    // MODULE: ADMIN (admin.html)
+    // ============================================================
+    var Admin = {
+    allData: [],
+    sessionToken: null,
+    adminEmail: null,
 
-    // ============================================================
+    init: function() {
+        var self = this;
+
+        // Check for saved session
+        this.sessionToken = localStorage.getItem('adminToken');
+        this.adminEmail = localStorage.getItem('adminEmail');
+        if (this.sessionToken && this.adminEmail) {
+            // Attempt to load data – if token invalid, server will reject and we'll logout
+            this.showDashboard();
+            this.loadData();
+        } else {
+            this.showLogin();
+        }
+
+        // Bind login form
+        var loginForm = document.getElementById('adminLoginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var email = document.getElementById('adminEmail').value.trim();
+                var password = document.getElementById('adminPassword').value.trim();
+                if (email && password) {
+                    self.login(email, password);
+                } else {
+                    showToast('Please enter email and password.', 'error');
+                }
+            });
+        }
+
+        // Bind logout button
+        var logoutBtn = document.getElementById('adminLogoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                self.logout();
+            });
+        }
+
+        // Search & filter
+        this.searchInput = document.getElementById('searchInput');
+        this.filterVerified = document.getElementById('filterVerified');
+        this.tableBody = document.getElementById('adminTableBody');
+
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', function() { self.renderTable(); });
+        }
+        if (this.filterVerified) {
+            this.filterVerified.addEventListener('change', function() { self.renderTable(); });
+        }
+
+        // Export / Refresh buttons (moved off inline onclick in the HTML)
+        this.exportBtn = document.getElementById('btnExportCSV');
+        this.refreshBtn = document.getElementById('btnRefresh');
+        if (this.exportBtn) {
+            this.exportBtn.addEventListener('click', function() { self.exportCSV(); });
+        }
+        if (this.refreshBtn) {
+            this.refreshBtn.addEventListener('click', function() { self.loadData(); });
+        }
+    },
+
+    showLogin: function() {
+        var overlay = document.getElementById('adminLoginOverlay');
+        if (overlay) overlay.classList.remove('hidden');
+        var dashboard = document.getElementById('adminDashboard');
+        if (dashboard) dashboard.style.display = 'none';
+    },
+
+    showDashboard: function() {
+        var overlay = document.getElementById('adminLoginOverlay');
+        if (overlay) overlay.classList.add('hidden');
+        var dashboard = document.getElementById('adminDashboard');
+        if (dashboard) dashboard.style.display = 'block';
+    },
+
+    login: function(email, password) {
+        var self = this;
+        var btn = document.getElementById('adminLoginBtn');
+        var errorEl = document.getElementById('loginError');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-sm"></span> Verifying...';
+        }
+        if (errorEl) errorEl.classList.remove('show');
+
+        fetch(APP_SCRIPT_URL, {
+            method: 'POST',
+            // NOTE: must be 'text/plain' (not 'application/json'). A JSON content-type
+            // forces the browser to send a CORS preflight (OPTIONS) request, which
+            // Google Apps Script's doOptions() can't answer with the right CORS
+            // headers — so the real login request gets blocked before it's sent.
+            // 'text/plain' avoids the preflight; e.postData.contents on the server
+            // is still the raw JSON string, so JSON.parse() there works unchanged.
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'admin_login', email: email, password: password })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success && data.token) {
+                self.sessionToken = data.token;
+                self.adminEmail = data.email;
+                localStorage.setItem('adminToken', data.token);
+                localStorage.setItem('adminEmail', data.email);
+                self.showDashboard();
+                self.loadData();
+                showToast('Login successful!', 'success');
+            } else {
+                if (errorEl) {
+                    errorEl.textContent = data.error || 'Invalid credentials.';
+                    errorEl.classList.add('show');
+                }
+                showToast('Login failed: ' + (data.error || 'Unknown error'), 'error');
+            }
+        })
+        .catch(function(err) {
+            if (errorEl) {
+                errorEl.textContent = 'Network error. Please try again.';
+                errorEl.classList.add('show');
+            }
+            showToast('Could not connect to server.', 'error');
+        })
+        .finally(function() {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '🔑 Sign In';
+            }
+        });
+    },
+
+    logout: function() {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminEmail');
+        this.sessionToken = null;
+        this.adminEmail = null;
+        this.allData = [];
+        this.showLogin();
+        showToast('Logged out.', '');
+    },
+
+    loadData: function() {
+        var self = this;
+        if (!this.sessionToken || !this.adminEmail) {
+            showToast('Not authenticated. Please log in.', 'error');
+            return;
+        }
+        if (this.tableBody) {
+            this.tableBody.innerHTML = '<tr><td colspan="10" class="loading">⏳ Loading...</td></tr>';
+        }
+        var url = APP_SCRIPT_URL + '?action=all&email=' + encodeURIComponent(this.adminEmail) +
+                  '&token=' + encodeURIComponent(this.sessionToken);
+        fetch(url)
+            .then(function(response) {
+                if (!response.ok) throw new Error('Network error');
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success === false && data.error === 'Unauthorized. Please log in again.') {
+                    self.logout();
+                    showToast('Session expired. Please log in again.', 'error');
+                    return;
+                }
+                if (Array.isArray(data)) {
+                    self.allData = data;
+                    self.renderTable();
+                    self.updateStats(data);
+                } else {
+                    throw new Error('Invalid data');
+                }
+            })
+            .catch(function(err) {
+                if (self.tableBody) {
+                    self.tableBody.innerHTML = '<tr><td colspan="10" class="loading">❌ Error loading data.</td></tr>';
+                }
+                showToast('Could not load data.', 'error');
+            });
+    },
+
+    renderTable: function() {
+        var self = this;
+        var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
+        var filter = this.filterVerified ? this.filterVerified.value : '';
+
+        var filtered = this.allData.filter(function(row) {
+            var match = true;
+            if (search) {
+                match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
+                        (row.Email && row.Email.toLowerCase().includes(search)) ||
+                        (row.UniqueID && row.UniqueID.toLowerCase().includes(search)) ||
+                        (row.ServiceNo && row.ServiceNo.toLowerCase().includes(search));
+            }
+            if (match && filter !== '') {
+                var isVerified = row.Verified === true || row.Verified === 'TRUE';
+                match = (filter === 'true') === isVerified;
+            }
+            return match;
+        });
+
+        if (!this.tableBody) return;
+        if (filtered.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#6b6560;">No registrations found.</td></tr>';
+            return;
+        }
+
+        var html = '';
+        filtered.forEach(function(row) {
+            var verified = row.Verified === true || row.Verified === 'TRUE';
+            var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
+            html += '<tr>' +
+                '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
+                '<td>' + (row.ServiceNo || '—') + '</td>' +
+                '<td>' + (row.Rank || '—') + '</td>' +
+                '<td>' + (row.FullName || '—') + '</td>' +
+                '<td>' + (row.Email || '—') + '</td>' +
+                '<td>' + (row.Phone || '—') + '</td>' +
+                '<td>' + (row.Organization || '—') + '</td>' +
+                '<td>' + (row.Role || '—') + '</td>' +
+                '<td>' + date + '</td>' +
+                '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified' : '⏳ Pending') + '</span></td>' +
+                '</tr>';
+        });
+        this.tableBody.innerHTML = html;
+    },
+
+    updateStats: function(data) {
+        var total = data.length;
+        var verified = data.filter(function(r) { return r.Verified === true || r.Verified === 'TRUE'; }).length;
+        var totalEl = document.getElementById('totalCount');
+        var verifiedEl = document.getElementById('verifiedCount');
+        var unverifiedEl = document.getElementById('unverifiedCount');
+        if (totalEl) totalEl.textContent = total;
+        if (verifiedEl) verifiedEl.textContent = verified;
+        if (unverifiedEl) unverifiedEl.textContent = total - verified;
+    },
+
+    exportCSV: function() {
+        if (!this.sessionToken || !this.adminEmail) {
+            showToast('Not authenticated. Please log in.', 'error');
+            return;
+        }
+        if (this.allData.length === 0) {
+            showToast('No data to export.', 'error');
+            return;
+        }
+        // Use current data (already loaded). If you want fresh, call loadData() first, but that's async.
+        var headers = ['UniqueID', 'ServiceNo', 'Rank', 'FullName', 'Email', 'Phone', 'Organization', 'Role', 'RegistrationDate', 'Verified'];
+        var rows = this.allData.map(function(row) {
+            return [
+                row.UniqueID,
+                row.ServiceNo,
+                row.Rank,
+                row.FullName,
+                row.Email,
+                row.Phone,
+                row.Organization,
+                row.Role,
+                row.RegistrationDate,
+                (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
+            ];
+        });
+        var csv = headers.join(',') + '\n';
+        rows.forEach(function(row) {
+            csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') + '\n';
+        });
+        var blob = new Blob([csv], { type: 'text/csv' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('CSV exported!', 'success');
+    }
+};
+
+    // ===========================================================
     // EXPOSE MODULES
-    // ============================================================
+    // ===========================================================
     window.NACWS = {
         registration: Registration,
         verify: Verify,
         admin: Admin
     };
 
-    // Auto-init registration on index page
-    if (document.getElementById('regForm')) {
-        document.addEventListener('DOMContentLoaded', function() {
+    // Auto‑init: each page has its own unique element, so one script
+    // file can safely self-initialize on any of the three pages
+    // without any inline <script> needed in the HTML.
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('regForm')) {
             NACWS.registration.init();
-        });
-    }
+        }
+        if (document.getElementById('verifyLoginOverlay')) {
+            NACWS.verify.init();
+        }
+        if (document.getElementById('adminLoginOverlay')) {
+            NACWS.admin.init();
+        }
+    });
 
 })();
