@@ -1,140 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
-<style>
-@font-face{font-family:"Optimistic";font-style:normal;font-weight:400 600;font-display:swap;src:url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2")}
-@font-face{font-family:"Optimistic Mono";font-style:normal;font-weight:400;font-display:swap;src:url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2")}
-:where(html){font-family:"Optimistic",system-ui,sans-serif}
-:where(code,pre,kbd,samp){font-family:"Optimistic Mono",ui-monospace,monospace}
-</style>
+<head>
+<style>@font-face{font-family:"Optimistic";font-style:normal;font-weight:400 600;font-display:swap;src:url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2")}:where(html){font-family:"Optimistic",system-ui,sans-serif}</style>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#07472d" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>NACWS · Verify</title>
+<title>NACWS · Verify - Login Required</title>
 <link rel="manifest" href="manifest.json" id="manifestLink" />
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://api.qrserver.com https://*.qrserver.com https://api.ipify.org; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.qrserver.com https://*.qrserver.com https://cdnjs.cloudflare.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://api.ipify.org https://api.qrserver.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://api.qrserver.com https://*.qrserver.com https://api.ipify.org; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.qrserver.com https://*.qrserver.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://api.ipify.org https://api.qrserver.com;">
 <meta http-equiv="Permissions-Policy" content="camera=(self)">
 <link rel="stylesheet" href="styles.css" />
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-<style>
-.install-banner{display:none;position:fixed;top:62px;left:0;right:0;background:#07472d;color:#e8d5a3;padding:10px 16px;justify-content:space-between;align-items:center;z-index:999;border-bottom:2px solid #c9a84c}
-.install-banner.show{display:flex}
-.scan-area{position:relative}
-.scan-overlay{pointer-events:none}
-.manual-area{position:relative;z-index:2;display:none}
-.manual-area.active{display:block}
-.manual-area .input-row{position:relative;z-index:3}
-</style>
 </head>
-
 <body>
 
-    <header class="app-header">
-        <div class="logo-icon">
-            <img src="nacws-logo.jpg" alt="NACWS Logo" class="logo-img" />
-        </div>
-        <div class="header-title">
-            <h1>NACWS QR Code Scanner</h1>
-            <small>Participant Check‑in System</small>
-        </div>
-        <span class="badge-status">● Live</span>
-    </header>
+<!-- LOGIN OVERLAY LIKE ADMIN.HTML -->
+<div class="admin-login-overlay" id="verifyLoginOverlay" style="display:flex;">
+  <div class="admin-login-box">
+    <div class="login-logo"><img src="nacws-logo.png" onerror="this.style.display='none'" alt="NACWS Logo" /></div>
+    <h2>🔐 Verifier Access</h2>
+    <p class="login-sub">Enter your credentials to access check-in system</p>
+    <div class="login-error" id="verifyLoginError">Invalid email or password. Please try again.</div>
+    <form id="verifyLoginForm" novalidate>
+      <div class="form-group"><label for="verifyEmail">Email Address</label><input type="email" id="verifyEmail" placeholder="verifier@example.com" required autofocus /></div>
+      <div class="form-group"><label for="verifyPassword">Password</label><input type="password" id="verifyPassword" placeholder="••••••••" required /></div>
+      <button type="submit" class="btn-login" id="verifyLoginBtn">🔑 Sign In</button>
+    </form>
+    <p class="login-footnote">🔒  NACWS Secured System · All data encrypted</p>
+  </div>
+</div>
 
-    <div class="install-banner" id="installBanner">
-        📲 Install this app for quick check‑in
-        <button class="btn-install" id="installBtn">Install App</button>
-    </div>
+<header class="app-header">
+  <div class="logo-icon"><img src="nacws-logo.jpg" alt="NACWS Logo" class="logo-img" /></div>
+  <div class="header-title"><h1>NACWS QR Code Scanner</h1><small>Verifier Login Required</small></div>
+  <span class="badge-status">● Live</span>
+  <button class="btn-logout" id="verifyLogoutBtn">🚪 Logout</button>
+</header>
 
-    <div class="main-container">
-        <div class="mode-toggle">
-            <button class="active" data-mode="scan" id="modeScan">Scan QR</button>
-            <button data-mode="manual" id="modeManual">Enter ID</button>
-        </div>
+<div class="install-banner" id="installBanner">📲 Install this app for quick check-in <button class="btn-install" id="installBtn">Install App</button></div>
 
-        <div class="scan-area" id="scanArea">
-            <div id="reader"></div>
-            <div class="scan-overlay"></div>
-            <div class="scan-hint"><strong>📸</strong> Point camera at the QR code on the participant's ticket</div>
-            <div class="scanner-controls">
-                <button class="btn-start" id="btnStartScanner">Start Camera</button>
-                <button class="btn-stop" id="btnStopScanner">Stop</button>
-            </div>
-        </div>
+<div class="main-container" id="verifyMainContainer" style="display:none;">
+  <div class="mode-toggle"><button class="active" data-mode="scan" id="modeScan">Scan QR</button><button data-mode="manual" id="modeManual">Enter ID</button></div>
+  <div class="scan-area" id="scanArea"><div id="reader"></div><div class="scan-overlay" style="pointer-events:none"></div><div class="scan-hint"><strong>📸</strong> Point camera at the QR code</div><div class="scanner-controls"><button class="btn-start" id="btnStartScanner">Start Camera</button><button class="btn-stop" id="btnStopScanner">Stop</button></div></div>
+  <div class="manual-area" id="manualArea" style="display:none"><label for="manualId">Enter Unique ID</label><div class="input-row"><input type="text" id="manualId" placeholder="e.g. NACWS-260626-142120-ABC123" /><button class="btn-verify" id="btnManualVerify">Verify</button></div></div>
+  <div class="result-card" id="resultCard"><div class="result-status"><span class="status-icon" id="statusIcon">✅</span><span class="status-text" id="statusText">Verified</span></div><div class="result-details"><span class="detail-label">Name</span><span class="detail-value" id="resultName">—</span><span class="detail-label">Unique ID</span><span class="detail-value gold" id="resultId">—</span><span class="detail-label">Email</span><span class="detail-value" id="resultEmail">—</span><span class="detail-label">Organization</span><span class="detail-value" id="resultOrg">—</span></div><div class="result-actions"><button class="btn-mark success" id="btnMarkVerified">✅ Mark as Verified</button><button class="btn-mark secondary" id="btnClearResult">✕ Clear</button></div></div>
+</div>
 
-        <div class="manual-area" id="manualArea">
-            <label for="manualId">Enter Unique ID</label>
-            <div class="input-row">
-                <input type="text" id="manualId" placeholder="e.g. NACWS-260626-142120-ABC123" />
-                <button class="btn-verify" id="btnManualVerify">Verify</button>
-            </div>
-        </div>
-
-        <div class="result-card" id="resultCard">
-            <div class="result-status">
-                <span class="status-icon" id="statusIcon">✅</span>
-                <span class="status-text" id="statusText">Verified Present</span>
-            </div>
-            <div class="result-details">
-                <span class="detail-label">Name</span>
-                <span class="detail-value" id="resultName">—</span>
-                <span class="detail-label">Unique ID</span>
-                <span class="detail-value gold" id="resultId">—</span>
-                <span class="detail-label">Email</span>
-                <span class="detail-value" id="resultEmail">—</span>
-                <span class="detail-label">Organization</span>
-                <span class="detail-value" id="resultOrg">—</span>
-            </div>
-            <div class="result-actions">
-                <button class="btn-mark success" id="btnMarkVerified">✅ Mark as Present</button>
-                <button class="btn-mark secondary" id="btnClearResult">✕ Clear</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="toast" id="toast"><span id="toastMsg">Message</span></div>
-
-    <script src="app.js"></script>
-    <script>
-        // Initialize verify module when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof NACWS !== 'undefined' && NACWS.verify) {
-                NACWS.verify.init();
-            }
-        });
-    </script>
+<div class="toast" id="toast"><span id="toastMsg">Message</span></div>
+<script type="module" src="./app.js"></script>
 <script>
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('installBanner');if(b)b.classList.add('show');});
-const ib=document.getElementById('installBtn');
-if(ib){ib.addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBanner').classList.remove('show');}});}
+document.addEventListener('DOMContentLoaded',()=>{if(typeof NACWS!=='undefined'&&NACWS.verify)NACWS.verify.init()});
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner')?.classList.add('show')});
+document.getElementById('installBtn')?.addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBanner')?.classList.remove('show')}});
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
