@@ -1,4 +1,3 @@
-/* NACWS Secure v2.0 – Same visuals, hardened */
 /* ============================================================
    RESET & BASE
    ============================================================ */
@@ -885,6 +884,11 @@ footer .footer-links a:hover {
     box-shadow: none;
 }
 
+/* Compact variant used by smaller popups (e.g. "Find My Ticket") — was inline style="max-width:440px" */
+.popup-box.popup-box-sm {
+    max-width: 440px;
+}
+
 /* ----- POPUP CLOSE BUTTON ----- */
 .popup-close {
     position: sticky;
@@ -1166,6 +1170,13 @@ footer .footer-links a:hover {
     margin-top: 8px;
     white-space: nowrap;
 }
+/* Smaller, muted variant used as the compact (downloadable) ticket's closing footnote
+   — was inline style="font-size:0.6rem;opacity:0.7;margin-top:12px" */
+.ticket-meta-single-line.ticket-footnote {
+    font-size: 0.6rem;
+    opacity: 0.7;
+    margin-top: 12px;
+}
 
 /* ============================================================
    PROFESSIONAL COMPACT TICKET (DOWNLOAD LOOK & FEEL)
@@ -1230,6 +1241,13 @@ footer .footer-links a:hover {
     color: #ffffff !important;
     font-weight: 600 !important;
     display: block !important;
+}
+/* Unique Pass ID row gets extra emphasis (monospace, gold) — was inline
+   style="font-family:monospace;color:#c9a84c;font-weight:700" */
+.ticket.compact .ticket-value.id-value {
+    font-family: 'Courier New', monospace !important;
+    color: #c9a84c !important;
+    font-weight: 700 !important;
 }
 
 .ticket.compact .qr-container-compact {
@@ -1789,6 +1807,9 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
+    /* Hidden until Admin.showDashboard() reveals it post-login
+       — was inline style="display:none" on #adminDashboard */
+    display: none;
 }
 .admin-header {
     background: #07472d;
@@ -1805,6 +1826,20 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
 .admin-header h1 {
     font-size: 1.6rem;
     font-weight: 700;
+}
+/* Header logo sizing — was inline style="height:40px;width:auto" */
+.admin-header h1 .logo-img {
+    height: 40px;
+    width: auto;
+}
+/* Event subtitle under the dashboard title — was inline style="font-size:0.8rem;opacity:0.7" */
+.admin-header .admin-event-subtitle {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+/* Spacing between the "Live" badge and the Export button — was inline style="margin-left:8px" */
+.header-right .btn-gold {
+    margin-left: 8px;
 }
 .admin-stats {
     display: grid;
@@ -2025,6 +2060,11 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
   font-size: 0.75rem;
   color: #6b6560;
 }
+/* Verify page's scanner UI is hidden until Verify.showMain() reveals it post-login
+   — was inline style="display:none" on #verifyMainContainer */
+#verifyMainContainer {
+  display: none;
+}
 /* ===== TICKET – Compact ===== */
 .ticket-inner {
     padding: 18px 20px 16px;
@@ -2219,16 +2259,3 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
         padding: 16px !important;
     }
 }
-
-/* Logout btn styling fix */
-.btn-logout {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 8px 18px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    margin-left: 12px;
-}
-.btn-logout:hover { background: rgba(255,255,255,0.2); }
