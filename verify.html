@@ -18,7 +18,7 @@
 <body>
 
 <!-- LOGIN OVERLAY LIKE ADMIN.HTML -->
-<div class="admin-login-overlay" id="verifyLoginOverlay" style="display:flex;">
+<div class="admin-login-overlay" id="verifyLoginOverlay">
   <div class="admin-login-box">
     <div class="login-logo"><img src="nacws-logo.png" alt="NACWS Logo" class="fallback-img" /></div>
     <h2>🔐 Verifier Access</h2>
@@ -42,10 +42,10 @@
 
 <div class="install-banner" id="installBanner">📲 Install this app for quick check-in <button class="btn-install" id="installBtn">Install App</button></div>
 
-<div class="main-container" id="verifyMainContainer" style="display:none;">
+<div class="main-container" id="verifyMainContainer">
   <div class="mode-toggle"><button class="active" data-mode="scan" id="modeScan">Scan QR</button><button data-mode="manual" id="modeManual">Enter ID</button></div>
-  <div class="scan-area" id="scanArea"><div id="reader"></div><div class="scan-overlay" style="pointer-events:none"></div><div class="scan-hint"><strong>📸</strong> Point camera at the QR code</div><div class="scanner-controls"><button class="btn-start" id="btnStartScanner">Start Camera</button><button class="btn-stop" id="btnStopScanner">Stop</button></div></div>
-  <div class="manual-area" id="manualArea" style="display:none"><label for="manualId">Enter Unique ID</label><div class="input-row"><input type="text" id="manualId" placeholder="e.g. NACWS-260626-142120-ABC123" /><button class="btn-verify" id="btnManualVerify">Verify</button></div></div>
+  <div class="scan-area" id="scanArea"><div id="reader"></div><div class="scan-overlay"></div><div class="scan-hint"><strong>📸</strong> Point camera at the QR code</div><div class="scanner-controls"><button class="btn-start" id="btnStartScanner">Start Camera</button><button class="btn-stop" id="btnStopScanner">Stop</button></div></div>
+  <div class="manual-area" id="manualArea"><label for="manualId">Enter Unique ID</label><div class="input-row"><input type="text" id="manualId" placeholder="e.g. NACWS-260626-142120-ABC123" /><button class="btn-verify" id="btnManualVerify">Verify</button></div></div>
   <div class="result-card" id="resultCard"><div class="result-status"><span class="status-icon" id="statusIcon">✅</span><span class="status-text" id="statusText">Verified</span></div><div class="result-details"><span class="detail-label">Name</span><span class="detail-value" id="resultName">—</span><span class="detail-label">Unique ID</span><span class="detail-value gold" id="resultId">—</span><span class="detail-label">Email</span><span class="detail-value" id="resultEmail">—</span><span class="detail-label">Organization</span><span class="detail-value" id="resultOrg">—</span></div><div class="result-actions"><button class="btn-mark success" id="btnMarkVerified">✅ Mark as Verified</button><button class="btn-mark secondary" id="btnClearResult">✕ Clear</button></div></div>
 </div>
 
