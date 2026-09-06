@@ -20,7 +20,7 @@
 <!-- LOGIN OVERLAY LIKE ADMIN.HTML -->
 <div class="admin-login-overlay" id="verifyLoginOverlay" style="display:flex;">
   <div class="admin-login-box">
-    <div class="login-logo"><img src="nacws-logo.png" onerror="this.style.display='none'" alt="NACWS Logo" /></div>
+    <div class="login-logo"><img src="nacws-logo.png" alt="NACWS Logo" class="fallback-img" /></div>
     <h2>🔐 Verifier Access</h2>
     <p class="login-sub">Enter your credentials to access check-in system</p>
     <div class="login-error" id="verifyLoginError">Invalid email or password. Please try again.</div>
@@ -51,11 +51,5 @@
 
 <div class="toast" id="toast"><span id="toastMsg">Message</span></div>
 <script type="module" src="./app.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded',()=>{if(typeof NACWS!=='undefined'&&NACWS.verify)NACWS.verify.init()});
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner')?.classList.add('show')});
-document.getElementById('installBtn')?.addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBanner')?.classList.remove('show')}});
-</script>
 </body>
 </html>
