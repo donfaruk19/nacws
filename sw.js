@@ -3,6 +3,8 @@ const ASSETS = [
   './index.html',
   './verify.html',
   './manifest.json',
+  './app.js',
+  './styles.css',
   'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
   'https://unpkg.com/html5-qrcode'
 ];
