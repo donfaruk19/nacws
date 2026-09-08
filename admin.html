@@ -1,38 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
-<style>
-@font-face{font-family:"Optimistic";font-style:normal;font-weight:400 600;font-display:swap;src:url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2")}
-@font-face{font-family:"Optimistic Mono";font-style:normal;font-weight:400;font-display:swap;src:url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2")}
-:where(html){font-family:"Optimistic",system-ui,sans-serif}
-:where(code,pre,kbd,samp){font-family:"Optimistic Mono",ui-monospace,monospace}
-</style>
-<meta charset="UTF-8" />
+<head><meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NACWS · Admin Dashboard</title>
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://api.qrserver.com https://*.qrserver.com https://api.ipify.org; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.qrserver.com https://*.qrserver.com https://cdnjs.cloudflare.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://api.ipify.org https://api.qrserver.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://api.qrserver.com https://*.qrserver.com https://api.ipify.org; script-src 'self' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.qrserver.com https://*.qrserver.com https://cdnjs.cloudflare.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://api.ipify.org https://api.qrserver.com;">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" type="image/png" href="favicon.png" />
@@ -51,7 +23,7 @@
             <div class="login-logo">
                 <img src="nacws-logo.png" alt="NACWS Logo" class="fallback-img" />
             </div>
-            <h2>🔐 Admin Access</h2>
+            <h2>Admin Access</h2>
             <p class="login-sub">Enter your credentials to access dashboard</p>
             <div class="login-error" id="loginError">Invalid email or password. Please try again.</div>
             <form id="adminLoginForm" novalidate>
@@ -63,7 +35,7 @@
                     <label for="adminPassword">Password</label>
                     <input type="password" id="adminPassword" placeholder="••••••••" required />
                 </div>
-                <button type="submit" class="btn-login" id="adminLoginBtn">🔑 Sign In</button>
+                <button type="submit" class="btn-login" id="adminLoginBtn">Sign In</button>
             </form>
             <p class="login-footnote">🔒 NACWS Secured System · All data encrypted</p>
         </div>
@@ -83,8 +55,8 @@
             </div>
             <div class="header-right">
                 <span class="badge badge-gold"><span class="status-dot online"></span> Live</span>
-                <button class="btn btn-gold" id="btnExportCSV">⬇️ Export CSV</button>
-                <button class="btn-logout" id="adminLogoutBtn">🚪 Logout</button>
+                <button class="btn btn-gold" id="btnExportCSV">⬇️ Export</button>
+                <button class="btn-logout" id="adminLogoutBtn">Logout</button>
             </div>
         </div>
 
@@ -128,6 +100,51 @@
     </div>
 
     <div class="toast" id="toast"><span id="toastMsg">Message</span></div>
+
+    <!-- ==========================================================
+         EXPORT CSV MODAL
+         ========================================================== -->
+    <div class="popup-overlay" id="exportModal">
+        <div class="popup-box export-modal-box">
+            <button class="popup-close" id="exportModalCloseBtn">✕</button>
+            <h2>⬇️ Export Registrations</h2>
+            <p class="sub">Choose what to include in your export.</p>
+
+            <div class="export-section-label">Scope</div>
+            <div class="export-scope-options">
+                <label class="export-radio-row">
+                    <input type="radio" name="exportScope" value="filtered" id="exportScopeFiltered" checked />
+                    <span id="exportScopeFilteredLabel">Current view (filtered/searched)</span>
+                </label>
+                <label class="export-radio-row">
+                    <input type="radio" name="exportScope" value="all" id="exportScopeAll" />
+                    <span id="exportScopeAllLabel">All registrations</span>
+                </label>
+            </div>
+
+            <div class="export-columns-header">
+                <div class="export-section-label">Columns</div>
+                <button type="button" class="export-select-all-btn" id="exportToggleAllBtn">Select All</button>
+            </div>
+            <div class="export-columns-grid" id="exportColumnsGrid">
+                <label class="export-column-item"><input type="checkbox" value="UniqueID" checked /> Unique ID</label>
+                <label class="export-column-item"><input type="checkbox" value="ServiceNo" checked /> Service No</label>
+                <label class="export-column-item"><input type="checkbox" value="Rank" checked /> Rank</label>
+                <label class="export-column-item"><input type="checkbox" value="FullName" checked /> Name</label>
+                <label class="export-column-item"><input type="checkbox" value="Email" checked /> Email</label>
+                <label class="export-column-item"><input type="checkbox" value="Phone" checked /> Phone</label>
+                <label class="export-column-item"><input type="checkbox" value="Organization" checked /> Organization</label>
+                <label class="export-column-item"><input type="checkbox" value="Role" checked /> Role</label>
+                <label class="export-column-item"><input type="checkbox" value="RegistrationDate" checked /> Registered</label>
+                <label class="export-column-item"><input type="checkbox" value="Verified" checked /> Verified</label>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="exportConfirmBtn">⬇️ Export</button>
+                <button type="button" class="btn btn-ghost" id="exportCancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="./app.js"></script>
 </body>
