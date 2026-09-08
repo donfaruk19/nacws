@@ -92,7 +92,7 @@ body {
     background: #a8883a;
     transform: translateY(-2px);
 }
-/* Logout button used in the Admin & Verify page headers */
+/* Logout button used in the Admin & Verify page headers (was previously unstyled) */
 .btn-logout {
     display: inline-flex;
     align-items: center;
@@ -907,7 +907,7 @@ footer .footer-links a:hover {
     box-shadow: none;
 }
 
-/* Compact variant used by smaller popups (e.g. "Find Ticket") */
+/* Compact variant used by smaller popups (e.g. "Find My Ticket") — was inline style="max-width:440px" */
 .popup-box.popup-box-sm {
     max-width: 440px;
 }
@@ -1247,7 +1247,8 @@ footer .footer-links a:hover {
     margin-top: 8px;
     white-space: nowrap;
 }
-/* Smaller, muted variant used as the compact (downloadable) ticket's closing footnote */
+/* Smaller, muted variant used as the compact (downloadable) ticket's closing footnote
+   — was inline style="font-size:0.6rem;opacity:0.7;margin-top:12px" */
 .ticket-meta-single-line.ticket-footnote {
     font-size: 0.6rem;
     opacity: 0.7;
@@ -1318,7 +1319,8 @@ footer .footer-links a:hover {
     font-weight: 600 !important;
     display: block !important;
 }
-/* Unique Pass ID row gets extra emphasis (monospace, gold) */
+/* Unique Pass ID row gets extra emphasis (monospace, gold) — was inline
+   style="font-family:monospace;color:#c9a84c;font-weight:700" */
 .ticket.compact .ticket-value.id-value {
     font-family: 'Courier New', monospace !important;
     color: #c9a84c !important;
@@ -1907,12 +1909,12 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
     height: 40px;
     width: auto;
 }
-/* Event subtitle under the dashboard title */
+/* Event subtitle under the dashboard title — was inline style="font-size:0.8rem;opacity:0.7" */
 .admin-header .admin-event-subtitle {
     font-size: 0.8rem;
     opacity: 0.7;
 }
-/* Spacing between the "Live" badge and the Export button */
+/* Spacing between the "Live" badge and the Export button — was inline style="margin-left:8px" */
 .header-right .btn-gold {
     margin-left: 8px;
 }
@@ -2135,7 +2137,8 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
   font-size: 0.75rem;
   color: #6b6560;
 }
-/* Verify page's scanner UI is hidden until Verify.showMain() reveals it post-login */
+/* Verify page's scanner UI is hidden until Verify.showMain() reveals it post-login
+   — was inline style="display:none" on #verifyMainContainer */
 #verifyMainContainer {
   display: none;
 }
@@ -2201,6 +2204,47 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
 .ticket-email-note {
     font-size: 0.6rem;
     margin-top: 8px;
+}
+
+/* ============================================================
+   STANDALONE TICKET PAGE (ticket.html — linked from confirmation emails)
+   ============================================================ */
+.ticket-page-container {
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 0 20px;
+    text-align: center;
+}
+.ticket-page-status {
+    font-size: 0.95rem;
+    color: #6b6560;
+    margin-top: 40px;
+}
+.ticket-page-error {
+    display: none;
+    color: #c0392b;
+    font-weight: 600;
+}
+.ticket-page-card-wrap {
+    display: none;
+}
+/* #compactTicket's base rule pins it off-screen (position:absolute; left:-9999px) since
+   it's normally only an offscreen html2canvas capture source. On this page it IS the
+   visible ticket, so this override (same ID-selector specificity via .parent #id) wins
+   regardless of source order. */
+.ticket-page-card-wrap #compactTicket {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 350px !important;
+    margin: 0 auto;
+}
+.ticket-page-card-wrap .ticket.compact {
+    margin: 0 auto;
+    position: static;
+}
+.ticket-page-actions {
+    margin-top: 20px;
 }
 
 /* ============================================================
