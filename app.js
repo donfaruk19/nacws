@@ -40,6 +40,37 @@
             .replace(/'/g, '&#39;');
     }
 
+    // Shared html2canvas capture used by both the registration-flow ticket download
+    // and the standalone ticket.html page (linked from the confirmation email) — one
+    // implementation, so both always produce an identical ticket image.
+    function captureCardAsPNG(cardEl, filename) {
+        return html2canvas(cardEl, {
+            scale: 2.5,
+            useCORS: true,
+            backgroundColor: '#0f281b',
+            logging: false,
+            onclone: function(doc) {
+                var extraImgs = doc.querySelectorAll('#qrcode-compact img');
+                extraImgs.forEach(function(img) { img.style.display = 'none'; });
+                var clonedCard = doc.querySelector('.ticket.compact') || doc.getElementById('compactTicket');
+                if (clonedCard) {
+                    clonedCard.style.width = '350px';
+                    clonedCard.style.margin = '0';
+                    clonedCard.style.overflow = 'visible';
+                    clonedCard.style.height = 'auto';
+                    clonedCard.style.maxHeight = 'none';
+                }
+                doc.body.style.background = '#0f281b';
+                doc.body.style.margin = '0';
+            }
+        }).then(function(canvas) {
+            var link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
     function getClientIP() {
         var lookup = fetch('https://api.ipify.org?format=json')
             .then(function(res) { return res.json(); })
@@ -56,7 +87,8 @@
     // ============================================================
     // SERVICE WORKER REGISTRATION
     // Required (along with manifest.json) before Chrome will ever fire
-    // 'beforeinstallprompt'
+    // 'beforeinstallprompt' — this was missing entirely, which is why the
+    // "Install App" banner on verify.html never appeared.
     // ============================================================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
@@ -67,7 +99,7 @@
     }
 
     // ============================================================
-    // IMAGE FALLBACK 
+    // IMAGE FALLBACK (moved from inline onerror="..." attributes)
     // Any <img class="fallback-img"> hides itself if it fails to load.
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
@@ -88,7 +120,7 @@
     // ============================================================
     // SHARED HELPERS
     // ============================================================
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwOBrRSlBTVePYV-91vZkXPZb_0x1WTWEdENwW5UycVNBOrx2lTuxz2jyUITFPlrCQdfA/exec';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7MNX9a8GzCPKp2s333bG_8fbxrIAPK3w-foFYGY8DbmkCP8Ytb1JNWjBTl-f0g2-i_A/exec';
     let toastTimer = null;
 
     function showToast(msg, type) {
@@ -144,7 +176,7 @@ var Registration = {
         this.confirmModal = document.getElementById('confirmModal');
         this.modalClose = document.getElementById('modalCloseBtn');
         this.modalClose2 = document.getElementById('modalCloseBtn2');
-        this.cardRank = document.getElementById('cardRank');        
+        this.cardRank = document.getElementById('cardRank');          // Added for rank display
         this.cardName = document.getElementById('cardName');
         this.cardServiceNo = document.getElementById('cardServiceNo');
         this.cardRole = document.getElementById('cardRole');
@@ -154,7 +186,7 @@ var Registration = {
         this.cardTicketId = document.getElementById('cardTicketId');
         this.qrContainer = document.getElementById('qrcode-card');
         this.downloadBtn = document.getElementById('downloadCardBtn');
-        this.retrieveBtn = document.getElementById('retrievePassBtn'); 
+        this.retrieveBtn = document.getElementById('retrievePassBtn'); // New
         this.retrievePopup = document.getElementById('retrievePopup');
         this.retrievePopupClose = document.getElementById('retrievePopupCloseBtn');
         this.retrievePopupCancel = document.getElementById('retrievePopupCancelBtn');
@@ -239,11 +271,11 @@ var Registration = {
             this.downloadBtn.addEventListener('click', function() { self.downloadTicket(); });
         }
 
-        // Pre-fill demo
+        // Pre-fill demo (kept from old)
         if (window.location.search.includes('demo')) {
-            if (this.fullName) this.fullName.value = 'DonFaruk';
-            if (this.serviceNo) this.serviceNo.value = 'N/12345';
-            if (this.email) this.email.value = 'DonFaruk19@sample.com';
+            if (this.fullName) this.fullName.value = 'Umar Faruk';
+            if (this.serviceNo) this.serviceNo.value = 'N/2332';
+            if (this.email) this.email.value = 'donfaruk191@gmail.com';
             if (this.phone) this.phone.value = '+234 800 123 4567';
             if (this.rank) this.rank.value = 'Major';
             if (this.role) this.role.value = 'Discussant';
@@ -315,7 +347,7 @@ var Registration = {
         }
     },
 
-    // ===== SHOW TICKET =====
+    // ===== UPDATED SHOW TICKET (with rank spacing) =====
     showTicket: function(participant) {
         this.currentParticipant = participant;
 
@@ -343,7 +375,7 @@ var Registration = {
         this.openConfirm();
     },
 
-    // ===== DOWNLOAD TICKET (with compact ticket and QR) =====
+    // ===== UPDATED DOWNLOAD TICKET (with compact ticket and QR) =====
     downloadTicket: function() {
         var self = this;
         var participant = this.currentParticipant;
@@ -373,8 +405,8 @@ var Registration = {
         if (idEl) idEl.textContent = participant.uniqueId || '—';
         if (roleEl) roleEl.textContent = participant.role || '—';
 
-        // QR encodes only {id, hmac} — not personal details — so a lost or photographed
-        // ticket doesn't leak PII to any generic QR reader outside the app.
+        // QR now encodes only {id, hmac} — not name/role — so a lost or photographed
+        // ticket doesn't leak PII to any generic QR reader outside your app.
         var qrContainer = document.getElementById('qrcode-compact');
         if (qrContainer) {
             qrContainer.innerHTML = '';
@@ -416,34 +448,10 @@ var Registration = {
 
         requestAnimationFrame(function() {
             setTimeout(function() {
-                html2canvas(card, {
-                    scale: 2.5,
-                    useCORS: true,
-                    backgroundColor: '#0f281b',
-                    logging: false,
-                    onclone: function(doc) {
-                        var extraImgs = doc.querySelectorAll('#qrcode-compact img');
-                        extraImgs.forEach(function(img) {
-                            img.style.display = 'none';
-                        });
-                        var clonedCard = doc.querySelector('.ticket.compact') || doc.getElementById('compactTicket');
-                        if (clonedCard) {
-                            clonedCard.style.width = '350px';
-                            clonedCard.style.margin = '0';
-                            clonedCard.style.overflow = 'visible';
-                            clonedCard.style.height = 'auto';
-                            clonedCard.style.maxHeight = 'none';
-                        }
-                        doc.body.style.background = '#0f281b';
-                        doc.body.style.margin = '0';
-                    }
-                }).then(function(canvas) {
-                    var link = document.createElement('a');
-                    link.download = 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png';
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    showToast('Ticket downloaded!', 'success');
-                }).catch(function(err) {
+                captureCardAsPNG(card, 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png')
+                    .then(function() {
+                        showToast('Ticket downloaded!', 'success');
+                    }).catch(function(err) {
                     console.error('html2canvas error:', err);
                     var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
                     if (qrCanvas) {
@@ -541,7 +549,7 @@ handleSubmit: function(e) {
     var rankVal = this.rank ? this.rank.value.trim() : '';
     var specialVal = this.special ? this.special.value.trim() : '';
 
-    // Validation patterns 
+    // Validation patterns (same as before)
     var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
     var servicePattern = /^[a-zA-Z0-9()\/]+$/;
     var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -584,12 +592,12 @@ handleSubmit: function(e) {
         this.submitBtn.innerHTML = '<span class="spinner"></span> Submitting…';
     }
 
-    // Duplicate checking inside processRegistration()
-    // (the backend already checks before inserting) — no separate pre-flight round trip hahaha.
+    // Duplicate checking now happens in a single request inside processRegistration()
+    // (the backend already checks before inserting) — no separate pre-flight round trip.
     this.processRegistration(clean);
 },
 
-    // ===== PROCESS REGISTRATION (sends data to backend) =====
+    // ===== PROCESS REGISTRATION (sends data to Google Apps Script) =====
     processRegistration: function(clean) {
         var self = this;
         var uniqueId = generateUniqueId();
@@ -616,6 +624,10 @@ handleSubmit: function(e) {
 
             fetch(APP_SCRIPT_URL, {
                 method: 'POST',
+                // text/plain avoids a CORS preflight (same reasoning as the admin/verify
+                // login fix) AND lets us actually read the JSON response — the previous
+                // 'no-cors' mode made the response opaque, so both success and real
+                // failures (duplicates, validation errors) silently showed a ticket.
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(payload)
             })
@@ -645,7 +657,7 @@ handleSubmit: function(e) {
         });
     },
 
-    // ===== GALLERY SLIDER =====
+    // ===== GALLERY SLIDER (unchanged from old version) =====
     initGallery: function() {
         const track = document.getElementById('galleryTrack');
         const prevBtn = document.getElementById('prevBtn');
@@ -878,7 +890,7 @@ var Verify = {
         }
         window.addEventListener('appinstalled', function() {
             if (self.installBanner) self.installBanner.classList.remove('show');
-            showToast('App installed! Find it on your home screen.', 'success');
+            showToast('✅ App installed! Find it on your home screen.', 'success');
         });
 
         if (window.location.protocol === 'file:') {
@@ -886,7 +898,7 @@ var Verify = {
             if (manifestLink) manifestLink.remove();
         }
 
-        console.log('NACWS Verify module loaded.');
+        console.log('✅ NACWS Verify module loaded.');
     },
 
     showLogin: function() {
@@ -910,6 +922,7 @@ var Verify = {
         getClientIP().then(function(ip) {
             fetch(APP_SCRIPT_URL, {
                 method: 'POST',
+                // text/plain avoids a CORS preflight that Apps Script can't answer for POST + JSON.
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: 'admin_login',
@@ -946,7 +959,7 @@ var Verify = {
             .finally(function() {
                 if (self.loginBtn) {
                     self.loginBtn.disabled = false;
-                    self.loginBtn.innerHTML = 'Sign In';
+                    self.loginBtn.innerHTML = '🔑 Sign In';
                 }
             });
         });
@@ -978,7 +991,7 @@ var Verify = {
             self.isScanning = true;
             if (self.scanArea) self.scanArea.classList.add('scanning-active');
             if (self.btnStart) {
-                self.btnStart.textContent = '🔍 Scanning...';
+                self.btnStart.textContent = '⏳ Scanning...';
                 self.btnStart.disabled = true;
             }
             showToast('Camera started. Point at a QR code.', '');
@@ -1008,7 +1021,7 @@ var Verify = {
         });
     },
 
-    // ===== SCAN SUCCESS HANDLER =====
+    // ===== UPDATED ON SCAN SUCCESS HANDLER =====
     onScanSuccess: function(decodedText) {
         var scannedId = '';
         var scannedHmac = '';
@@ -1019,7 +1032,8 @@ var Verify = {
         }
 
         try {
-            // Current tickets encode {id, hmac}.
+            // Current tickets encode {id, hmac}. Older format {id, name, role, ...} is
+            // still accepted for the id — just won't carry a signature.
             var parsed = JSON.parse(decodedText);
             if (parsed && parsed.id) {
                 scannedId = String(parsed.id).trim();
@@ -1211,7 +1225,7 @@ verifyParticipant: function(id, hmac) {
         this.currentHmac = null;
         if (this.btnMarkVerified) {
             this.btnMarkVerified.disabled = false;
-            this.btnMarkVerified.innerHTML = '✅ Mark as Attendance';
+            this.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
         }
         if (this.manualId) this.manualId.value = '';
     }
@@ -1231,7 +1245,7 @@ verifyParticipant: function(id, hmac) {
         this.sessionToken = localStorage.getItem('adminToken');
         this.adminEmail = localStorage.getItem('adminEmail');
         if (this.sessionToken && this.adminEmail) {
-            // Attempt to load data – if token invalid, server will reject and will logout
+            // Attempt to load data – if token invalid, server will reject and we'll logout
             this.showDashboard();
             this.loadData();
         } else {
@@ -1273,7 +1287,7 @@ verifyParticipant: function(id, hmac) {
             this.filterVerified.addEventListener('change', function() { self.renderTable(); });
         }
 
-        // Export / Refresh buttons
+        // Export / Refresh buttons (moved off inline onclick in the HTML)
         this.exportBtn = document.getElementById('btnExportCSV');
         this.refreshBtn = document.getElementById('btnRefresh');
         if (this.exportBtn) {
@@ -1344,7 +1358,7 @@ verifyParticipant: function(id, hmac) {
                 // Google Apps Script's doOptions() can't answer with the right CORS
                 // headers — so the real login request gets blocked before it's sent.
                 // 'text/plain' avoids the preflight; e.postData.contents on the server
-                // is still the raw JSON string, so JSON.parse() there works fine.
+                // is still the raw JSON string, so JSON.parse() there works unchanged.
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: 'admin_login',
@@ -1382,7 +1396,7 @@ verifyParticipant: function(id, hmac) {
             .finally(function() {
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = 'Sign In';
+                    btn.innerHTML = '🔑 Sign In';
                 }
             });
         });
@@ -1578,7 +1592,7 @@ verifyParticipant: function(id, hmac) {
         }
 
         var lines = [];
-        // Professional header block for the export
+        // Professional header block for the export itself
         lines.push([csvEscape('NACWS Cybersecurity Seminar 2027 — Registration Export')].join(','));
         lines.push([csvEscape('Generated: ' + new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }))].join(','));
         lines.push([csvEscape('Scope: ' + (scope === 'all' ? 'All registrations' : 'Current filtered/searched view') + ' (' + dataToExport.length + ' of ' + this.allData.length + ' total)')].join(','));
@@ -1609,16 +1623,133 @@ verifyParticipant: function(id, hmac) {
 };
 
     // ===========================================================
+    // STANDALONE TICKET PAGE (ticket.html — linked from the confirmation email)
+    // Renders the exact same compact-ticket design used during live registration
+    // and reuses the same captureCardAsPNG() capture code, so the email's
+    // "Download Ticket" link produces the full ticket image, not just the bare
+    // QR square it used to link to directly.
+    // ===========================================================
+    const TicketPage = {
+        init: function() {
+            var self = this;
+            this.root = document.getElementById('ticketPageRoot');
+            this.loadingEl = document.getElementById('ticketLoading');
+            this.errorEl = document.getElementById('ticketError');
+            this.cardWrap = document.getElementById('ticketCardWrap');
+            this.downloadBtn = document.getElementById('ticketDownloadBtn');
+            if (!this.root) return;
+
+            var params = new URLSearchParams(window.location.search);
+            var id = params.get('id') || '';
+            var hmac = params.get('hmac') || '';
+            if (!id || !hmac) {
+                this.showError('This ticket link is missing required information.');
+                return;
+            }
+
+            var url = APP_SCRIPT_URL + '?action=get&id=' + encodeURIComponent(id) + '&hmac=' + encodeURIComponent(hmac);
+            fetch(url)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (!data || data.success === false || !data.UniqueID) {
+                        self.showError('This ticket link is invalid or has expired.');
+                        return;
+                    }
+                    self.render({
+                        uniqueId: data.UniqueID,
+                        fullName: data.FullName,
+                        serviceNo: data.ServiceNo,
+                        rank: data.Rank,
+                        role: data.Role,
+                        organization: data.Organization,
+                        hmac: hmac
+                    });
+                })
+                .catch(function() {
+                    self.showError('Could not reach the server. Please try this link again shortly.');
+                });
+
+            if (this.downloadBtn) {
+                this.downloadBtn.addEventListener('click', function() {
+                    if (!self.participant) return;
+                    self.downloadBtn.disabled = true;
+                    self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
+                    var card = document.getElementById('compactTicket');
+                    captureCardAsPNG(card, 'NACWS-Ticket-' + (self.participant.uniqueId || 'Ticket') + '.png')
+                        .then(function() {
+                            showToast('Ticket downloaded!', 'success');
+                        })
+                        .catch(function() {
+                            showToast('Failed to generate ticket. Please try again.', 'error');
+                        })
+                        .finally(function() {
+                            self.downloadBtn.disabled = false;
+                            self.downloadBtn.innerHTML = '⬇️ Download Ticket';
+                        });
+                });
+            }
+        },
+
+        showError: function(msg) {
+            if (this.loadingEl) this.loadingEl.style.display = 'none';
+            if (this.errorEl) {
+                this.errorEl.textContent = msg;
+                this.errorEl.style.display = 'block';
+            }
+        },
+
+        render: function(participant) {
+            this.participant = participant;
+            if (this.loadingEl) this.loadingEl.style.display = 'none';
+            if (this.cardWrap) this.cardWrap.style.display = 'block';
+            if (this.downloadBtn) this.downloadBtn.disabled = false;
+
+            var formattedRank = (participant.rank && participant.rank !== 'N/A') ? participant.rank.trim() + ' ' : '';
+            var rankEl = document.getElementById('compactRank');
+            var nameEl = document.getElementById('compactName');
+            var svcNoEl = document.getElementById('compactSvcNo');
+            var orgEl = document.getElementById('compactOrg');
+            var idEl = document.getElementById('compactId');
+            var roleEl = document.getElementById('compactRole');
+            if (rankEl) rankEl.textContent = formattedRank;
+            if (nameEl) nameEl.textContent = participant.fullName || '—';
+            if (svcNoEl) svcNoEl.textContent = participant.serviceNo || '—';
+            if (orgEl) orgEl.textContent = participant.organization || '—';
+            if (idEl) idEl.textContent = participant.uniqueId || '—';
+            if (roleEl) roleEl.textContent = participant.role || '—';
+
+            var qrContainer = document.getElementById('qrcode-compact');
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                var qrPayload = JSON.stringify({ id: participant.uniqueId || '', hmac: participant.hmac || '' });
+                try {
+                    new QRCode(qrContainer, {
+                        text: qrPayload,
+                        width: 130,
+                        height: 130,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.L
+                    });
+                } catch (e) {
+                    qrContainer.innerHTML = '<p style="color:red;font-size:0.5rem;">QR error</p>';
+                }
+            }
+        }
+    };
+
+    // ===========================================================
     // EXPOSE MODULES
     // ===========================================================
     window.NACWS = {
         registration: Registration,
         verify: Verify,
-        admin: Admin
+        admin: Admin,
+        ticketPage: TicketPage
     };
 
     // Auto‑init: each page has its own unique element, so one script
-    // file can safely self-initialise on any of the three pages
+    // file can safely self-initialize on any of the three pages
     // without any inline <script> needed in the HTML.
     document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('regForm')) {
@@ -1629,6 +1760,9 @@ verifyParticipant: function(id, hmac) {
         }
         if (document.getElementById('adminLoginOverlay')) {
             NACWS.admin.init();
+        }
+        if (document.getElementById('ticketPageRoot')) {
+            NACWS.ticketPage.init();
         }
     });
 
