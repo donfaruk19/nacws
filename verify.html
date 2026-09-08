@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>@font-face{font-family:"Optimistic";font-style:normal;font-weight:400 600;font-display:swap;src:url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2")}:where(html){font-family:"Optimistic",system-ui,sans-serif}</style>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#07472d" />
-<title>NACWS · Verify - Login Required</title>
+<title>NACWS · Verify - Login</title>
 <link rel="manifest" href="manifest.json" id="manifestLink" />
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://api.qrserver.com https://*.qrserver.com https://api.ipify.org; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.qrserver.com https://*.qrserver.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://api.ipify.org https://api.qrserver.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://api.qrserver.com https://*.qrserver.com https://api.ipify.org; script-src 'self' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.qrserver.com https://*.qrserver.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://api.ipify.org https://api.qrserver.com;">
 <meta http-equiv="Permissions-Policy" content="camera=(self)">
 <link rel="stylesheet" href="styles.css" />
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
@@ -27,7 +26,7 @@
     <form id="verifyLoginForm" novalidate>
       <div class="form-group"><label for="verifyEmail">Email Address</label><input type="email" id="verifyEmail" placeholder="verifier@example.com" required autofocus /></div>
       <div class="form-group"><label for="verifyPassword">Password</label><input type="password" id="verifyPassword" placeholder="••••••••" required /></div>
-      <button type="submit" class="btn-login" id="verifyLoginBtn">🔑 Sign In</button>
+      <button type="submit" class="btn-login" id="verifyLoginBtn">Sign In</button>
     </form>
     <p class="login-footnote">🔒  NACWS Secured System · All data encrypted</p>
   </div>
