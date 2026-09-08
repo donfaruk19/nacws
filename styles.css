@@ -92,6 +92,29 @@ body {
     background: #a8883a;
     transform: translateY(-2px);
 }
+/* Logout button used in the Admin & Verify page headers */
+.btn-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: .3s;
+    white-space: nowrap;
+}
+.btn-logout:hover {
+    background: #c0392b;
+    border-color: #c0392b;
+    color: #fff;
+    transform: translateY(-2px);
+}
 
 .badge {
     display: inline-block;
@@ -884,7 +907,7 @@ footer .footer-links a:hover {
     box-shadow: none;
 }
 
-/* Compact variant used by smaller popups (e.g. "Find My Ticket") — was inline style="max-width:440px" */
+/* Compact variant used by smaller popups (e.g. "Find Ticket") */
 .popup-box.popup-box-sm {
     max-width: 440px;
 }
@@ -986,6 +1009,60 @@ footer .footer-links a:hover {
     margin-top: 12px;
     text-align: center;
 }
+
+/* Honeypot field — must be visually gone but still exist in the DOM and tab order-free,
+   NOT display:none (some bots specifically skip hidden inputs and only fill visible-ish ones) */
+.hp-field {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    height: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.consent-group {
+    background: #faf7f0;
+    border: 1px solid #e0dbd2;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.consent-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: #2d2a26;
+    cursor: pointer;
+    line-height: 1.5;
+}
+.consent-label input {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    accent-color: #c9a84c;
+    flex-shrink: 0;
+}
+.consent-label a {
+    color: #a8883a;
+    font-weight: 600;
+}
+
+.privacy-notice-body {
+    max-height: 320px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    color: #2d2a26;
+    line-height: 1.6;
+    padding-right: 6px;
+}
+.privacy-notice-body p {
+    margin: 0 0 12px;
+}
+.privacy-notice-body a {
+    color: #a8883a;
+}
+
 .form-actions {
     display: flex;
     gap: 12px;
@@ -1170,8 +1247,7 @@ footer .footer-links a:hover {
     margin-top: 8px;
     white-space: nowrap;
 }
-/* Smaller, muted variant used as the compact (downloadable) ticket's closing footnote
-   — was inline style="font-size:0.6rem;opacity:0.7;margin-top:12px" */
+/* Smaller, muted variant used as the compact (downloadable) ticket's closing footnote */
 .ticket-meta-single-line.ticket-footnote {
     font-size: 0.6rem;
     opacity: 0.7;
@@ -1242,8 +1318,7 @@ footer .footer-links a:hover {
     font-weight: 600 !important;
     display: block !important;
 }
-/* Unique Pass ID row gets extra emphasis (monospace, gold) — was inline
-   style="font-family:monospace;color:#c9a84c;font-weight:700" */
+/* Unique Pass ID row gets extra emphasis (monospace, gold) */
 .ticket.compact .ticket-value.id-value {
     font-family: 'Courier New', monospace !important;
     color: #c9a84c !important;
@@ -1832,12 +1907,12 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
     height: 40px;
     width: auto;
 }
-/* Event subtitle under the dashboard title — was inline style="font-size:0.8rem;opacity:0.7" */
+/* Event subtitle under the dashboard title */
 .admin-header .admin-event-subtitle {
     font-size: 0.8rem;
     opacity: 0.7;
 }
-/* Spacing between the "Live" badge and the Export button — was inline style="margin-left:8px" */
+/* Spacing between the "Live" badge and the Export button */
 .header-right .btn-gold {
     margin-left: 8px;
 }
@@ -2060,8 +2135,7 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
   font-size: 0.75rem;
   color: #6b6560;
 }
-/* Verify page's scanner UI is hidden until Verify.showMain() reveals it post-login
-   — was inline style="display:none" on #verifyMainContainer */
+/* Verify page's scanner UI is hidden until Verify.showMain() reveals it post-login */
 #verifyMainContainer {
   display: none;
 }
@@ -2128,6 +2202,89 @@ FULL TICKET CAPTURE & COMPACT PRINT STYLES
     font-size: 0.6rem;
     margin-top: 8px;
 }
+
+/* ============================================================
+   ADMIN — EXPORT CSV MODAL
+   ============================================================ */
+.export-modal-box {
+    max-width: 480px;
+}
+.export-section-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #07472d;
+    margin: 18px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.export-scope-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.export-radio-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid #e0dbd2;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #2d2a26;
+    transition: .2s;
+}
+.export-radio-row:hover {
+    border-color: #c9a84c;
+    background: #faf7f0;
+}
+.export-radio-row input {
+    accent-color: #c9a84c;
+    width: 16px;
+    height: 16px;
+}
+.export-columns-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.export-columns-header .export-section-label {
+    margin-bottom: 0;
+}
+.export-select-all-btn {
+    background: none;
+    border: none;
+    color: #a8883a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.export-columns-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px 2px;
+}
+.export-column-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #2d2a26;
+}
+.export-column-item input {
+    accent-color: #c9a84c;
+    width: 15px;
+    height: 15px;
+}
+.export-modal-box .form-actions {
+    margin-top: 20px;
+}
+
 /* ============================================================
    RESPONSIVE LAYOUT & MEDIA BREAKPOINTS
    ============================================================ */
