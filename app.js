@@ -19,7 +19,55 @@
     }
 
     // ============================================================
-    // IMAGE FALLBACK (moved from inline onerror="..." attributes)
+    // CLIENT IP LOOKUP (shared by Admin & Verify login)
+    // Backend logAudit()/logLoginAttempt() expect clientIP + userAgent
+    // in the admin_login request body to populate the AuditLog and
+    // LoginAttempts sheets. Falls back to 'unknown' if the lookup fails
+    // so a network hiccup here never blocks someone from logging in.
+    // ============================================================
+    // Escapes HTML-significant characters before interpolating any registrant-supplied
+    // string into innerHTML (e.g. the admin table). sanitizeInput() on the backend already
+    // strips <>"'& at registration time, but this is defense-in-depth: it protects the
+    // dashboard even if a row was edited directly in the Sheet (bypassing that filter) or
+    // a future backend change relaxes it.
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function getClientIP() {
+        var lookup = fetch('https://api.ipify.org?format=json')
+            .then(function(res) { return res.json(); })
+            .then(function(data) { return data.ip; })
+            .catch(function() { return 'unknown'; });
+        var timeout = new Promise(function(resolve) {
+            setTimeout(function() { resolve('unknown'); }, 1200);
+        });
+        // Whichever settles first wins — a slow/hanging IP lookup should never add
+        // more than ~1.2s on top of the (already slow) Apps Script round trip.
+        return Promise.race([lookup, timeout]);
+    }
+
+    // ============================================================
+    // SERVICE WORKER REGISTRATION
+    // Required (along with manifest.json) before Chrome will ever fire
+    // 'beforeinstallprompt'
+    // ============================================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('./sw.js').catch(function(err) {
+                console.warn('Service worker registration failed:', err);
+            });
+        });
+    }
+
+    // ============================================================
+    // IMAGE FALLBACK 
     // Any <img class="fallback-img"> hides itself if it fails to load.
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
@@ -40,7 +88,7 @@
     // ============================================================
     // SHARED HELPERS
     // ============================================================
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYu6nZVjwvD1Vgo4XRU1U1rWNqRsITzmbMuBlonXMQ8GKZGT2gzGUq8NNafda9j1lqHQ/exec';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwOBrRSlBTVePYV-91vZkXPZb_0x1WTWEdENwW5UycVNBOrx2lTuxz2jyUITFPlrCQdfA/exec';
     let toastTimer = null;
 
     function showToast(msg, type) {
@@ -96,7 +144,7 @@ var Registration = {
         this.confirmModal = document.getElementById('confirmModal');
         this.modalClose = document.getElementById('modalCloseBtn');
         this.modalClose2 = document.getElementById('modalCloseBtn2');
-        this.cardRank = document.getElementById('cardRank');          // Added for rank display
+        this.cardRank = document.getElementById('cardRank');        
         this.cardName = document.getElementById('cardName');
         this.cardServiceNo = document.getElementById('cardServiceNo');
         this.cardRole = document.getElementById('cardRole');
@@ -106,13 +154,39 @@ var Registration = {
         this.cardTicketId = document.getElementById('cardTicketId');
         this.qrContainer = document.getElementById('qrcode-card');
         this.downloadBtn = document.getElementById('downloadCardBtn');
-        this.retrieveBtn = document.getElementById('retrievePassBtn'); // New
+        this.retrieveBtn = document.getElementById('retrievePassBtn'); 
         this.retrievePopup = document.getElementById('retrievePopup');
         this.retrievePopupClose = document.getElementById('retrievePopupCloseBtn');
         this.retrievePopupCancel = document.getElementById('retrievePopupCancelBtn');
         this.retrieveForm = document.getElementById('retrieveForm');
         this.retrieveQuery = document.getElementById('retrieveQuery');
+        this.retrieveProof = document.getElementById('retrieveProof');
         this.retrieveSubmitBtn = document.getElementById('retrieveSubmitBtn');
+
+        // Honeypot + consent + privacy notice
+        this.hpWebsite = document.getElementById('hpWebsite');
+        this.consentCheckbox = document.getElementById('consentCheckbox');
+        this.privacyNoticeLink = document.getElementById('privacyNoticeLink');
+        this.privacyNoticeModal = document.getElementById('privacyNoticeModal');
+        this.privacyNoticeCloseBtn = document.getElementById('privacyNoticeCloseBtn');
+        this.privacyNoticeOkBtn = document.getElementById('privacyNoticeOkBtn');
+        if (this.privacyNoticeLink) {
+            this.privacyNoticeLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (self.privacyNoticeModal) self.privacyNoticeModal.classList.add('active');
+            });
+        }
+        if (this.privacyNoticeCloseBtn) this.privacyNoticeCloseBtn.addEventListener('click', function() {
+            if (self.privacyNoticeModal) self.privacyNoticeModal.classList.remove('active');
+        });
+        if (this.privacyNoticeOkBtn) this.privacyNoticeOkBtn.addEventListener('click', function() {
+            if (self.privacyNoticeModal) self.privacyNoticeModal.classList.remove('active');
+        });
+        if (this.privacyNoticeModal) {
+            this.privacyNoticeModal.addEventListener('click', function(e) {
+                if (e.target === self.privacyNoticeModal) self.privacyNoticeModal.classList.remove('active');
+            });
+        }
 
         this.currentParticipant = null;
 
@@ -165,11 +239,11 @@ var Registration = {
             this.downloadBtn.addEventListener('click', function() { self.downloadTicket(); });
         }
 
-        // Pre-fill demo (kept from old)
+        // Pre-fill demo
         if (window.location.search.includes('demo')) {
-            if (this.fullName) this.fullName.value = 'Umar Faruk';
-            if (this.serviceNo) this.serviceNo.value = 'N/2332';
-            if (this.email) this.email.value = 'donfaruk191@gmail.com';
+            if (this.fullName) this.fullName.value = 'DonFaruk';
+            if (this.serviceNo) this.serviceNo.value = 'N/12345';
+            if (this.email) this.email.value = 'DonFaruk19@sample.com';
             if (this.phone) this.phone.value = '+234 800 123 4567';
             if (this.rank) this.rank.value = 'Major';
             if (this.role) this.role.value = 'Discussant';
@@ -186,6 +260,7 @@ var Registration = {
         if (!this.popup) return;
         this.popup.classList.add('active');
         document.body.style.overflow = 'hidden';
+        this.formOpenedAt = Date.now(); // used as a soft bot-timing signal on submit
     },
 
     closePopup: function() {
@@ -240,7 +315,7 @@ var Registration = {
         }
     },
 
-    // ===== UPDATED SHOW TICKET (with rank spacing) =====
+    // ===== SHOW TICKET =====
     showTicket: function(participant) {
         this.currentParticipant = participant;
 
@@ -258,9 +333,7 @@ var Registration = {
 
         var qrPayload = JSON.stringify({
             id: participant.uniqueId,
-            name: participant.fullName,
-            email: participant.email,
-            role: participant.role
+            hmac: participant.hmac || ''
         });
 
         var self = this;
@@ -270,7 +343,7 @@ var Registration = {
         this.openConfirm();
     },
 
-    // ===== UPDATED DOWNLOAD TICKET (with compact ticket and QR) =====
+    // ===== DOWNLOAD TICKET (with compact ticket and QR) =====
     downloadTicket: function() {
         var self = this;
         var participant = this.currentParticipant;
@@ -300,14 +373,14 @@ var Registration = {
         if (idEl) idEl.textContent = participant.uniqueId || '—';
         if (roleEl) roleEl.textContent = participant.role || '—';
 
-        // QR Code (only ID, Name, Role for better scan clarity)
+        // QR encodes only {id, hmac} — not personal details — so a lost or photographed
+        // ticket doesn't leak PII to any generic QR reader outside the app.
         var qrContainer = document.getElementById('qrcode-compact');
         if (qrContainer) {
             qrContainer.innerHTML = '';
             var qrPayload = JSON.stringify({
                 id: participant.uniqueId || '',
-                name: participant.fullName || '',
-                role: participant.role || ''
+                hmac: participant.hmac || ''
             });
             try {
                 new QRCode(qrContainer, {
@@ -397,20 +470,23 @@ var Registration = {
 handleRetrieveTicket: function() {
     var self = this;
     var input = this.retrieveQuery ? this.retrieveQuery.value.trim() : '';
+    var proof = this.retrieveProof ? this.retrieveProof.value.trim() : '';
     if (!input) { showToast('Enter your email or Unique Pass ID.', 'error'); return; }
+    if (!proof || proof.length < 4) { showToast('Enter the last 4 digits of the phone number you registered with.', 'error'); return; }
 
     if (this.retrieveSubmitBtn) {
         this.retrieveSubmitBtn.disabled = true;
         this.retrieveSubmitBtn.innerHTML = '<span class="spinner"></span> Searching...';
     }
 
-    // Use the secure 'find' endpoint – only one record is returned
-    var url = APP_SCRIPT_URL + '?action=find&q=' + encodeURIComponent(input);
+    // 'proof' (last 4 of registered phone) is a required second factor here — this endpoint
+    // has no login, so email/ID alone would let anyone harvest PII by guessing addresses.
+    var url = APP_SCRIPT_URL + '?action=find&q=' + encodeURIComponent(input) + '&proof=' + encodeURIComponent(proof);
     fetch(url)
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data.success === false || !data.UniqueID) {
-                showToast('No participant found with that email or ID.', 'error');
+                showToast('No matching ticket found. Check your email/ID and phone digits.', 'error');
                 return;
             }
             // Participant found
@@ -422,7 +498,8 @@ handleRetrieveTicket: function() {
                 email: data.Email,
                 rank: data.Rank,
                 role: data.Role,
-                organization: data.Organization
+                organization: data.Organization,
+                hmac: data.HMAC
             });
             showToast('Pass retrieved successfully!', 'success');
         })
@@ -441,6 +518,20 @@ handleRetrieveTicket: function() {
 handleSubmit: function(e) {
     e.preventDefault();
     var self = this;
+
+    // Honeypot: a real visitor never sees or fills this field. If it's populated,
+    // silently bail without a network request — no feedback that would help a bot
+    // learn to avoid this check.
+    if (this.hpWebsite && this.hpWebsite.value.trim() !== '') {
+        return;
+    }
+
+    if (this.consentCheckbox && !this.consentCheckbox.checked) {
+        showToast('Please confirm you consent to the Privacy Notice before submitting.', 'error');
+        this.consentCheckbox.focus();
+        return;
+    }
+
     var name = this.fullName ? this.fullName.value.trim() : '';
     var serviceNo = this.serviceNo ? this.serviceNo.value.trim() : '';
     var mail = this.email ? this.email.value.trim() : '';
@@ -450,7 +541,7 @@ handleSubmit: function(e) {
     var rankVal = this.rank ? this.rank.value.trim() : '';
     var specialVal = this.special ? this.special.value.trim() : '';
 
-    // Validation patterns (same as before)
+    // Validation patterns 
     var namePattern = /^[a-zA-Z0-9\-\.\s]+$/;
     var servicePattern = /^[a-zA-Z0-9()\/]+$/;
     var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -490,78 +581,71 @@ handleSubmit: function(e) {
 
     if (this.submitBtn) {
         this.submitBtn.disabled = true;
-        this.submitBtn.innerHTML = '<span class="spinner"></span> Checking records…';
+        this.submitBtn.innerHTML = '<span class="spinner"></span> Submitting…';
     }
 
-    // --- SECURE DUPLICATE CHECK using dedicated endpoint ---
-    var checkUrl = APP_SCRIPT_URL + '?action=check&email=' + encodeURIComponent(mail) +
-                   '&serviceNo=' + encodeURIComponent(serviceNo || '');
-    fetch(checkUrl)
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.duplicate) {
-                showToast('Error: Email or Service No is already registered!', 'error');
+    // Duplicate checking inside processRegistration()
+    // (the backend already checks before inserting) — no separate pre-flight round trip hahaha.
+    this.processRegistration(clean);
+},
+
+    // ===== PROCESS REGISTRATION (sends data to backend) =====
+    processRegistration: function(clean) {
+        var self = this;
+        var uniqueId = generateUniqueId();
+        var honeypot = this.hpWebsite ? this.hpWebsite.value.trim() : '';
+        var formTimeMs = this.formOpenedAt ? (Date.now() - this.formOpenedAt) : null;
+
+        getClientIP().then(function(ip) {
+            var payload = {
+                uniqueId: uniqueId,
+                fullName: clean.fullName,
+                serviceNo: clean.serviceNo,
+                email: clean.email,
+                phone: clean.phone,
+                rank: clean.rank,
+                role: clean.role,
+                organization: clean.organization,
+                special: clean.special,
+                registrationDate: new Date().toISOString(),
+                verified: false,
+                clientIP: ip,
+                honeypot: honeypot,
+                formTimeMs: formTimeMs
+            };
+
+            fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data && data.success) {
+                    payload.hmac = data.hmac || '';
+                    self.showTicket(payload);
+                    showToast('Registration successful! Check your email.', 'success');
+                    if (self.form) self.form.reset();
+                    self.closePopup();
+                } else if (data && data.error === 'Duplicate') {
+                    showToast('Error: Email or Service No is already registered!', 'error');
+                } else {
+                    showToast('Registration failed: ' + (data && data.error ? data.error : 'Unknown error'), 'error');
+                }
+            })
+            .catch(function() {
+                showToast('Could not reach the server. Please check your connection and try again.', 'error');
+            })
+            .finally(function() {
                 if (self.submitBtn) {
                     self.submitBtn.disabled = false;
                     self.submitBtn.innerHTML = 'Submit Now';
                 }
-                return;
-            }
-            // No duplicate – proceed
-            self.processRegistration(clean);
-        })
-        .catch(function(err) {
-            showToast('Could not verify duplicate. Please check your network.', 'error');
-            if (self.submitBtn) {
-                self.submitBtn.disabled = false;
-                self.submitBtn.innerHTML = 'Submit Now';
-            }
-        });
-},
-
-    // ===== PROCESS REGISTRATION (sends data to Google Apps Script) =====
-    processRegistration: function(clean) {
-        var self = this;
-        var uniqueId = generateUniqueId();
-        var payload = {
-            uniqueId: uniqueId,
-            fullName: clean.fullName,
-            serviceNo: clean.serviceNo,
-            email: clean.email,
-            phone: clean.phone,
-            rank: clean.rank,
-            role: clean.role,
-            organization: clean.organization,
-            special: clean.special,
-            registrationDate: new Date().toISOString(),
-            verified: false
-        };
-
-        fetch(APP_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            redirect: 'follow',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        }).then(function() {
-            self.showTicket(payload);
-            showToast('Registration successful! Check your email.', 'success');
-            if (self.form) self.form.reset();
-            self.closePopup();
-        }).catch(function() {
-            self.showTicket(payload);
-            showToast('Registered locally. Email will be sent when online.', 'success');
-            if (self.form) self.form.reset();
-            self.closePopup();
-        }).finally(function() {
-            if (self.submitBtn) {
-                self.submitBtn.disabled = false;
-                self.submitBtn.innerHTML = 'Submit Now';
-            }
+            });
         });
     },
 
-    // ===== GALLERY SLIDER (unchanged from old version) =====
+    // ===== GALLERY SLIDER =====
     initGallery: function() {
         const track = document.getElementById('galleryTrack');
         const prevBtn = document.getElementById('prevBtn');
@@ -794,7 +878,7 @@ var Verify = {
         }
         window.addEventListener('appinstalled', function() {
             if (self.installBanner) self.installBanner.classList.remove('show');
-            showToast('✅ App installed! Find it on your home screen.', 'success');
+            showToast('App installed! Find it on your home screen.', 'success');
         });
 
         if (window.location.protocol === 'file:') {
@@ -802,7 +886,7 @@ var Verify = {
             if (manifestLink) manifestLink.remove();
         }
 
-        console.log('✅ NACWS Verify module loaded.');
+        console.log('NACWS Verify module loaded.');
     },
 
     showLogin: function() {
@@ -823,41 +907,48 @@ var Verify = {
         }
         if (this.loginError) this.loginError.classList.remove('show');
 
-        fetch(APP_SCRIPT_URL, {
-            method: 'POST',
-            // text/plain avoids a CORS preflight that Apps Script can't answer for POST + JSON.
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'admin_login', email: email, password: password })
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success && data.token) {
-                self.sessionToken = data.token;
-                self.verifierEmail = data.email;
-                localStorage.setItem('verifierToken', data.token);
-                localStorage.setItem('verifierEmail', data.email);
-                self.showMain();
-                showToast('Login successful!', 'success');
-            } else {
+        getClientIP().then(function(ip) {
+            fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'admin_login',
+                    email: email,
+                    password: password,
+                    clientIP: ip,
+                    userAgent: navigator.userAgent
+                })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.token) {
+                    self.sessionToken = data.token;
+                    self.verifierEmail = data.email;
+                    localStorage.setItem('verifierToken', data.token);
+                    localStorage.setItem('verifierEmail', data.email);
+                    self.showMain();
+                    showToast('Login successful!', 'success');
+                } else {
+                    if (self.loginError) {
+                        self.loginError.textContent = data.error || 'Invalid credentials.';
+                        self.loginError.classList.add('show');
+                    }
+                    showToast('Login failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(function(err) {
                 if (self.loginError) {
-                    self.loginError.textContent = data.error || 'Invalid credentials.';
+                    self.loginError.textContent = 'Network error. Please try again.';
                     self.loginError.classList.add('show');
                 }
-                showToast('Login failed: ' + (data.error || 'Unknown error'), 'error');
-            }
-        })
-        .catch(function(err) {
-            if (self.loginError) {
-                self.loginError.textContent = 'Network error. Please try again.';
-                self.loginError.classList.add('show');
-            }
-            showToast('Could not connect to server.', 'error');
-        })
-        .finally(function() {
-            if (self.loginBtn) {
-                self.loginBtn.disabled = false;
-                self.loginBtn.innerHTML = '🔑 Sign In';
-            }
+                showToast('Could not connect to server.', 'error');
+            })
+            .finally(function() {
+                if (self.loginBtn) {
+                    self.loginBtn.disabled = false;
+                    self.loginBtn.innerHTML = 'Sign In';
+                }
+            });
         });
     },
 
@@ -887,7 +978,7 @@ var Verify = {
             self.isScanning = true;
             if (self.scanArea) self.scanArea.classList.add('scanning-active');
             if (self.btnStart) {
-                self.btnStart.textContent = '⏳ Scanning...';
+                self.btnStart.textContent = '🔍 Scanning...';
                 self.btnStart.disabled = true;
             }
             showToast('Camera started. Point at a QR code.', '');
@@ -917,9 +1008,10 @@ var Verify = {
         });
     },
 
-    // ===== UPDATED ON SCAN SUCCESS HANDLER =====
+    // ===== SCAN SUCCESS HANDLER =====
     onScanSuccess: function(decodedText) {
         var scannedId = '';
+        var scannedHmac = '';
 
         if (!decodedText) {
             showToast('Empty QR code payload.', 'error');
@@ -927,10 +1019,11 @@ var Verify = {
         }
 
         try {
-            // Attempt parsing JSON payload (containing { id, name, role })
+            // Current tickets encode {id, hmac}.
             var parsed = JSON.parse(decodedText);
             if (parsed && parsed.id) {
                 scannedId = String(parsed.id).trim();
+                scannedHmac = parsed.hmac ? String(parsed.hmac).trim() : '';
             } else if (typeof parsed === 'string') {
                 scannedId = parsed.trim();
             }
@@ -945,7 +1038,7 @@ var Verify = {
                 this.stopScanner();
             }
             showToast('QR Code captured successfully!', 'success');
-            this.verifyParticipant(scannedId);
+            this.verifyParticipant(scannedId, scannedHmac);
         } else {
             showToast('Invalid QR Code format.', 'error');
         }
@@ -972,10 +1065,11 @@ var Verify = {
             });
     },
 
-verifyParticipant: function(id) {
+verifyParticipant: function(id, hmac) {
     var self = this;
     if (!id || !id.trim()) { showToast('Enter a valid ID.', 'error'); return; }
     this.currentId = id.trim();
+    this.currentHmac = hmac || ''; // carried forward to markAsVerified() for the extra tamper-check
     if (this.resultCard) {
         this.resultCard.classList.add('show');
         if (this.statusIcon) this.statusIcon.textContent = '⏳';
@@ -995,8 +1089,19 @@ verifyParticipant: function(id) {
         }
     }
 
-    // --- SECURE: fetch only the participant by ID ---
-    var url = APP_SCRIPT_URL + '?action=get&id=' + encodeURIComponent(this.currentId);
+    if (!this.sessionToken || !this.verifierEmail) {
+        showToast('Not authenticated. Please log in.', 'error');
+        this.showLogin();
+        return;
+    }
+
+    // 'get' requires EITHER a valid ticket signature (from a scanned QR) OR a logged-in
+    // verifier session (covers manual ID entry, which has no signature to offer) — closes
+    // off the endpoint to fully anonymous callers while keeping both check-in paths working.
+    var url = APP_SCRIPT_URL + '?action=get&id=' + encodeURIComponent(this.currentId) +
+              '&hmac=' + encodeURIComponent(hmac || '') +
+              '&email=' + encodeURIComponent(this.verifierEmail) +
+              '&token=' + encodeURIComponent(this.sessionToken);
     fetch(url)
         .then(function(response) { return response.json(); })
         .then(function(data) {
@@ -1066,6 +1171,7 @@ verifyParticipant: function(id) {
             return;
         }
         var url = APP_SCRIPT_URL + '?action=verify&id=' + encodeURIComponent(this.currentId) +
+                  '&hmac=' + encodeURIComponent(this.currentHmac || '') +
                   '&email=' + encodeURIComponent(this.verifierEmail) +
                   '&token=' + encodeURIComponent(this.sessionToken);
         fetch(url)
@@ -1102,9 +1208,10 @@ verifyParticipant: function(id) {
         if (this.resultCard) this.resultCard.classList.remove('show');
         this.currentParticipant = null;
         this.currentId = null;
+        this.currentHmac = null;
         if (this.btnMarkVerified) {
             this.btnMarkVerified.disabled = false;
-            this.btnMarkVerified.innerHTML = '✅ Mark as Verified Attendance';
+            this.btnMarkVerified.innerHTML = '✅ Mark as Attendance';
         }
         if (this.manualId) this.manualId.value = '';
     }
@@ -1124,7 +1231,7 @@ verifyParticipant: function(id) {
         this.sessionToken = localStorage.getItem('adminToken');
         this.adminEmail = localStorage.getItem('adminEmail');
         if (this.sessionToken && this.adminEmail) {
-            // Attempt to load data – if token invalid, server will reject and we'll logout
+            // Attempt to load data – if token invalid, server will reject and will logout
             this.showDashboard();
             this.loadData();
         } else {
@@ -1166,15 +1273,43 @@ verifyParticipant: function(id) {
             this.filterVerified.addEventListener('change', function() { self.renderTable(); });
         }
 
-        // Export / Refresh buttons (moved off inline onclick in the HTML)
+        // Export / Refresh buttons
         this.exportBtn = document.getElementById('btnExportCSV');
         this.refreshBtn = document.getElementById('btnRefresh');
         if (this.exportBtn) {
-            this.exportBtn.addEventListener('click', function() { self.exportCSV(); });
+            this.exportBtn.addEventListener('click', function() { self.openExportModal(); });
         }
         if (this.refreshBtn) {
             this.refreshBtn.addEventListener('click', function() { self.loadData(); });
         }
+
+        // Export modal elements & wiring
+        this.exportModal = document.getElementById('exportModal');
+        this.exportModalCloseBtn = document.getElementById('exportModalCloseBtn');
+        this.exportCancelBtn = document.getElementById('exportCancelBtn');
+        this.exportConfirmBtn = document.getElementById('exportConfirmBtn');
+        this.exportToggleAllBtn = document.getElementById('exportToggleAllBtn');
+        this.exportColumnsGrid = document.getElementById('exportColumnsGrid');
+        this.exportScopeFilteredLabel = document.getElementById('exportScopeFilteredLabel');
+        this.exportScopeAllLabel = document.getElementById('exportScopeAllLabel');
+
+        if (this.exportModalCloseBtn) this.exportModalCloseBtn.addEventListener('click', function() { self.closeExportModal(); });
+        if (this.exportCancelBtn) this.exportCancelBtn.addEventListener('click', function() { self.closeExportModal(); });
+        if (this.exportModal) this.exportModal.addEventListener('click', function(e) { if (e.target === self.exportModal) self.closeExportModal(); });
+        if (this.exportConfirmBtn) this.exportConfirmBtn.addEventListener('click', function() { self.exportCSV(); });
+        if (this.exportToggleAllBtn) {
+            this.exportToggleAllBtn.addEventListener('click', function() {
+                var checkboxes = self.exportColumnsGrid.querySelectorAll('input[type="checkbox"]');
+                var allChecked = Array.prototype.every.call(checkboxes, function(cb) { return cb.checked; });
+                checkboxes.forEach(function(cb) { cb.checked = !allChecked; });
+                self.exportToggleAllBtn.textContent = allChecked ? 'Select All' : 'Deselect All';
+            });
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && self.exportModal && self.exportModal.classList.contains('active')) {
+                self.closeExportModal();
+            }
+        });
     },
 
     showLogin: function() {
@@ -1201,47 +1336,55 @@ verifyParticipant: function(id) {
         }
         if (errorEl) errorEl.classList.remove('show');
 
-        fetch(APP_SCRIPT_URL, {
-            method: 'POST',
-            // NOTE: must be 'text/plain' (not 'application/json'). A JSON content-type
-            // forces the browser to send a CORS preflight (OPTIONS) request, which
-            // Google Apps Script's doOptions() can't answer with the right CORS
-            // headers — so the real login request gets blocked before it's sent.
-            // 'text/plain' avoids the preflight; e.postData.contents on the server
-            // is still the raw JSON string, so JSON.parse() there works unchanged.
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'admin_login', email: email, password: password })
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success && data.token) {
-                self.sessionToken = data.token;
-                self.adminEmail = data.email;
-                localStorage.setItem('adminToken', data.token);
-                localStorage.setItem('adminEmail', data.email);
-                self.showDashboard();
-                self.loadData();
-                showToast('Login successful!', 'success');
-            } else {
+        getClientIP().then(function(ip) {
+            fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                // NOTE: must be 'text/plain' (not 'application/json'). A JSON content-type
+                // forces the browser to send a CORS preflight (OPTIONS) request, which
+                // Google Apps Script's doOptions() can't answer with the right CORS
+                // headers — so the real login request gets blocked before it's sent.
+                // 'text/plain' avoids the preflight; e.postData.contents on the server
+                // is still the raw JSON string, so JSON.parse() there works fine.
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'admin_login',
+                    email: email,
+                    password: password,
+                    clientIP: ip,
+                    userAgent: navigator.userAgent
+                })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.token) {
+                    self.sessionToken = data.token;
+                    self.adminEmail = data.email;
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('adminEmail', data.email);
+                    self.showDashboard();
+                    self.loadData();
+                    showToast('Login successful!', 'success');
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = data.error || 'Invalid credentials.';
+                        errorEl.classList.add('show');
+                    }
+                    showToast('Login failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(function(err) {
                 if (errorEl) {
-                    errorEl.textContent = data.error || 'Invalid credentials.';
+                    errorEl.textContent = 'Network error. Please try again.';
                     errorEl.classList.add('show');
                 }
-                showToast('Login failed: ' + (data.error || 'Unknown error'), 'error');
-            }
-        })
-        .catch(function(err) {
-            if (errorEl) {
-                errorEl.textContent = 'Network error. Please try again.';
-                errorEl.classList.add('show');
-            }
-            showToast('Could not connect to server.', 'error');
-        })
-        .finally(function() {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '🔑 Sign In';
-            }
+                showToast('Could not connect to server.', 'error');
+            })
+            .finally(function() {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Sign In';
+                }
+            });
         });
     },
 
@@ -1293,12 +1436,11 @@ verifyParticipant: function(id) {
             });
     },
 
-    renderTable: function() {
-        var self = this;
+    getFilteredData: function() {
         var search = this.searchInput ? this.searchInput.value.toLowerCase() : '';
         var filter = this.filterVerified ? this.filterVerified.value : '';
 
-        var filtered = this.allData.filter(function(row) {
+        return this.allData.filter(function(row) {
             var match = true;
             if (search) {
                 match = (row.FullName && row.FullName.toLowerCase().includes(search)) ||
@@ -1312,6 +1454,11 @@ verifyParticipant: function(id) {
             }
             return match;
         });
+    },
+
+    renderTable: function() {
+        var self = this;
+        var filtered = this.getFilteredData();
 
         if (!this.tableBody) return;
         if (filtered.length === 0) {
@@ -1324,15 +1471,15 @@ verifyParticipant: function(id) {
             var verified = row.Verified === true || row.Verified === 'TRUE';
             var date = row.RegistrationDate ? new Date(row.RegistrationDate).toLocaleDateString() : '—';
             html += '<tr>' +
-                '<td><strong>' + (row.UniqueID || '—') + '</strong></td>' +
-                '<td>' + (row.ServiceNo || '—') + '</td>' +
-                '<td>' + (row.Rank || '—') + '</td>' +
-                '<td>' + (row.FullName || '—') + '</td>' +
-                '<td>' + (row.Email || '—') + '</td>' +
-                '<td>' + (row.Phone || '—') + '</td>' +
-                '<td>' + (row.Organization || '—') + '</td>' +
-                '<td>' + (row.Role || '—') + '</td>' +
-                '<td>' + date + '</td>' +
+                '<td><strong>' + escapeHtml(row.UniqueID || '—') + '</strong></td>' +
+                '<td>' + escapeHtml(row.ServiceNo || '—') + '</td>' +
+                '<td>' + escapeHtml(row.Rank || '—') + '</td>' +
+                '<td>' + escapeHtml(row.FullName || '—') + '</td>' +
+                '<td>' + escapeHtml(row.Email || '—') + '</td>' +
+                '<td>' + escapeHtml(row.Phone || '—') + '</td>' +
+                '<td>' + escapeHtml(row.Organization || '—') + '</td>' +
+                '<td>' + escapeHtml(row.Role || '—') + '</td>' +
+                '<td>' + escapeHtml(date) + '</td>' +
                 '<td><span class="verified-badge ' + (verified ? 'verified-yes' : 'verified-no') + '">' + (verified ? '✅ Verified' : '⏳ Pending') + '</span></td>' +
                 '</tr>';
         });
@@ -1350,6 +1497,30 @@ verifyParticipant: function(id) {
         if (unverifiedEl) unverifiedEl.textContent = total - verified;
     },
 
+    openExportModal: function() {
+        if (!this.exportModal) return;
+        if (this.allData.length === 0) {
+            showToast('No data to export.', 'error');
+            return;
+        }
+        var filteredCount = this.getFilteredData().length;
+        var totalCount = this.allData.length;
+        if (this.exportScopeFilteredLabel) {
+            this.exportScopeFilteredLabel.textContent = 'Current view (filtered/searched) — ' + filteredCount + ' record' + (filteredCount === 1 ? '' : 's');
+        }
+        if (this.exportScopeAllLabel) {
+            this.exportScopeAllLabel.textContent = 'All registrations — ' + totalCount + ' record' + (totalCount === 1 ? '' : 's');
+        }
+        this.exportModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    },
+
+    closeExportModal: function() {
+        if (!this.exportModal) return;
+        this.exportModal.classList.remove('active');
+        document.body.style.overflow = '';
+    },
+
     exportCSV: function() {
         if (!this.sessionToken || !this.adminEmail) {
             showToast('Not authenticated. Please log in.', 'error');
@@ -1359,34 +1530,81 @@ verifyParticipant: function(id) {
             showToast('No data to export.', 'error');
             return;
         }
-        // Use current data (already loaded). If you want fresh, call loadData() first, but that's async.
-        var headers = ['UniqueID', 'ServiceNo', 'Rank', 'FullName', 'Email', 'Phone', 'Organization', 'Role', 'RegistrationDate', 'Verified'];
-        var rows = this.allData.map(function(row) {
-            return [
-                row.UniqueID,
-                row.ServiceNo,
-                row.Rank,
-                row.FullName,
-                row.Email,
-                row.Phone,
-                row.Organization,
-                row.Role,
-                row.RegistrationDate,
-                (row.Verified === true || row.Verified === 'TRUE') ? 'Yes' : 'No'
-            ];
+
+        // Which columns were checked in the modal
+        var columnMeta = {
+            UniqueID: 'Unique ID', ServiceNo: 'Service No', Rank: 'Rank', FullName: 'Name',
+            Email: 'Email', Phone: 'Phone', Organization: 'Organization', Role: 'Role',
+            RegistrationDate: 'Registered', Verified: 'Verified'
+        };
+        var checkedBoxes = this.exportColumnsGrid ? this.exportColumnsGrid.querySelectorAll('input[type="checkbox"]:checked') : [];
+        var selectedColumns = Array.prototype.map.call(checkedBoxes, function(cb) { return cb.value; });
+        if (selectedColumns.length === 0) {
+            showToast('Select at least one column to export.', 'error');
+            return;
+        }
+
+        // Which records: current filtered/searched view, or everything
+        var scopeEl = document.querySelector('input[name="exportScope"]:checked');
+        var scope = scopeEl ? scopeEl.value : 'filtered';
+        var dataToExport = scope === 'all' ? this.allData : this.getFilteredData();
+        if (dataToExport.length === 0) {
+            showToast('No records match the selected scope.', 'error');
+            return;
+        }
+
+        var self = this;
+        function formatCell(row, col) {
+            if (col === 'Verified') {
+                return (row.Verified === true || row.Verified === 'TRUE') ? 'Verified' : 'Pending';
+            }
+            if (col === 'RegistrationDate') {
+                if (!row.RegistrationDate) return '—';
+                var d = new Date(row.RegistrationDate);
+                return isNaN(d.getTime()) ? row.RegistrationDate : d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+            return row[col] || '—';
+        }
+        function csvEscape(value) {
+            var str = String(value);
+            // Neutralize CSV/Excel formula injection: a registrant-controlled field like
+            // FullName or Organization starting with =, +, -, @, or a tab could execute
+            // as a formula (even arbitrary commands via =cmd|...) when an admin opens the
+            // exported CSV in Excel. Prefixing with a single quote forces text interpretation.
+            if (/^[=+\-@\t]/.test(str)) {
+                str = "'" + str;
+            }
+            return '"' + str.replace(/"/g, '""') + '"';
+        }
+
+        var lines = [];
+        // Professional header block for the export
+        lines.push([csvEscape('NACWS Cybersecurity Seminar 2027 — Registration Export')].join(','));
+        lines.push([csvEscape('Generated: ' + new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }))].join(','));
+        lines.push([csvEscape('Scope: ' + (scope === 'all' ? 'All registrations' : 'Current filtered/searched view') + ' (' + dataToExport.length + ' of ' + this.allData.length + ' total)')].join(','));
+        lines.push(''); // blank spacer row before the actual table
+
+        var headerRow = selectedColumns.map(function(col) { return csvEscape(columnMeta[col] || col); });
+        lines.push(headerRow.join(','));
+
+        dataToExport.forEach(function(row) {
+            var line = selectedColumns.map(function(col) { return csvEscape(formatCell(row, col)); });
+            lines.push(line.join(','));
         });
-        var csv = headers.join(',') + '\n';
-        rows.forEach(function(row) {
-            csv += row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',') + '\n';
-        });
-        var blob = new Blob([csv], { type: 'text/csv' });
+
+        // UTF-8 BOM so Excel renders special characters (é, ñ, etc.) correctly
+        var csv = '\uFEFF' + lines.join('\r\n');
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         var link = document.createElement('a');
+        var stamp = new Date().toISOString().slice(0, 10);
         link.href = URL.createObjectURL(blob);
-        link.download = 'NACWS_Registrations_' + new Date().toISOString().slice(0, 10) + '.csv';
+        link.download = 'NACWS_Registrations_' + (scope === 'all' ? 'All' : 'Filtered') + '_' + stamp + '.csv';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        showToast('CSV exported!', 'success');
+
+        this.closeExportModal();
+        showToast('CSV exported — ' + dataToExport.length + ' record' + (dataToExport.length === 1 ? '' : 's') + '.', 'success');
     }
 };
 
@@ -1400,7 +1618,7 @@ verifyParticipant: function(id) {
     };
 
     // Auto‑init: each page has its own unique element, so one script
-    // file can safely self-initialize on any of the three pages
+    // file can safely self-initialise on any of the three pages
     // without any inline <script> needed in the HTML.
     document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('regForm')) {
