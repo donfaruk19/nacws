@@ -977,7 +977,7 @@ var Verify = {
             .finally(function() {
                 if (self.loginBtn) {
                     self.loginBtn.disabled = false;
-                    self.loginBtn.innerHTML = '🔑 Sign In';
+                    self.loginBtn.innerHTML = 'Sign In';
                 }
             });
         });
@@ -1181,7 +1181,7 @@ verifyParticipant: function(id, hmac) {
         if (this.resultRole) this.resultRole.textContent = participant.Role || '—';
         if (this.btnMarkVerified) {
             this.btnMarkVerified.disabled = isVerified;
-            this.btnMarkVerified.innerHTML = isVerified ? '✅ Already Verified' : '✅ Mark as Attendance';
+            this.btnMarkVerified.innerHTML = isVerified ? '✅ Verified' : '✅ Mark as Attendance';
         }
         if (this.resultCard) this.resultCard.classList.add('show');
     },
