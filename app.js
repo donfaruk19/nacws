@@ -40,6 +40,25 @@
             .replace(/'/g, '&#39;');
     }
 
+    // Waits for every <img> inside a container to actually finish loading (or fail)
+    // before resolving — capturing before images are ready is a common cause of
+    // html2canvas throwing instead of gracefully skipping. Hard-capped so a single
+    // slow/broken image can never hang the download forever.
+    function waitForImages(container, timeoutMs) {
+        var imgs = container.querySelectorAll('img');
+        if (imgs.length === 0) return Promise.resolve();
+        var promises = Array.prototype.map.call(imgs, function(img) {
+            if (img.complete) return Promise.resolve();
+            return new Promise(function(resolve) {
+                img.addEventListener('load', resolve, { once: true });
+                img.addEventListener('error', resolve, { once: true }); // don't block on a broken image
+            });
+        });
+        var all = Promise.all(promises);
+        var timeout = new Promise(function(resolve) { setTimeout(resolve, timeoutMs || 3000); });
+        return Promise.race([all, timeout]);
+    }
+
     // Shared html2canvas capture used by both the registration-flow ticket download
     // and the standalone ticket.html page (linked from the confirmation email) — one
     // implementation, so both always produce an identical ticket image.
@@ -447,11 +466,11 @@ var Registration = {
         card.style.maxHeight = 'none';
 
         requestAnimationFrame(function() {
-            setTimeout(function() {
-                captureCardAsPNG(card, 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png')
-                    .then(function() {
-                        showToast('Ticket downloaded!', 'success');
-                    }).catch(function(err) {
+            waitForImages(card, 3000).then(function() {
+                return captureCardAsPNG(card, 'NACWS-Ticket-' + (participant.uniqueId || 'Ticket') + '.png');
+            }).then(function() {
+                    showToast('Ticket downloaded!', 'success');
+                }).catch(function(err) {
                     console.error('html2canvas error:', err);
                     var qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
                     if (qrCanvas) {
@@ -459,9 +478,9 @@ var Registration = {
                         link.download = 'NACWS-QR-' + (participant.uniqueId || 'QR') + '.png';
                         link.href = qrCanvas.toDataURL('image/png');
                         link.click();
-                        showToast('QR downloaded (fallback).', 'success');
+                        showToast('Full ticket failed (' + (err && err.message ? err.message : 'unknown error') + ') — downloaded QR only.', 'error');
                     } else {
-                        showToast('Failed to generate ticket. Please try again.', 'error');
+                        showToast('Failed to generate ticket: ' + (err && err.message ? err.message : 'unknown error'), 'error');
                     }
                 }).finally(function() {
                     compact.style.display = 'none';
@@ -470,7 +489,6 @@ var Registration = {
                         self.downloadBtn.innerHTML = '⬇️ Download Ticket';
                     }
                 });
-            }, 200);
         });
     },
 
@@ -1675,12 +1693,14 @@ verifyParticipant: function(id, hmac) {
                     self.downloadBtn.disabled = true;
                     self.downloadBtn.innerHTML = '<span class="spinner"></span> Generating…';
                     var card = document.getElementById('compactTicket');
-                    captureCardAsPNG(card, 'NACWS-Ticket-' + (self.participant.uniqueId || 'Ticket') + '.png')
+                    waitForImages(card, 3000).then(function() {
+                        return captureCardAsPNG(card, 'NACWS-Ticket-' + (self.participant.uniqueId || 'Ticket') + '.png');
+                    })
                         .then(function() {
                             showToast('Ticket downloaded!', 'success');
                         })
-                        .catch(function() {
-                            showToast('Failed to generate ticket. Please try again.', 'error');
+                        .catch(function(err) {
+                            showToast('Failed to generate ticket: ' + (err && err.message ? err.message : 'unknown error'), 'error');
                         })
                         .finally(function() {
                             self.downloadBtn.disabled = false;
